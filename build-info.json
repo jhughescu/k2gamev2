@@ -1,6 +1,6 @@
 {
-  "timestamp": "2024-10-31T11:59:53Z",
-  "commitHash": "1f826d16a60015b2c43a5f4b2457e70522fe8157",
-  "commitMessage": "de-linked autofill of allocation forms from isDev so game can be fully tested in dev mode",
-  "branch": "main"
+  "timestamp": "2024-11-07T12:24:39Z",
+  "commitHash": "4cbdaed9f19ceae580b42dea63b7210fd367e549",
+  "commitMessage": "Altered package.json to initialise build-info",
+  "branch": "master"
 }
