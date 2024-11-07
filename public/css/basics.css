@@ -1,0 +1,86 @@
+html, body {
+    background-color: #1c232e;
+    color: white;
+}
+body {
+    font-family: monospace;
+/*    font-size: 1.5em;*/
+}
+.buttonNO {
+	display: block;
+	text-align: center;
+	text-decoration: none;
+    user-select: none;
+    cursor: pointer;
+	color: white;
+	background: black;
+	width: 50%;
+	padding: 7px 4px;
+	font-size: 12pt;
+	margin: 50px auto;
+	transition: 0.5s;
+}
+.container.fullscreen1 {
+    background-color: #545a54;
+    background-image: url(../assets/forest.jpg);
+    text-shadow: 2px 2px 2px rgb(23, 28, 19, 0.8);
+}
+/* Add any classes which should never have text-shadow below */
+.fa {
+    text-shadow: none;
+}
+a {
+    color: white;
+    text-decoration: none;
+    cursor: pointer;
+}
+a:visited {
+    color: white;
+}
+a:hover {
+    text-decoration: underline;
+}
+a.disabled, .link.disabled {
+    color: grey;
+    cursor: default;
+}
+a.disabled:hover, .link.disabled:hover {
+    text-decoration: none;
+}
+.link {
+    cursor: pointer;
+/*    display: inline-block;*/
+    width: fit-content;
+/*    background-color: green;*/
+}
+.vertstack {
+    display: block;
+}
+.link:hover {
+    text-decoration: underline;
+}
+.highlight {
+    color: yellow;
+}
+table, td, tr {
+    border-collapse: collapse;
+    border: 0px;
+}
+.danger {
+    color: red;
+}
+.devnote {
+    color: #4242b9;
+    font-weight: bold;
+    font-style: italic;
+    text-align: center;
+}
+.val_true {
+    color: green;
+}
+.val_false {
+    color: red;
+}
+.alignright {
+    text-align: right;
+}

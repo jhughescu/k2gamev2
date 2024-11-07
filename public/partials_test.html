@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>K2 Game Admin</title>
+    <script src="https://code.jquery.com/jquery-3.7.0.js" integrity="sha256-JlqSTELeR4TLqP0OG9dxM7yDPqX1ox/HfgiSLBj8+kM=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/handlebars@latest/dist/handlebars.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src='js/common.js'></script>
+    <!--    <script src='js/scriptadmin.js'></script>-->
+
+    <!--    <link rel='stylesheet' href='css/stylecommon.css'>-->
+
+</head>
+
+<body>
+    <h1>Let's play</h1>
+    <div id='msg'></div>
+    <button id='showSessions'>show sessions</button>
+    <button id='deleteSessions'>delete sessions</button>
+    <div id='insertion'>
+
+
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            //    return;
+            const socket = io('', {
+                query: {
+                    role: 'admin'
+                }
+            });
+            const bShowSessions = $('#showSessions');
+            const bDeleteSessions = $('#deleteSessions');
+            const getTestOb = () => {
+                return {
+                    a: Math.random(),
+                    b: Math.random(),
+                    c: Math.random()
+                }
+            };
+            const showSessions = () => {
+                const o = new Array(10).fill(getTestOb());
+                console.log(o);
+                renderTemplate('insertion', 'admin.sessions', o);
+            };
+            const deleteSessions = async () => {
+                socket.emit('getSessions', {}, (s) => {
+                    if (s.length === 0) {
+                        alert('no sessions to delete')
+                    } else {
+                        const sure = confirm(`are you sure you want to delete ${s.length} session${s.length > 1 ? 's' : ''}?`);
+                        if (sure) {
+                            socket.emit('deleteSessions', {}, (str) => {
+                                //                        console.log(`dunne:`);
+                                //                        console.log(str);
+                            });
+                        }
+                    }
+                });
+            };
+            showSessions();
+            bShowSessions.off('click').on('click', () => {
+                showSessions();
+            });
+            bDeleteSessions.off('click').on('click', () => {
+                deleteSessions();
+            });
+            socket.on('disconnect', () => {
+                //        gameflow('server connection lost - show warning');
+            });
+            socket.on('socketConnect', (o) => {
+//                console.log('test result', o);
+                if (o.testID) {
+                    if (!document.title.includes(o.testID)) {
+                        document.title += ` port: ${o.testID}`;
+                        $('h1').append(` port: ${o.testID}`);
+                        showSessions()
+                    }
+                }
+            })
+        });
+
+    </script>
+</body>
+
+</html>

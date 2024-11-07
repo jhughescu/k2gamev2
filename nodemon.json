@@ -1,0 +1,6 @@
+{
+    "watch": ["app.js", "controllers/", "models/", "views/", "generate_build_info.js"],
+    "ext": "js,json",
+    "ignore": ["build-info.json", "public/", "logs/", "logs/peas.txt"],
+    "exec": "npm run generate-build-info && node app.js"
+}

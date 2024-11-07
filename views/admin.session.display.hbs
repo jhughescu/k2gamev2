@@ -1,0 +1,4 @@
+Values: {{session.values.length}}
+{{#each session.values}}<p>{{action}}, {{description}}</p>{{/each}}
+Score packets: {{session.scorePackets.length}}
+{{#each session.scorePackets}}<p>round {{round}}: {{src}} allocated {{val}} to {{team}}</p>{{/each}}

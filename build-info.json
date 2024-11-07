@@ -1,0 +1,6 @@
+{
+  "timestamp": "2024-10-31T11:59:53Z",
+  "commitHash": "1f826d16a60015b2c43a5f4b2457e70522fe8157",
+  "commitMessage": "de-linked autofill of allocation forms from isDev so game can be fully tested in dev mode",
+  "branch": "main"
+}
