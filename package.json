@@ -1,9 +1,9 @@
 {
-    "name": "dbdev",
+    "name": "k2gamev2",
     "version": "1.0.0",
-    "description": "Sustainability game",
+    "description": "K2 game second version",
     "keywords": [],
-    "author": "",
+    "author": "John Hughes",
     "license": "ISC",
     "dependencies": {
         "chalk": "^4.1.2",
@@ -36,10 +36,10 @@
     "main": "app.js",
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/jhughescu/susgame2.0.git"
+        "url": "git+https://github.com/jhughescu/k2gamev2.git"
     },
     "bugs": {
-        "url": "https://github.com/jhughescu/susgame2.0/issues"
+        "url": "https://github.com/jhughescu/k2gamev2/issues"
     },
-    "homepage": "https://github.com/jhughescu/susgame2.0#readme"
+    "homepage": "https://github.com/jhughescu/k2gamev2#readme"
 }
