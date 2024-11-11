@@ -1,7 +1,7 @@
 const socketIo = require('socket.io');
 const { getEventEmitter } = require('./../controllers/eventController');
 const routeController = require('./../controllers/routeController');
-//const sessionController = require('./../controllers/sessionController');
+const sessionController = require('./../controllers/sessionController');
 const downloadController = require('./../controllers/downloadController');
 const logController = require('./../controllers/logController');
 
@@ -10,11 +10,12 @@ const tools = require('./../controllers/tools');
 const eventEmitter = getEventEmitter();
 
 let io = null;
-let adminDashboardNamespace = null;
-let facilitatorDashboardNamespace = null;
-let playerNamespace = null;
-const logging = false;
-
+if (1 == 2) {
+//let adminDashboardNamespace = null;
+//let facilitatorDashboardNamespace = null;
+//let playerNamespace = null;
+//const logging = false;
+/*
 const gameNamespaces = {};
 
 const log = (msg) => {
@@ -51,7 +52,8 @@ const getQueries = (u) => {
 //    console.log(qu);
     return qu;
 };
-
+*/
+}
 const showRoomSize = (id) => {
     const roomName = id;
     const room = io.sockets.adapter.rooms.get(roomName);
@@ -75,10 +77,15 @@ const getRoomSockets = (id) => {
         return new Set([]);
     }
 };
+
+const getPlayerHandshake = () => {
+    const ph = process.env.CLIENT_HANDSHAKE;
+//    console.log(ph);
+    return ph;
+};
 // Function to initialize socket.io
 function initSocket(server) {
     io = socketIo(server);
-    logController.emptyFolder('logs');
     // Handle client events
     io.on('connection', async (socket) => {
         let ref = socket.request.headers.referer;
@@ -86,16 +93,10 @@ function initSocket(server) {
         src = src.split('/').reverse()[0];
         src = `/${src}`;
         const Q = socket.handshake.query;
-
+        let sType = false;
         socket.on('checkSocket', (o, cb) => {
-            console.log(`request for sock: ${o.sock}, ${o.address}`);
             const sock = `${o.address}-${o.sock}`;
             const ro = {total: showRoomSize(sock)};
-//            console.log(`request for sock: ${sock}`);
-//            const total = getRoomSockets(sock);
-//            console.log(sock);
-//            console.log(total);
-//            console.log(getRoomSockets(sock));
             if (cb) {
                 cb(ro);
 //                console.log(`there is one`);
@@ -103,51 +104,72 @@ function initSocket(server) {
                 console.log(`no callback provided`);
             }
         });
+        console.log('emitting socketConnect')
         socket.emit('socketConnect', {
             port: process.env.PORT,
             testID: process.env.TEST_ID
         });
-        // Spedific client ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        if (Q.role === 'PASSED_VALUE') {
-            // when a client connects it can pass a 'role' value which places it into a specific room for event targetting
-            roomID = `${session.address}-ROOMID  `;
-            socket.join(roomID);
-            console.log('PASSED_VALUE connected');
-            socket.on('disconnect', () => {
-    //            log('User disconnected from the admin dashboard');
-            });
+        if (Q) {
+            if (Boolean(Q.role)) {
+                sType = Q.role;
+            }
         }
-        // End specific client ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+        if (Boolean(sType)) {
+            // common methods
+            socket.on('getSessions', (sOb, cb) => {
+                sessionController.getSessions(sOb, cb);
+            });
+            // end common
+            // game clients
+            if (sType === 'player') {
+                console.log('player enters')
+                socket.emit('handshakeCheck', getPlayerHandshake());
+                socket.on('disconnect', () => {
+//                    console.log('gone');
+                });
+                socket.on('newSession', (cb) => {
+                    sessionController.newSession(cb);
+                });
+                socket.on('restoreSession', (sOb, cb) => {
+                    sessionController.restoreSession(sOb, cb);
+                });
+                socket.on('updateSession', (sOb, cb) => {
+                    sessionController.updateSession(sOb, cb);
+                });
+                socket.on('deleteSession', (sOb, cb) => {
+                    console.log(`try to delete`);
+                    sessionController.deleteSession(sOb, cb);
+                });
+            }
+            // end game clients
+            // admin clients
+            if (sType === 'admin') {
+                socket.on('deleteSessions', (sOb, cb) => {
+                    sessionController.deleteSessions(sOb, cb);
+                });
+            }
+            // end admin clients
+        }
     });
 
+//    eventEmitter.on();
 
 
-    eventEmitter.on('EVENT', () => {
-        const rooms = [];
-        rooms.forEach(r => {
-            const room = `${game.address}${r}`;
-//            console.log(`emit gameUpdate to room ${room} which has ${getRoomSockets(room).size} socket(s)`);
-            io.to(room).emit('gameUpdate', eGame);
-        });
-    });
 };
 
-const emitAll = (ev, o) => {
-    io.emit(ev, o);
-};
-const emitSystem = (ev, o) => {
-    if (io) {
-        adminDashboardNamespace.emit(ev, o)
-    }
-};
-const getSockets = (id) => {
-    return getRoomSockets(id);
-};
+//const emitAll = (ev, o) => {
+//    io.emit(ev, o);
+//};
+//const emitSystem = (ev, o) => {
+//    if (io) {
+//        adminDashboardNamespace.emit(ev, o)
+//    }
+//};
+//const getSockets = (id) => {
+//    return getRoomSockets(id);
+//};
 module.exports = {
     initSocket,
-    eventEmitter,
-    emitSystem,
-    emitAll,
-    gameNamespaces
+    eventEmitter
 };

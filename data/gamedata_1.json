@@ -1,0 +1,59 @@
+{
+    "countries": [
+        "Canada",
+        "Czechoslovakia",
+        "Finland",
+        "France",
+        "Germany",
+        "Italy",
+        "Netherlands",
+        "Norway",
+        "Spain",
+        "USA"
+    ],
+    "teams": [
+        {
+            "id": 0,
+            "country": "Canada"
+        },
+        {
+            "id": 1,
+            "country": "Czechoslovakia"
+        },
+        {
+            "id": 2,
+            "country": "Finland"
+        },
+        {
+            "id": 3,
+            "country": "France",
+            "active": true
+        },
+        {
+            "id": 4,
+            "country": "Germany",
+            "active": true
+        },
+        {
+            "id": 5,
+            "country": "Italy",
+            "active": true
+        },
+        {
+            "id": 6,
+            "country": "Netherlands"
+        },
+        {
+            "id": 7,
+            "country": "Norway"
+        },
+        {
+            "id": 8,
+            "country": "Spain"
+        },
+        {
+            "id": 9,
+            "country": "USA"
+        }
+    ]
+}

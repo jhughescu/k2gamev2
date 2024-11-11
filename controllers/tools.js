@@ -63,21 +63,30 @@ const getIPv4Address = () => {
 //    console.log(`ipv4Address: ${ipv4Address}`)
     return ipv4Address || false;
 };
-const mapSessionToGame = (s, g) => {
-    const rg = Object.assign({}, g);
-    for (let i in g) {
-        if (g.hasOwnProperty(i)) {
-            rg[i] = s[i];
-        }
+const padNum = (n, r) => {
+    const rr = r ? r : 10;
+    let pre = '';
+    for (let i = 1; i < rr.toString().length; i++) {
+        pre += '0';
     }
-    return rg;
+    if (n < rr) {
+        return `${pre}${n.toString()}`
+    } else {
+        return n;
+    }
+};
+const getTimeStamp = () => {
+    const d = new Date();
+    const ts = `timestamp: ${d.getFullYear()}${padNum(d.getMonth())}${padNum(d.getDay())} ${padNum(d.getHours())}:${padNum(d.getMinutes())}:${padNum(d.getSeconds())}`;
+    return ts;
 };
 module.exports = {
     procVal,
     toCamelCase,
     justNumber,
+    padNum,
     roundNumber,
     isValidJSON,
     getIPv4Address,
-    mapSessionToGame
+    getTimeStamp
 }

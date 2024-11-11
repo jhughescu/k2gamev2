@@ -43,6 +43,9 @@ app.get('/partials', async (req, res) => {
 app.get(`/ptest`, (req, res) => {
     res.sendFile(path.join(basePath, 'partials_test.html'));
 });
+app.get(`/`, (req, res) => {
+    res.sendFile(path.join(basePath, 'game.html'));
+});
 
 
 

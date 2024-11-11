@@ -29,7 +29,7 @@
     },
     "scripts": {
         "generate-build-info": "node generate_build_info.js",
-        "dev": "nodemon --exec \"npm generate-build-info run node\" app.js",
+        "dev": "nodemon --exec \"npm run generate-build-info && node\" app.js",
         "start": "node app.js"
     },
     "main": "app.js",
