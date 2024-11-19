@@ -55,7 +55,8 @@ const newSession = async (cb) => {
         dateID: 0,
         type: 1,
         teamRef: cc,
-        state: 'new'
+        state: 'new',
+        time: 0
     });
     s.save();
     cb(developSession(s));
@@ -75,8 +76,8 @@ const updateSession = async (sOb, cb) => {
     const s = await Session.findOne({uniqueID: sOb.uniqueID});
 //    const new = Object.assign({}, sOb);
 //    delete
-//    console.log(`updateSession`);
-//    console.log(sOb);
+    console.log(`updateSession`);
+    console.log(sOb);
 //    console.log(s);
     if (s) {
         Object.entries(sOb).forEach((p, v) => {
@@ -88,6 +89,20 @@ const updateSession = async (sOb, cb) => {
 //        s[sOb]
         if (cb) {
 //            cb('fart');
+        } else {
+    //        console.log('no no no');
+        }
+    }
+};
+const getSession = async (sOb, cb) => {
+    const s = await Session.findOne({uniqueID: sOb.uniqueID});
+//    console.log(`getSession`);
+//    console.log(sOb);
+//    console.log(s);
+    if (s) {
+//        s[sOb]
+        if (cb) {
+            cb(s);
         } else {
     //        console.log('no no no');
         }
@@ -114,7 +129,7 @@ const getSessions = async (sOb, cb) => {
     }
 };
 const deleteSessions = async (sOb, cb) => {
-    console.log('deleting');
+//    console.log('deleting');
     Session.deleteMany({})
     .then(result => {
         console.log(`Deleted ${result.deletedCount} sessions.`);
@@ -131,6 +146,7 @@ module.exports = {
     newSession,
     restoreSession,
     updateSession,
+    getSession,
     deleteSession,
     deleteSessions,
     getSessions

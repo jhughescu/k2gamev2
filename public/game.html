@@ -10,15 +10,23 @@
     <script src="/socket.io/socket.io.js"></script>
     <script src='js/common.js'></script>
     <script src='js/scriptgame.js'></script>
+    <script src='js/timer.js'></script>
+    <script src='js/state.js'></script>
 
     <link rel='stylesheet' href='css/basics.css'>
+    <link rel='stylesheet' href='css/timer.css'>
+    <link rel='stylesheet' href='css/debug.css'>
 
 </head>
 
 <body>
-     <div id='insertion'>
+    <div id='time_display'></div>
+    <div id='insertion'>
         <h1>Let's play</h1>
         <div id='msg'></div>
+        <button id='b_playpause'>play/pause</button>
+        <button id='b_reset'>reset time</button>
+<!--        <button id='b_test_2'>update</button>-->
     </div>
 </body>
 

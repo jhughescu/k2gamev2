@@ -7,7 +7,8 @@ const sessionSchema = new Schema({
     dateID: Number,
     type: Number,
     teamRef: Number,
-    state: String
+    state: String,
+    time: Number
 });
 
 module.exports = mongoose.model('Session', sessionSchema);

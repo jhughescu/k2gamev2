@@ -134,6 +134,9 @@ function initSocket(server) {
                 socket.on('restoreSession', (sOb, cb) => {
                     sessionController.restoreSession(sOb, cb);
                 });
+                socket.on('getSession', (sOb, cb) => {
+                    sessionController.getSession(sOb, cb);
+                });
                 socket.on('updateSession', (sOb, cb) => {
                     sessionController.updateSession(sOb, cb);
                 });
@@ -141,6 +144,10 @@ function initSocket(server) {
                     console.log(`try to delete`);
                     sessionController.deleteSession(sOb, cb);
                 });
+                socket.on('test', o => {
+                    console.log('the test:');
+                    console.log(o);
+                })
             }
             // end game clients
             // admin clients

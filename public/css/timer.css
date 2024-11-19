@@ -1,0 +1,9 @@
+#time_display {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    width: 100px;
+    height: 30px;
+    background-color: black;
+    color: white;
+}
