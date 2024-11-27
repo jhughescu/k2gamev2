@@ -4,3 +4,33 @@
 .message.ok {
     color: green;
 }
+
+
+
+#temp {
+    position: fixed;
+    right: 10px;
+    top: 50px;
+    width: 200px;
+    height: 400px;
+    background-color: #00a7ff;
+}
+.climber {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.63);
+    position: absolute;
+    border: 1px solid black;
+    bottom: 0px;
+    display: none;
+}
+#c0 {
+    left: 10px;
+}
+#c1 {
+    left: 40px;
+}
+#c2 {
+    left: 70px;
+}

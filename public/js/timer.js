@@ -7,7 +7,7 @@ class GameTimer {
         this.hasStarted = false;
         this.hour = 3600000;
         this.minute = 60000;
-        this.int = 1000;
+        this.int = 50;
     }
 
     getHourInMilli(n) {
@@ -20,7 +20,6 @@ class GameTimer {
     getMinutesFromMilli(n) {
         return n / this.minute;
     }
-
     startTimer() {
         if (this.isRunning) return; // Prevent multiple intervals
 //        console.log('####################### startTimer')

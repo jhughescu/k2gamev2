@@ -144,6 +144,9 @@ function initSocket(server) {
                     console.log(`try to delete`);
                     sessionController.deleteSession(sOb, cb);
                 });
+                socket.on('getGameData', cb => {
+                    sessionController.getGameData(cb);
+                });
                 socket.on('test', o => {
                     console.log('the test:');
                     console.log(o);

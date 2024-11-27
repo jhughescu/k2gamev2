@@ -14,7 +14,9 @@ document.addEventListener('DOMContentLoaded', function () {
         gameflow('please wait, checking connection');
         handshake = str;
         setTimeout(() => {
+            getData()
             checkSession();
+
         }, 1000);
     });
     const msgWin = $('#msg');
@@ -46,9 +48,8 @@ document.addEventListener('DOMContentLoaded', function () {
     let handshake = null;
     let session = null;
     let newconnect = false;
-    // state stuff
     let theState = null;
-    // end state stuff
+    let gameData = null;
 
 
     const getStoreID = () => {
@@ -85,12 +86,13 @@ document.addEventListener('DOMContentLoaded', function () {
     };
     const summariseSession = () => {
         gameflow(`your country is ${session.team.country}`);
-        console.log(session);
+//        console.log(session);
+//        console.log(theState);
     };
 
     const storeLocal = (p, v) => {
         const id = `${getStoreID()}-${p}`;
-        console.log(`storing`, id, v);
+//        console.log(`storing`, id, v);
         localStorage.setItem(id, v);
     };
     const getLocal = (p) => {
@@ -107,7 +109,7 @@ document.addEventListener('DOMContentLoaded', function () {
         for (var i = 0; i < localStorage.length; i++) {
             const k = localStorage.key(i);
             const match = getStoreID();
-            console.log(k === match)
+//            console.log(k === match)
             // snapshot does not include the session ID:
             if (k.includes(match) && k !== match) {
                 kill.push(k);
@@ -121,17 +123,27 @@ document.addEventListener('DOMContentLoaded', function () {
 //        showtime(session.time);
         showtime(gTimer.elapsedTime);
     };
+    const expandSession = () => {
+        // on init, takes a session and expands various items
+        session.allProfiles = [];
+        for (var i in session) {
+            if (i.includes('profile')) {
+                if (session[i].profile !== null && session[i].hasOwnProperty('summary')) {
+                    const o = {summaryString: session[i].summary};
+                    session[i] = getClimber(o);
+                    session.allProfiles.push(session[i]);
+                }
+            }
+        }
+//        console.log(`expandSession`, session);
+    };
     const setSession = (sesh, type) => {
         // unified method for setting the session
         session = sesh;
         gameflow(`session initialised (${type}) with ID ${session.uniqueID}`);
         theState = new State(socket, session);
-        console.log(`setSession`);
-        console.log(`session`, session.time);
-        console.log(`gTimer`, gTimer.elapsedTime);
-//        console.log(`theState`, theState);
-        console.log('stored time', getLocal('time'));
         gTimer.setTimer(session.time);
+        expandSession();
         summariseSession();
         updateView();
     };
@@ -152,12 +164,8 @@ document.addEventListener('DOMContentLoaded', function () {
             socket.emit('restoreSession', {
                 uniqueID: lid
             }, (sesh) => {
-//                console.log('restore callback:', sesh)
                 if (typeof (sesh) === 'object') {
                     setSession(sesh, 'restored');
-//                    session = sesh;
-//                    gameflow(`game ${lid} restored (check console), game state: ${session.state}`);
-//                    summariseSession();
                 } else {
                     gameflow(`no game found with ID ${lid} [confirm2]`);
                 }
@@ -166,19 +174,13 @@ document.addEventListener('DOMContentLoaded', function () {
             gameflow('no game in progress, start new game');
             socket.emit('newSession', sesh => {
                 setSession(sesh, 'new');
-//                session = sesh;
-//                gameflow(`starting new game with ID ${session.uniqueID}`);
-//                summariseSession();
                 localStorage.setItem(gid, session.uniqueID);
-//                console.log(session);
             });
         }
     };
     const clearSession = () => {
         const sId = getStoreID();
         const lid = localStorage.getItem(sId);
-        //        console.log('clear');
-        //        console.log(session);
         socket.emit('restoreSession', {
             uniqueID: lid
         }, (sesh) => {
@@ -200,6 +202,8 @@ document.addEventListener('DOMContentLoaded', function () {
 //        gameTime.now = startTime;
         gTimer.resetTimer();
         theState.storeTime(gTimer.elapsedTime);
+        resetClimbers();
+//        updateClimbers();
 //        updateView();
     };
     const playPauseSession = () => {
@@ -220,15 +224,30 @@ document.addEventListener('DOMContentLoaded', function () {
             console.log('we have the session', s)
         });
     };
-    const updateSession = (p, v) => {
+
+    const updateSession = (p, v, cb) => {
         session[p] = v;
+        expandSession();
+        console.log('session', session);
+//        gameflow(`session updated (${p})`);
         const hup = {
             uniqueID: session.uniqueID
         };
         hup[p] = v;
         socket.emit('updateSession', hup, (str) => {
-            gameflow(`update complete: ${str}`);
+            gameflow(`update complete: (${p} set to ${JSON.stringify(v)})`);
+            if (cb) {
+                cb(str);
+            }
         });
+    };
+
+    const getCurrentState = () => {
+        // creates an object which can be used to update the view at a given point in the timeline - use tAdj to convert real time to game time
+        const sec = roundNumber((gTimer.elapsedTime * tAdj) / 1000, 2);
+        const min = roundNumber((gTimer.elapsedTime * tAdj) / 60000, 2);
+//        console.log(`min: ${min}, sec: ${sec}`);
+        return {sec: sec, min: min};
     };
     const diceRoll = () => {
         let numbers = Array.from({
@@ -240,6 +259,142 @@ document.addEventListener('DOMContentLoaded', function () {
         return numbers[Math.floor(numbers.length * Math.random())];
     };
 
+    const processData = (d) => {
+        if (d) {
+            d.route.stages = [];
+            const s = d.route.stages;
+            const r = d.route.ratio;
+            if (r[0] + r[1] !== 100) {
+                console.warn(`the values of route.ratio must add up to 100`);
+            }
+            s[0] = 0;
+            s[1] = 50 / (r[0] + r[1]) * r[0];
+            s[2] = 50
+            s[3] = 50 + (50 / (r[0] + r[1]) * r[1]);
+            s[4] = 100;
+
+            d.storeID = getStoreID();
+            d.timer = gTimer;
+//            console.log(d.route.stages);
+            return d;
+        }
+    };
+    const getData = () => {
+        socket.emit('getGameData', (d) => {
+//            gameflow(`game data ready (check console)`);
+            gameflow(`game data ready`);
+            gameData = processData(d);
+//            console.log(gameData);
+        });
+    };
+    // teams
+    const resetClimbers = () => {
+        Climber.resetAll();
+        updateClimbers(0);
+    };
+    const updateClimbers = (s) => {
+        Climber.updateViews(s);
+    };
+    const updateClimbersV1 = (s) => {
+        Climber.updateViews(s);
+        return;
+//        console.log(`updateClimbers: ${s}`);
+        const p = session.allProfiles;
+        const H = $('#temp').height() - $('.climber').height();
+        p.forEach(c => {
+            c.updatePosition(s);
+            const cv = $(`#c${c.profile}`);
+            let pos = (H / 50) * c.position;
+            if (c.position > 50) {
+                pos = H - (pos - H);
+            }
+            cv.css({bottom: `${pos}px`});
+            storeLocal(`profile${c.profile}`, c.getStorageSummary());
+        });
+    };
+    const clearTeamMember = (p, cb) => {
+        const id = `profile${p}`;
+        if (session.hasOwnProperty(id)) {
+            session[id] = {};
+            updateSession(id, {profile: null}, () => {
+                if (cb) {
+                    cb();
+                }
+            })
+        } else {
+            console.warn(`no profile profile${p}`);
+        }
+    };
+    const clearTeam = () => {
+        const kill = [];
+        for (var i in session) {
+            if (i.includes('profile')) {
+                kill.push(justNumber(i));
+            }
+        }
+        kill.forEach(p => {
+            clearTeamMember(p);
+        })
+        console.log(kill);
+    };
+    const getClimber = (o) => {
+        // getClimber returns a new Climber instance
+        // Requires an object as arg
+        // Add the game data to all instances
+        if (gameData) {
+            o.gameData = JSON.parse(JSON.stringify(gameData));
+            const c = new Climber(o);
+            c.setView($('.climber'));
+    //        c.calculateClimbRate();
+            return c;
+        }
+    };
+    const setTeamMember = (profile, type) => {
+        let tm = false;
+        if (session[`profile${profile}`]) {
+            if (session[`profile${profile}`].profile === null) {
+                const fullProfile = Object.assign(getTeamMember(profile, type), {profile: profile, type: type});
+                const p = getClimber(fullProfile);
+                tm = {summary: p.getStorageSummary()};
+                if (Boolean(tm)) {
+                    updateSession(`profile${profile}`, tm, (r) => {
+
+                    });
+                }
+            }
+        }
+        if (!tm) {
+            console.warn('cannot overwritre established team member (to force, use overwriteTeamMember instead)');
+        }
+        return tm;
+    };
+    const getTeamMember = (profile, type) => {
+        const P = gameData.profiles;
+        const p = `profile_${profile}`;
+        const t = `type_${type}`;
+        const l = Object.entries(P).length;
+        let r = null;
+        if (profile < l) {
+            if (P[p].hasOwnProperty(t)) {
+                r = P[p][t];
+            } else {
+                console.warn(`profile ${profile} has only ${Object.entries(P[p]).length} types`);
+            }
+        } else {
+            console.warn(`there are only ${l} profiles`);
+        }
+        return r;
+    };
+    const overwriteTeamMember = (p, t) => {
+        clearTeamMember(p, () => {
+            setTeamMember(p, t);
+        });
+
+    };
+    window.setTeamMember = setTeamMember;
+    window.clearTeamMember = clearTeamMember;
+    window.clearTeam = clearTeam;
+    window.overwriteTeamMember = overwriteTeamMember;
     // timing
     const gTimer = new GameTimer();
     const startTime = gTimer.getHourInMilli(5);
@@ -247,8 +402,9 @@ document.addEventListener('DOMContentLoaded', function () {
     const runTime = endTime - startTime;
     const gameHours = gTimer.getHoursFromMilli(runTime);
     const gameMinutes = gTimer.getMinutesFromMilli(runTime);
-    const sessionMax = 70; /* total play time before game death in minutes */
+    const sessionMax = 20; /* total play time before game death in minutes */
     const tAdj = gameMinutes / sessionMax; /* factor by which time is speeded up */
+//    console.log(`tAdj = ${tAdj}`);
     const formatTime = (ms) => {
         // Calculate hours, minutes, and seconds
 //        console.log(ms);
@@ -278,7 +434,12 @@ document.addEventListener('DOMContentLoaded', function () {
             timeDisplay.html(formatTime(adj + startTime));
         }
     };
-    gTimer.updateDisplay = showtime;
+    const updateDisplay = () => {
+        const cs = getCurrentState();
+        updateClimbers(cs.sec);
+        showtime();
+    };
+    gTimer.updateDisplay = updateDisplay;
     const toggleTimer = () => {
         if (gTimer.hasStarted) {
             if (gTimer.isRunning) {
@@ -307,6 +468,9 @@ document.addEventListener('DOMContentLoaded', function () {
     };
     window.onbeforeunload = onUnload;
     const init = () => {
+        renderTemplate('temp', 'climbers', {}, () => {
+            Climber.setBounds(0, $('#temp').height() - $('.climber').height());
+        });
         gameflow('script init');
         newconnect = true;
     };

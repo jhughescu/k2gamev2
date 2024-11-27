@@ -88,7 +88,7 @@ const updateSession = async (sOb, cb) => {
         s.save();
 //        s[sOb]
         if (cb) {
-//            cb('fart');
+            cb(s);
         } else {
     //        console.log('no no no');
         }
@@ -121,6 +121,9 @@ const deleteSession = async (sOb, cb) => {
         cb(del);
     }
 };
+const getGameData = (cb) => {
+    cb(persistentData);
+};
 
 const getSessions = async (sOb, cb) => {
     const s = await Session.find();
@@ -149,5 +152,6 @@ module.exports = {
     getSession,
     deleteSession,
     deleteSessions,
-    getSessions
+    getSessions,
+    getGameData,
 };

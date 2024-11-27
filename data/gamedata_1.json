@@ -55,5 +55,64 @@
             "id": 9,
             "country": "USA"
         }
-    ]
+    ],
+    "profiles": {
+        "profile_0": {
+            "type_0": {
+                "capacity": 30,
+                "t1": 18,
+                "t2": 24
+            },
+            "type_1": {
+                "capacity": 60,
+                "t1": 10,
+                "t2": 3
+            }
+        },
+        "profile_1": {
+            "type_0": {
+                "capacity": 70,
+                "t1": 8,
+                "t2": 7
+            },
+            "type_1": {
+                "capacity": 80,
+                "t1": 10,
+                "t2": 10
+            },
+            "type_2": {
+                "capacity": 100,
+                "t1": 12,
+                "t2": 13
+            }
+        },
+        "profile_2": {
+            "type_0": {
+                "capacity": 30,
+                "t1": 16,
+                "t2": 16
+            },
+            "type_1": {
+                "capacity": 40,
+                "t1": 20,
+                "t2": 22
+            },
+            "type_2": {
+                "capacity": 50,
+                "t1": 24,
+                "t2": 28
+            },
+            "type_3": {
+                "capacity": 70,
+                "t1": 28,
+                "t2": 34
+            },
+            "type_4": {
+                "capacity": 80,
+                "t1": 32,
+                "t2": 40
+            }
+        }
+    },
+    "route": {"ratio": [50, 50]}
 }

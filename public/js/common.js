@@ -83,7 +83,7 @@ document.addEventListener('DOMContentLoaded', function () {
             // do nothing if IP addresses
 //            console.log('we have matched an IP', v);
         } else if (!isNaN(parseInt(v))) {
-            v = parseInt(v);
+            v = parseFloat(v);
         } else if (v === 'true') {
             v = true;
         } else if (v === 'false') {
