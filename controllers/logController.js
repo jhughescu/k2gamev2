@@ -20,6 +20,7 @@ const isDev = () => {
     return Boolean(tools.procVal(process.env.isDev));
 };
 const emptyFolder = async (directoryPath) => {
+    console.log(`emptyFolder: ${isDev()}`);
     if (isDev()) {
         try {
             const filesIn = await fs.readdir(directoryPath);
@@ -90,6 +91,7 @@ const writeBeautifiedJson = async (directoryPath, fileName, data) => {
     }
 };
 const updateUpdates = async () => {
+    console.log(`updateUpdates: ${isDev()}`);
     if (isDev()) {
         let uf = await fs.readFile(LOG_UPDATE);
         uf = JSON.parse(uf);
@@ -141,6 +143,7 @@ const writeMapFile = (o) => {
 }
 
 const writeLogs = async () => {
+    console.log(`writeLogs`);
     if (isDev()) {
         try {
             let uf;
@@ -175,6 +178,7 @@ const writeLogs = async () => {
     }
 };
 const getUpdateLog = async (cb) => {
+    console.log(`getUpdateLog: ${isDev()}`);
     if (isDev()) {
         const ul = await fs.readFile(LOG_UPDATE, 'utf-8');
         if (cb) {
@@ -196,6 +200,7 @@ const addLog = async (id, ob) => {
     logTime = setTimeout(writeLogs, 500);
 };
 const init = () => {
+    console.log(`init: ${isDev()}`);
     if (isDev()) {
         fs.writeFile(LOG_UPDATE, '{}');
     }
