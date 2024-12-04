@@ -90,21 +90,23 @@ const writeBeautifiedJson = async (directoryPath, fileName, data) => {
     }
 };
 const updateUpdates = async () => {
-    let uf = await fs.readFile(LOG_UPDATE);
-    uf = JSON.parse(uf);
-    let index = Object.keys(uf).length;
-    while (updateList.length > 0) {
-        const uo = updateList.shift();
-        const u = JSON.parse(uo.update);
-        u.game = uo.game;
-        u.timestamp = uo.timestamp;
-        const newI = `update_${index}`;
-        uf[newI] = u;
-        index++;
+    if (isDev()) {
+        let uf = await fs.readFile(LOG_UPDATE);
+        uf = JSON.parse(uf);
+        let index = Object.keys(uf).length;
+        while (updateList.length > 0) {
+            const uo = updateList.shift();
+            const u = JSON.parse(uo.update);
+            u.game = uo.game;
+            u.timestamp = uo.timestamp;
+            const newI = `update_${index}`;
+            uf[newI] = u;
+            index++;
+        }
+        const writer = beautify(uf, null, 2, 100);
+        await fs.writeFile(LOG_UPDATE, writer);
+        eventEmitter.emit('updateLogUpdated', writer);
     }
-    const writer = beautify(uf, null, 2, 100);
-    await fs.writeFile(LOG_UPDATE, writer);
-    eventEmitter.emit('updateLogUpdated', writer);
 };
 const getFilePath = (f) => {
     return `logs/${f}.json`;
@@ -178,9 +180,11 @@ const writeLogs = async () => {
     }
 };
 const getUpdateLog = async (cb) => {
-    const ul = await fs.readFile(LOG_UPDATE, 'utf-8');
-    if (cb) {
-        cb(ul);
+    if (isDev()) {
+        const ul = await fs.readFile(LOG_UPDATE, 'utf-8');
+        if (cb) {
+            cb(ul);
+        }
     }
 };
 const addUpdate = async (ob) => {
@@ -197,7 +201,9 @@ const addLog = async (id, ob) => {
     logTime = setTimeout(writeLogs, 500);
 };
 const init = () => {
-    fs.writeFile(LOG_UPDATE, '{}');
+    if (isDev()) {
+        fs.writeFile(LOG_UPDATE, '{}');
+    }
 };
 
 init();

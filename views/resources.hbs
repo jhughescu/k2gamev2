@@ -34,10 +34,13 @@
 	<div class="content-block">
 		<p>Select which load you want to allocate for this climber.</p>
 		<div class="resource-options-container center">
+		    {{#each options}}
 			<div class="resource-option-item">
 			<h3>Option A</h3>
-				<p>30kg load carrying capacity</p>
+				<p><span class='dyno'>{{capacity}}</span>kg load carrying capacity</p>
 			</div>
+			{{/each}}
+<!--
 			<div class="resource-option-item">
 			<h3>Option B</h3>
 				<p>60kg load carrying capacity</p>
@@ -46,6 +49,7 @@
 			<h3>Option C</h3>
 				<p>90kg load carrying capacity</p>
 			</div>
+-->
 		</div>
 		<div class="call-out-box">
 		<h3>Ideal climb times</h3>

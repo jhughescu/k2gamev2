@@ -14,6 +14,7 @@ class Climber {
         this.profile = init.profile;
         this.option = this.getOption(init.profile);
         this.OPTION = this.getOption(init.profile).toUpperCase();
+        this.options = Object.values(this.gameData.profiles[`profile_${this.profile}`]);
 //        console.log(`stored summary:`)
 //            this.getStoredSummary();
         this.name = init.team.profiles[`p${init.profile}`];
