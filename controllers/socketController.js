@@ -160,6 +160,15 @@ function initSocket(server) {
                 });
             }
             // end admin clients
+            // mapper clients
+            if (sType === 'mapper') {
+                console.log('mapper client')
+                socket.on('writeMapFile', (o) => {
+                    console.log('ok to write');
+                    logController.writeMapFile(o);
+                });
+            }
+            // end mapper clients
         }
     });
 

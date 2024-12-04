@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Circle with Triangular Point</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+        .circle-container {
+            box-shadow: 2px 2px black;
+        }
+        .circle-with-point {
+            position: relative;
+            width: 60px; /* Diameter of the circle */
+            height: 60px;
+            background-color: #3498db; /* Circle color */
+            border-radius: 50%; /* Make it a circle */
+/*            box-shadow: 2px 2px black;*/
+        }
+
+        .circle-with-point::after {
+            content: '';
+            position: absolute;
+            bottom: -30px; /* Triangle height */
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-style: solid;
+            border-width: 52px 29px 0 29px; /* Triangle dimensions */
+            border-color: #3498db transparent transparent transparent; /* Match circle color */
+/*            box-shadow: 2px 2px black;*/
+        }
+    </style>
+</head>
+<body>
+    <div class='circle-container'>
+    <div class="circle-with-point"></div>
+    </div>
+    <script>
+        setTimeout(() => {
+            window.location.reload();
+        }, 1000);
+    </script>
+</body>
+</html>

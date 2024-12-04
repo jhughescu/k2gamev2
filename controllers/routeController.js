@@ -43,9 +43,25 @@ app.get('/partials', async (req, res) => {
 app.get(`/ptest`, (req, res) => {
     res.sendFile(path.join(basePath, 'partials_test.html'));
 });
+app.get(`/route`, (req, res) => {
+    res.sendFile(path.join(basePath, 'routemapper.html'));
+});
+app.get(`/game`, (req, res) => {
+    res.sendFile(path.join(basePath, 'game.html'));
+});
 app.get(`/`, (req, res) => {
     res.sendFile(path.join(basePath, 'game.html'));
 });
+app.get('/data/routemap.json', (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'data', 'routemap.json'));
+});
+app.get('/test', (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'testing', 'pointer.html'));
+});
+app.get('/map', (req, res) => {
+    res.render('map');
+});
+
 
 
 

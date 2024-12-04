@@ -9,7 +9,7 @@ let persistentData = null;
 const developData = (d) => {
     // runs processes on the persistentData
     d.activeTeams = d.teams.filter(t => Boolean(t.active));
-    d.activeTeams = d.teams.slice(0);
+//    d.activeTeams = d.teams.slice(0);
 //    console.log(d.activeTeams);
     return d;
 };
@@ -56,7 +56,10 @@ const newSession = async (cb) => {
         type: 1,
         teamRef: cc,
         state: 'new',
-        time: 0
+        time: 0,
+        profile0: {blank: true},
+        profile1: {blank: true},
+        profile2: {blank: true}
     });
     s.save();
     cb(developSession(s));

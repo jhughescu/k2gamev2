@@ -1,0 +1,105 @@
+.body-map {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-image: linear-gradient(#27376f, #0099c4, #0099c4);
+/*    height: 100vh;*/
+    padding: 0;
+}
+
+.map-pointer-container {
+/*    position: relative;*/
+    position: absolute;
+    width: 60px;
+    height: 83px;
+    /* jh */
+    z-index: 0;
+/*    box-shadow: 2px 2px;*/
+}
+
+.map-pointer {
+    position: absolute;
+    width: 100%;
+    top: 0;
+    left: 0;
+    z-index: 0;
+}
+
+.map-pointer-profile {
+    position: absolute;
+    width: 80%;
+    display: block;
+    margin: 10% auto 0;
+    background-color: lightgray;
+    border-radius: 50%;
+    z-index: 1;
+/*     jh */
+    margin: 10%;
+}
+.map-pointer-label {
+    position: absolute;
+    bottom: 90px;
+    width: 100px;
+    height: 50px;
+    background-color: rgba(255, 255, 255, 0.71);
+    box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.6);
+    color: black;
+    font-size: 11px;
+    padding: 2px 0px;
+    vertical-align: top;
+}
+.map-pointer-label p {
+/*    padding: 0px 4px;*/
+    margin: 0px 4px;
+}
+.map-pointer-label .rAlign {
+    color: #012995;
+    position: absolute;
+    right: 40px;
+}
+.mountain {
+    position: absolute;
+    width: 100vw;
+    height: 100vh;
+    z-index: 2;
+    background-position: center;
+    background-size: cover;
+    background-image: url(../../assets/K2-MountainProgress.png);
+}
+.mountain {
+    width: 100%;
+    height: 100%;
+}
+
+.mountain-progress {
+    height: 100%;
+    width: 100%;
+    border: 2px solid pink;
+}
+#climbzone {
+    display: none;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 192, 203, 0.69);
+}
+#climby {
+    position: inherit;
+    width: 100%;
+    height: 50%;
+    top: 30%;
+    background-color: rgba(128, 0, 128, 0.59);
+}
+#mapzone {
+    position: absolute;
+    z-index: 3; /* Ensure it overlays the mountain */
+/*    border: 2px solid rgba(154, 232, 255, 0.51);*/
+    background-color: rgba(255, 255, 255, 0.18);
+    top: 30%; /* Adjust these percentages */
+    left: 25%;
+    left: calc(50% - 175px);
+    width: 50%;
+    width: 350px;
+    height: 50%; /* Based on the climbable area of the mountain */
+    height: 500px;
+}

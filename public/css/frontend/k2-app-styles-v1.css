@@ -1,0 +1,996 @@
+@charset "UTF-8";
+@import url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css");
+/* CSS Document */
+
+:root{
+	--grey-background: rgba(237,237,237,1.00);
+
+	--button-gradient: linear-gradient(to right, rgba(38,113,136,1.00), rgba(56,163,182,1.00));
+
+	--button-gradient-hover: linear-gradient(to right, rgba(56,163,182,1.00), rgba(56,163,182,1.00));
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* Style the body */
+body {
+  font-family: "Arial", "sans-serif";
+  margin: 0;
+}
+
+h1{
+	font-size: 2em;
+	font-weight: 600;
+	}
+
+h2{
+	font-size: 1.6em;
+	font-weight: 600;
+}
+
+h3{
+	font-size: 1.3em;
+	font-weight: 600;
+}
+
+h4{
+	font-size: 1.1em;
+	font-weight: 600;
+}
+
+p{
+	font-size: 1em;
+}
+
+/* Main Mountain Background */
+
+.main-background{
+		background-image: none;
+		padding: 0;
+		}
+
+/* Home Page Layout */
+
+.home-page-grid{
+	display: grid;
+	width: 100%;
+	height: 100vh;
+	grid-template-columns: auto;
+	grid-template-rows: 80px auto 200px;
+}
+
+.home-page-grid h1{
+		color: white;
+	}
+
+.home-page-grid p{
+		color: white;
+		font-size: 1.2em;
+	}
+
+
+/* Header/logo Title */
+.header {
+ 	padding: 0px;
+	width: 100%;
+	height: 200px;
+	margin-top: 0;
+  	text-align: center;
+  	background: #2D5D61;
+	background-image: url("../assets/flags/Flags_French.png");
+	background-size: cover;
+	background-position: center;
+	position: relative;
+}
+
+.header-grad-overlay{
+	width: 100%;
+	height: 100%;
+	background-image: linear-gradient(120deg,  rgba(0,255,255,0), rgba(0,255,255,0.50));
+	position: absolute;
+	top: 0;
+	left: 0;
+		}
+
+.header h1{
+	color: white;
+	width: 100%;
+	margin: 0;
+	padding: 60px;
+	position: absolute;
+	top: 0;
+	left: 0;
+	z-index: 1;
+}
+
+.main-content{
+		width: 90%;
+		margin: 20px auto;
+		}
+
+.center{
+	text-align: center;
+	}
+
+/* Start/Submit Buttons */
+
+.big-button a{
+	display: block;
+	text-decoration: none;
+	color: black;
+	background: #FFFFFF;
+	max-width: 360px;
+	padding: 20px 40px;
+	font-size: 16pt;
+	margin: 0px auto;
+	border-radius: 10px;
+	box-shadow: 3px 3px 5px 0px rgba(0,0,0,0.80);
+	transition: 0.5s;
+	}
+
+.big-button a:hover, .big-button a:focus{
+	background: #DFDFDF;
+	}
+
+/* Global Header Scetion, Back Button and Title Bar */
+
+.nav-header-container{
+			width: 100%;
+			margin-bottom: 20px;
+			text-align: center;
+			color: white;
+		}
+
+.back-btn-title-bar{
+			width: 100%;
+			height: 74px;
+			position: relative;
+			padding: 22px;
+		}
+
+.back-btn {
+			position: absolute;
+			left: 0;
+			top: 0;
+			display: block;
+			width: 70px;
+			padding: 15px;
+			background: none;
+			transition: 0.5s;
+		z-index: 10;
+		}
+
+.back-btn:hover, .back-btn:focus{
+			background: rgba(0,0,0,0.2);
+		}
+
+.nav-header-container h1{
+			font-weight: 300;
+    font-size: 2em;
+    margin: -5px auto 0;
+    width: 80%;
+		}
+
+.dark-text{
+	color: black;
+}
+
+.content-block{
+		margin: 30px 0px;
+	}
+
+/* Set Up Page */
+
+	.set-up img{
+		max-width: 180px;
+		box-shadow: 3px 3px 5px 0px rgba(0,0,0,0.30);
+		margin: 0 auto;
+		display: block;
+	}
+
+	.set-up p:first-of-type{
+		font-size: 1.5em;
+		font-weight: 600
+	}
+
+	.set-up-btn{
+		position: relative;
+		background-color: rgba(242,242,242,1.00);
+		font-size: 1.3em;
+		max-width: 360px;
+		display: flex;
+		align-content: center;
+		justify-content: center;
+		padding: 18px;
+		border-radius: 10px;
+		box-shadow: 3px 3px 5px 0px rgba(0,0,0,0.30);
+		text-decoration: none !important;
+		color: black;
+		margin: 15px auto;
+		transition: 0.5s;
+	}
+
+	.set-up-btn:hover, .set-up-btn:focus{
+		background-color: rgba(212,212,212,1.00);
+	}
+
+	.set-up-btn img{
+		width: 25px;
+		position: absolute;
+		display: flex;
+		align-self: center;
+		left: 30px;
+	}
+
+/* Climbing Information Section */
+
+.climbing-overview-grid{
+		display: grid;
+		grid-template-columns: auto auto auto auto;
+		grid-template-rows: auto auto auto auto;
+		grid-gap: 20px;
+		justify-content: space-evenly;
+		align-content: center;
+	}
+
+.climbing-overview-mountain{
+		grid-column: 1/5;
+	}
+
+.climbing-overview-mountain img{
+		margin: 0 auto;
+		display: block;
+	}
+
+.climbing-overview-icon{
+		width: 45px;
+	}
+
+.climbing-overview-grid a{
+		display: block;
+		background-color: #F2F2F2;
+		border-radius: 5px;
+	box-shadow: 3px 3px 5px 0px rgba(0,0,0,0.80);
+		transition: 0.5s;
+		border: none;
+	}
+
+.climbing-overview-grid a:hover, .climbing-overview-grid a:focus{
+		background-color: #D1D1D1;
+	}
+
+/* Profile Page */
+
+.profile-header{
+	width: 100%;
+	height: 310px;
+	margin-bottom: 20px;
+	background: var(--grey-background);
+	position: relative;
+		}
+
+.profile-info h2{
+	font-weight: 600;
+}
+
+.hero-image{
+			background: #205d77;
+			width: 100%;
+			height: 150px;
+			background-image: url("../assets/flags/Flags_French.png");
+			background-size: cover;
+			background-position: center;
+		}
+
+.profile-flags{
+	width: 100%;
+	height: 150px;
+	object-fit: cover;
+}
+
+.profile-icon{
+			display: block;
+			width: 140px;
+			margin: 0px auto 10px;
+	border-radius: 50%;
+	background-color: white;
+		}
+
+.profile-info{
+			width: 80%;
+			margin: 0 auto;
+			position: relative;
+			top: -70px;
+		}
+
+.team-info h1{
+			margin: 10px;
+		}
+
+.icon-box{
+		margin-top: -50px;
+	}
+
+.icon-box div{
+		background-color: #F2F2F2;
+		border-radius: 10px;
+		padding: 50px 20px 20px;
+	}
+
+.icon-box img{
+		display: block;
+		width: 80px;
+		position: relative;
+		top: 40px;
+		margin: 0 auto;
+	}
+
+.progress{
+		margin-top: 5px;
+		border-radius: 6px
+	}
+
+.progress-bar{
+		background-color: #D73D7A;
+		height: 12px;
+		border-radius: 6px
+	}
+
+
+/* Your team */
+
+
+.your-team-profile{
+	display: flex;
+	align-items: center;
+	flex-wrap: nowrap;
+	}
+
+
+.your-team-profile img{
+	width: 100px;
+	border-radius: 50%;
+	}
+
+.your-team-profile div{
+	margin-left: 10px
+	}
+
+.your-team-profile h2{
+	margin-bottom: 0;
+	}
+
+.your-team-profile p{
+	margin-top: 5px;
+	}
+
+.profile-btn {
+	display: block;
+	transition: 0.5s;
+	border-radius: 50%;
+background-color: none		}
+
+.profile-btn:hover, .profile-btn:focus{
+			background: rgba(0,0,0,0.2);
+		}
+
+
+/* Bootstrap Modal Re-Styling */
+
+
+.modal-content{
+	border-radius: 20px;
+	box-shadow: 3px 3px 5px 0px rgba(0,0,0,0.80);
+	overflow: hidden;
+	min-height: 540px;
+}
+
+.modal-footer{
+	padding: 0;
+}
+
+.k2-modal-btn{
+	display: block;
+	margin: 0;
+	padding: 10px;
+	width: 100%;
+	background-image: var(--button-gradient);
+	border-radius: 0 0 20px 20px;
+	color: white;
+	font-size: 1.2em;
+
+}
+
+.k2-modal-btn:hover, .k2-modal-btn:focus{
+	background-image: var(--button-gradient-hover);
+	color: white;
+}
+
+.k2-modal-btn-link{
+	background-image: var(--button-gradient);
+	padding: 15px 40px;
+	border: none;
+	border-radius: 20px;
+	color: white;
+	font-size: 1.2em;
+	margin: 25px auto;
+	display: block;
+	width: 80%;
+	box-shadow: 3px 3px 5px 0px rgba(0,0,0,0.5);
+	transition: 0.5s;
+	}
+
+.k2-modal-btn-link:hover, .k2-modal-btn-link:focus{
+	background-image: var(--button-gradient-hover);
+	color: white;
+	}
+
+.selectClimber{
+	display: grid;
+	grid-template-columns: 40% 60%;
+    justify-content: space-evenly;
+    align-items: center;
+    background-color: var(--grey-background);
+    border-radius: 10px;
+    width: 100%;
+    text-align: left;
+	margin-bottom: 20px;
+	box-shadow: 3px 3px 5px 0px rgba(0,0,0,0.5);
+	transition: 0.5s;
+	}
+
+.selectClimber:hover, .selectClimber:focus{
+    background-color: #C8C8C8;
+	}
+
+.selectClimber img{
+	display: block;
+	width: 90px;
+	margin: 0 auto;
+	}
+
+.selectClimber h4{
+	margin: 5px 0 0px;
+	}
+
+.selectClimber p{
+	margin-bottom: 0px;
+	}
+
+.selectClimber-modal-body{
+	padding: 0;
+    border-radius: 20px 20px 0 0;
+}
+
+.climber-response{
+	text-align: center;
+	font-size: 1.5em;
+	margin: 20px 20px;
+}
+
+.climber-response::before{
+	content: url("../assets/icons/Icons_Quote.png")
+}
+
+.dice-app-container{
+	display: grid;
+	grid-template-rows: 80px 40px;
+	grid-template-columns: 1fr;
+	width: 60%;
+	margin: 10px auto 20px;
+	text-align: center;
+}
+
+.dice-app{
+	display: grid;
+	align-items: center;
+	background-color: lightgray;
+	}
+
+.dice-app-container p{
+	font-size: 1.5em;
+	margin-bottom: 0;
+}
+
+.modal-photo-header{
+	padding: 10px;
+	width: 100%;
+	background-image: var(--button-gradient);
+}
+
+.modal-photo-header img{
+	height: 100px;
+	display: block;
+	margin: 0 auto;
+}
+
+.selfie-photo{
+	position: relative;
+	margin: 30px 0;
+}
+
+.selfie-photo-background{
+	width: 100%
+}
+
+.selfie-climber{
+	position: absolute;
+	width: auto;
+	height: 100%;
+	z-index: 2;
+	left: 20px;
+	bottom: 0px;
+}
+
+.avatar-alert-btn{
+	display: block;
+	max-width: 25%;
+	position: absolute;
+	top: 20%;
+	right: 10%;
+	border-radius: 50%;
+	background-color: white;
+	transition: 0.5s;
+}
+
+.avatar-alert-btn:hover, .avatar-alert-btn:focus{
+	background-color: rgba(212,212,212,1.00);
+}
+
+.alert-dot{
+	background-color: #F6C30F;
+	width: 15%;
+	height: 16%;
+	position: absolute;
+    top: 0;
+    right: 0;
+    border-radius: 50%;
+}
+
+.avatar-alert-btn img{
+	width: 100%;
+}
+
+.modal-alert img{
+	display: block;
+	margin: 0px auto 10px;
+}
+
+.modal-alert p{
+	text-align: center;
+	width: 80%;
+	margin: 0 auto;
+}
+
+.help-yes img{
+	width: 250px;
+}
+
+/* FLEXBOX */
+
+.flex-container{
+	display: flex;
+	flex-direction: column;
+	}
+
+.flex-item{
+	max-width: 600px;
+	background-color: white;
+	margin: 0 auto;
+	}
+
+
+/* Resources Template Profiles */
+
+.resources-grid{
+	display: grid;
+	grid-template-columns: auto;
+
+}
+
+.resources-grid-item{
+	width: 90%;
+		background-color: white;
+		margin: 0 auto;
+}
+
+.resources-grid-item .call-out-box{
+	background-color: white;
+}
+
+.resources-profile-header{
+		width: 100%;
+		padding: 20px 5%;
+		margin-bottom: 20px;
+		background: white;
+		display: grid;
+		grid-template-columns: 40px auto 40px;
+		align-items: center;
+		}
+
+	.resources-profile-navbtn-box{
+		height: 100%;
+	}
+
+	.resource-profile-info{
+		width: 80%;
+		margin: 0 auto;
+		}
+
+	.resources-profile-navbtn{
+		width: 40px;
+		height: 100%;
+		display: flex;
+		align-items: center;
+		background-color: none;
+		transition: 0.5s;
+		}
+
+	.resources-profile-navbtn:hover, .resources-profile-navbtn:focus{
+		background-color: rgba(0, 0, 0, 0.2);
+	}
+
+	.navbtn-previous{
+		border-radius: 10px 0px 0px 10px;
+	}
+
+	.navbtn-next{
+		border-radius: 0px 10px 10px 0px;
+	}
+
+	.resources-profile-info h2{
+		margin-bottom: 5px;
+		}
+
+	.resources-profile-info p{
+		margin-top: 0;
+		}
+
+	.resource-options-container{
+		display: grid;
+		grid-template-columns: auto auto auto;
+		grid-gap: 10px;
+	}
+
+	.resource-option-item{
+		background-color: var(--grey-background);
+		border-radius: 5px;
+		padding: 0px 15px;
+	}
+
+	.resource-option-item h3{
+		margin-bottom: 5px;
+	}
+
+	.resource-option-item p{
+		margin-top: 0px;
+	}
+
+	.call-out-box{
+		background-color: var(--grey-background);
+		border-radius: 5px;
+		padding: 10px 20px 20px;
+		margin: 10px 0px;
+		}
+
+.summit-graphic{
+	display: block;
+	margin: 0 auto;
+}
+
+	.inset-box{
+		display: grid;
+		grid-template-columns: auto auto;
+		grid-gap: 15px;
+		align-items: center;
+		background-color: rgba(128,128,128,1.00);
+		padding: 20px;
+		margin: 20px 0px;
+		color: white;
+		text-align: center;
+		font-weight: 100;
+	}
+
+	.inset-box img{
+		width: 40px;
+		display: block;
+	}
+
+	.resources-table-grid{
+		display: grid;
+		grid-template-columns: auto 30% 30%;
+		grid-gap: 15px;
+		text-align: center;
+		align-items: center;
+	}
+
+	.resources-table-grid img{
+		width: 40px;
+		display: grid;
+		align-self: center;
+	}
+
+	.table-grid-icons{
+		display: flex;
+		flex-direction: column;
+		flex-wrap: wrap;
+		justify-content: flex-end;
+		align-items: flex-end;
+		text-align: right;
+	}
+
+	form div{
+		margin: 20px 0px;
+		display: grid;
+    	grid-template-columns: 35% auto;
+	}
+
+	form .form-submit-btn{
+		background-image: var(--button-gradient);
+		padding: 15px 40px;
+		border: none;
+		border-radius: 5px;
+		color: white;
+		font-size: 1.5em;
+		margin: 40px auto;
+		display: block;
+		box-shadow: 3px 3px 5px 0px rgba(0,0,0,0.5);
+		transition: 0.5s;
+		cursor: pointer;
+	}
+
+	.form-submit-btn:hover, .form-submit-btn:focus{
+		background-image: var(--button-gradient-hover);
+
+	}
+
+	.resources-form-selections div{
+		margin: 0px;
+	}
+
+	.resources-form-selections div h4 span{
+		display: inline-block;
+		background-color: rgba(242,242,242,1.00);
+		width: 70px;
+		text-align: center;
+		padding: 5px;
+	}
+
+	.resources-ingame-table-grid{
+		display: grid;
+		grid-template-columns: repeat(2, 1fr);
+		grid-gap: 10px;
+		text-align: center;
+		align-items: center;
+	justify-content: center;
+	}
+
+	.resources-ingame-table-grid .resources-amounts p{
+		background: var(--grey-background);
+		width: 60%;
+		margin: 0 auto;
+		padding: 6px;
+	}
+
+	.resources-ingame-table-grid .table-grid-icons img{
+	width: 40px;
+}
+
+/* Progress */
+
+	.prog-table-grid{
+			display: grid;
+			grid-template-columns: 1fr;
+			width: 100%;
+			margin: 0px;
+		}
+
+		.prog-table-grid-item{
+			padding-bottom: 20px;
+		}
+
+		.prog-table-grid-item-row{
+			display: grid;
+			grid-template-columns: 50px 2fr 1fr;
+			justify-content: center;
+			align-items: center;
+
+		}
+
+		.prog-table-grid-item-row h3{
+
+			background-color: rgba(38,113,136,1.00);
+			color: white;
+			width: 40px;
+			height: 40px;
+			border-radius: 50%;
+			padding-top: 9px;
+			text-align: center;
+			box-shadow: 3px 3px 3px 0px rgba(0,0,0,0.30);
+			margin-left: -21px;
+			margin-top: 0;
+		}
+
+		.prog-table-grid-item-row h4{
+			margin-top: 5px;
+		}
+
+		.prog-table-grid-item-row p{
+			margin: 7px 0;
+		}
+
+		.prog-table-grid-item{
+			border-left: dashed 2px rgba(43,124,147,1.00);
+		}
+
+		.resources-grid-item:last-of-type .prog-table-grid-item:last-of-type{
+			border-left: none;
+		}
+
+
+		.prog-main-content{
+			width: 90%;
+			padding-left: 20px;
+			margin: 0px auto;
+		}
+
+/* Mountain / Game Progress */
+
+		.game-progress-container{
+			max-width: 800px;
+			margin: 0 auto;
+			position: relative;
+			height: 100vh;
+
+		}
+
+		.mountain-progress{
+			position: absolute;
+			width: 100%;
+			height: 100vh;
+			object-fit: cover;
+			z-index: -1;
+		}
+
+		.game-time{
+			text-align: right;
+			font-size: 1.5em;
+		}
+
+		.game-progress-nav{
+			width: 100%;
+			margin-bottom: 20px;
+			text-align: center;
+			color: white;
+		}
+
+		.game-progress-nav div{
+			display: flex;
+			align-items: center;
+			justify-content: end;
+			margin: 0 auto;
+			height: 74px;
+			position: relative;
+			padding: 22px;
+		}
+
+		.game-progress-bottom-nav{
+			display: grid;
+			align-content: center;
+			position: absolute;
+			bottom: 15px;
+			width: 100%
+		}
+
+		.game-progress-bottom-nav div{
+			display: flex;
+			justify-content: space-evenly;
+		}
+
+		.game-progress-btn{
+			display: block;
+			width: 80px;
+			padding: 15px;
+			background: none;
+			transition: 0.5s;
+			z-index: 2;
+		}
+
+		.game-progress-btn:hover, .game-progress-btn:focus{
+				background: rgba(0,0,0,0.2);
+			}
+
+		.game-progress-btn img{
+			width: 100%;
+		}
+
+
+/* Desktop Styles Below */
+
+@media (min-width: 800px) {
+
+	/* Main Mountain Background */
+	.body-map{
+		background-image: url("../../assets/K2-mobile-home-background.svg");
+		background-size: cover;
+		background-repeat: no-repeat;
+		background-position: center;
+		width: 100%;
+		padding: 30px;
+		}
+
+	.flex-container{
+		flex-direction: row;
+		flex-wrap: wrap;
+		justify-content: center;
+		}
+
+	.flex-item{
+		max-width: 450px;
+		margin: 0px 30px 0px;
+		border-radius: 10px;
+		background-color: var(--grey-background);
+		}
+
+	.resources-profile-header{
+		background: var(--grey-background);
+		}
+
+	.resources-grid{
+		display: grid;
+		grid-template-columns: repeat(2, 1fr);
+		grid-gap: 20px;
+		justify-content: center;
+		}
+
+	.resources-grid-item{
+		width: 90%;
+		background-color: rgba(255,255,255,0.00);
+		margin: 0 auto;
+		}
+
+	.resources-grid-item .call-out-box{
+	background-color: var(--grey-background);
+	}
+
+	.resources-grid-item:nth-of-type(2) .content-block{
+	margin-top: 0px;
+	}
+
+	.resources-grid-item .main-content{
+		margin: 0 auto;
+		}
+
+	#profile-menu, #climb-info-a, #climb-info-b, #climb-info-c{
+		display: none;
+		}
+
+	.main-content p{
+		font-size: 0.8em;
+		}
+
+	.desktop-fade-bg{
+		background-color: rgba(255,255,255,0.85);
+		margin: 50px auto;
+		padding-bottom: 50px;
+		border-radius: 20px;
+		max-width: 1020px;
+		}
+
+	.flex-item .back-btn-title-bar{
+		display: none;
+		}
+
+	.profile-header, .hero-image{
+		border-radius: 10px 10px 0 0;
+		}
+
+	.resources-profile-header{
+		width: 90%;
+        margin: 10px auto;
+        border-radius: 5px;
+		}
+
+}

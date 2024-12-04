@@ -132,6 +132,12 @@ const writeLogsV1 = async () => {
     }
 };
 
+const writeMapFile = (o) => {
+    console.log('write it');
+    fs.writeFile('data/routemap.json', beautify(o, null, 2, 100));
+//    writeBeautifiedJson('data', 'routemap.json', o);
+}
+
 const writeLogs = async () => {
     try {
         let uf;
@@ -200,5 +206,6 @@ module.exports = {
     writeBeautifiedJson,
     addUpdate,
     getUpdateLog,
-    addLog
+    addLog,
+    writeMapFile
 };

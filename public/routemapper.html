@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>K2 Game Route Mapper</title>
+    <script src="https://code.jquery.com/jquery-3.7.0.js" integrity="sha256-JlqSTELeR4TLqP0OG9dxM7yDPqX1ox/HfgiSLBj8+kM=" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/ui/1.14.1/jquery-ui.min.js" integrity="sha256-AlTido85uXPlSyyaZNsjJXeCs07eSv3r43kyCVc8ChI=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/handlebars@latest/dist/handlebars.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src='js/common.js'></script>
+    <script src='js/routemapper.js'></script>
+
+    <link rel='stylesheet' href='css/basics.css'>
+    <link rel='stylesheet' href='css/timer.css'>
+    <link rel='stylesheet' href='css/debug.css'>
+    <link rel='stylesheet' href='css/routemapper.css'>
+
+</head>
+
+<body>
+    <div id='insertion'>
+        <h1>Route Mapper</h1>
+        <div id='msg'>Drag nodes into position</div>
+        <button id='reset'>reset</button>
+        <button id='output'>output</button>
+        <button id='test'>test</button>
+        <div id='zone'></div>
+    </div>
+</body>
+
+</html>

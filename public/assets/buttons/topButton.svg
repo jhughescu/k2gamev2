@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="uuid-7cc9f9b9-4426-474f-8850-e67397a1a18c" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 245 245">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: none;
+        stroke: #fff;
+        stroke-miterlimit: 10;
+        stroke-width: 6.6px;
+      }
+    </style>
+  </defs>
+  <g id="uuid-ac1bde2b-3d0f-4133-9278-5178ad1d9539">
+    <line class="cls-1" x1="126" y1="80.4" x2="58.7" y2="147.7"/>
+    <line class="cls-1" x1="187.8" y1="147.7" x2="120.5" y2="80.4"/>
+    <circle class="cls-1" cx="122.5" cy="122.5" r="119.2"/>
+  </g>
+</svg>

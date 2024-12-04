@@ -27,17 +27,23 @@
         {
             "id": 3,
             "country": "France",
-            "active": true
+            "adjective": "French",
+            "active": true,
+            "profiles": {
+                "p0": "Sébastien Martin",
+                "p1": "Adrien Romane",
+                "p2": "Camille Duval"
+            }
         },
         {
             "id": 4,
             "country": "Germany",
-            "active": true
+            "active": false
         },
         {
             "id": 5,
             "country": "Italy",
-            "active": true
+            "active": false
         },
         {
             "id": 6,
@@ -65,8 +71,8 @@
             },
             "type_1": {
                 "capacity": 60,
-                "t1": 10,
-                "t2": 3
+                "t1": 22,
+                "t2": 30
             }
         },
         "profile_1": {

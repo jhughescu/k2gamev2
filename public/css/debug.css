@@ -16,21 +16,38 @@
     background-color: #00a7ff;
 }
 .climber {
-    width: 20px;
+    width: 200px;
     height: 20px;
-    border-radius: 50%;
-    background-color: rgba(255, 255, 255, 0.63);
+    background-color: rgba(255, 255, 255, 0.19);
     position: absolute;
-    border: 1px solid black;
+
     bottom: 0px;
     display: none;
 }
-#c0 {
-    left: 10px;
+.climber .climber_icon {
+    position: relative;
+    width: 20px;
+    height: 100%;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.63);
+    border: 1px solid black;
+    color: black;
+    text-align: center;
+    font-size: 16px;
+}
+.map-pointer-container {
+/*    left: 100px;*/
+/*    display: none;*/
+}
+#Pointer_CamilleDuval{
+    display: block;
 }
 #c1 {
-    left: 40px;
+/*    left: 40px;*/
 }
 #c2 {
-    left: 70px;
+/*    left: 70px;*/
+}
+.dyno {
+    color: blue;
 }
