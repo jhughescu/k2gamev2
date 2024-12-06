@@ -35,8 +35,8 @@
 		<p>Select which load you want to allocate for this climber.</p>
 		<div class="resource-options-container center">
 		    {{#each options}}
-			<div class="resource-option-item">
-			<h3>Option A</h3>
+			<div class="resource-option-item resop noselect" id='resop_{{../profile}}_{{n}}'>
+			<h3>Option <span class='dyno'>{{option}}</span></h3>
 				<p><span class='dyno'>{{capacity}}</span>kg load carrying capacity</p>
 			</div>
 			{{/each}}
@@ -54,11 +54,11 @@
 		<div class="call-out-box">
 		<h3>Ideal climb times</h3>
 		<p>Based on nothing unexpected occurring.</p>
-		<img class="summit-graphic" src="assets/profiles/ProfileImages_ProfileA-A.png" alt="Ideal clime times"/>
-			<div class="inset-box">
-				<img src="assets/icons/questionMark.png" alt="question mark icon"/>
-		<p>Would you prefer to prioritise speed or to take extra resources and move at a slower pace but test your edurance?</p>
-			</div>
+		<img class="summit-graphic" src="assets/profiles/ProfileImages_Profile_blank.png" alt="Ideal clime times"/>
+        <div class="inset-box">
+            <img src="assets/icons/questionMark.png" alt="question mark icon"/>
+              <p>Would you prefer to prioritise speed or to take extra resources and move at a slower pace but test your edurance?</p>
+        </div>
 		</div>
 	</div>
 </div>
@@ -113,17 +113,17 @@
 			<form action="#">
 				<div>
 			  <label for="oxygen">Oxygen</label>
-			  <input type="text" id="oxygen" name="oxygen" value="0">
+			  <input type="text" id="oxygen" name="oxygen" value="3">
 				</div>
 			<div>
 				<label for="oxygen">Sustenance</label>
-				<input type="text" id="sustenance" name="oxygen" value="0"></div>
+				<input type="text" id="sustenance" name="sustenance" value="1"></div>
 
 				<div>
 				<label for="oxygen">Emergency rope</label>
-					<input type="text" id="emergencyRope" name="oxygen" value="0"></div>
+					<input type="text" id="emergencyRope" name="emergencyRope" value="2"></div>
 
-			  <input type="submit" value="Submit" class="form-submit-btn">
+			  <input type="submit" value="Submit" class="form-submit-btn" data-profile='profile{{profile}}'>
 			</form>
 		</div>
 	</div>

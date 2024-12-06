@@ -1,6 +1,6 @@
 {
-  "timestamp": "2024-12-04T14:20:25Z",
-  "commitHash": "2bae21449b3ee67e42dd66da6de40d2ce11a2902",
-  "commitMessage": "Commented logController for debugging in test deployment",
+  "timestamp": "2024-12-06T11:55:49Z",
+  "commitHash": "c8c988f1288b143a47ca32c2cbd44909e4a9386e",
+  "commitMessage": "logController: modified isDev method to use env vars",
   "branch": "master"
 }

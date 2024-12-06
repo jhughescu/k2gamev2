@@ -22,7 +22,14 @@
         },
         {
             "id": 2,
-            "country": "Finland"
+            "country": "Finland",
+            "adjective": "Finnish",
+            "active": true,
+            "profiles": {
+                "p0": "Luukas Aalto",
+                "p1": "Juhani Karppinen",
+                "p2": "Oona Takala"
+            }
         },
         {
             "id": 3,

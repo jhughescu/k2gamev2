@@ -18,3 +18,66 @@
 #msg {
     display: none;
 }
+#overlay {
+    position: absolute;
+    top: 20px;
+    right: 30px;
+    width: 250px;
+    height: 150px;
+    background-color: white;
+    box-shadow: -2px 2px 3px rgba(28, 28, 28, 0.85);
+    z-index: 2000;
+    display: none;
+}
+#overlay #close {
+    position: absolute;
+    right: 0px;
+    top: 0px;
+    width: 30px;
+    height: 30px;
+    color: #363636;
+    text-align: center;
+    font-weight: bold;
+    cursor: pointer;
+    z-index: 2;
+}
+#overlay button {
+    padding-top: 5px;
+    display: none;
+    position: relative;
+}
+#overlay #msg {
+    padding-top: 30px;
+    pointer-events: none;
+    color: black;
+    position: relative;
+/*    top: 35px;*/
+    width: 100%;
+    z-index: 1;
+}
+.resop {
+    cursor: pointer;
+}
+.resop.disabled {
+    cursor: default;
+}
+.resop.abled:hover {
+    background-color: #c7f2ff;
+/*    opacity: 0.5;*/
+}
+.resop.selected {
+    background-color: #89dff8;
+/*    opacity: 0.5;*/
+}
+.noselect {
+    -webkit-user-select: none; /* Safari */
+    -ms-user-select: none; /* IE 10 and IE 11 */
+    user-select: none;
+}
+.form-submit-btn:disabled {
+    cursor: default;
+    opacity: 0.6;
+}
+.form-submit-btn.disabled:hover {
+    background-image: var(--button-gradient);
+}

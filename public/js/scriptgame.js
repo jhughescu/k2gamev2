@@ -31,9 +31,12 @@ document.addEventListener('DOMContentLoaded', function () {
         let startNew = false;
 //        startNew = confirm('would you like to start a new game?');
         if (startNew) {
-            clearSession();
-            newconnect = false;
+            startNew();
         }
+    };
+    const startNew = () => {
+        clearSession();
+        newconnect = false;
     };
     const confirmRetry = () => {
         gameflow(`would you like to try to connect again?`)
@@ -146,6 +149,27 @@ document.addEventListener('DOMContentLoaded', function () {
 //        console.log(`h: ${h}`);
         return o;
     }
+    const showOverlay = (msg, ob) => {
+        const o = $('#overlay');
+        const m = o.find('#msg');
+        const b = o.find('button');
+        const c = o.find('#close');
+        m.html(msg);
+        m.show();
+        if (ob.hasOwnProperty('button')) {
+            b.html(ob.button);
+            b.show();
+            b.off('click').on('click', () => {
+                ob.action();
+            });
+        }
+        c.off('click').on('click', hideOverlay);
+        o.fadeIn();
+    };
+    const hideOverlay = () => {
+        const o = $('#overlay');
+        o.fadeOut();
+    };
 
     const storeLocal = (p, v) => {
         const id = `${getStoreID()}-${p}`;
@@ -188,13 +212,12 @@ document.addEventListener('DOMContentLoaded', function () {
             if (i.includes('profile')) {
                 if (session[i].profile !== null && session[i].hasOwnProperty('summary')) {
                     const o = {summaryString: session[i].summary};
-//                    console.log(o);
-
                     session[i] = getClimber(o);
                     session.allProfiles.push(session[i]);
                 }
             }
         }
+
     };
     const setSession = (sesh, type) => {
         // unified method for setting the session
@@ -212,8 +235,10 @@ document.addEventListener('DOMContentLoaded', function () {
         const lid = localStorage.getItem(gid);
         if (Boolean(lid)) {
             gameflow(`continuing game ${lid}`, {style: 'ok'});
+            gameflow(`newconnect? ${newconnect}`)
             if (newconnect) {
                 gameflow(`You can choose to start a new game [confirm1]`);
+                showOverlay(`Would you like to start a new game?`, {button: 'yes', action: startNew})
                 let reset = false;
                 if (reset) {
                     clearSession();
@@ -234,6 +259,9 @@ document.addEventListener('DOMContentLoaded', function () {
             gameflow('no game in progress, start new game');
             socket.emit('newSession', sesh => {
                 setSession(sesh, 'new');
+                setTeamMember(0, -1);
+                setTeamMember(1, -1);
+                setTeamMember(2, -1);
                 localStorage.setItem(gid, session.uniqueID);
             });
         }
@@ -249,8 +277,19 @@ document.addEventListener('DOMContentLoaded', function () {
             }, (boo) => {
                 gameflow(`emit callback: ${boo}`);
                 if (boo) {
+
                     localStorage.removeItem(sId);
+                    window.location.hash = 'home';
+                    delete session.profile0;
+                    delete session.profile1;
+                    delete session.profile2;
+                    session.allProfiles = [];
+                    Climber.zeroAll();
+//                    showSession();
+//                    showProfiles();
+//                    debugger;
                     window.location.reload();
+
                 } else {
                     gameflow(`cannot delete game ${sId}`);
                 }
@@ -263,6 +302,13 @@ document.addEventListener('DOMContentLoaded', function () {
         gTimer.resetTimer();
         theState.storeTime(gTimer.elapsedTime);
         resetClimbers();
+    };
+    const showSession = () => {
+        console.log(session);
+    };
+    const showProfiles = () => {
+        const p = Object.entries(session).filter(s => s[0].includes('profile')).map(([_, value]) => value);
+        console.log(p);
     };
     const playPauseSession = () => {
         toggleTimer();
@@ -284,9 +330,13 @@ document.addEventListener('DOMContentLoaded', function () {
     };
 
     const updateSession = (p, v, cb) => {
+//        console.log(`updateSession`)
+//        console.log('session1', JSON.parse(JSON.stringify(session)));
+//        console.log(`updateSession`, p, v);
         session[p] = v;
+//        console.log('session2', JSON.parse(JSON.stringify(session)));
         expandSession();
-//        console.log('session', session);
+//        console.log('session3', JSON.parse(JSON.stringify(session)));
 //        gameflow(`session updated (${p})`);
         const hup = {
             uniqueID: session.uniqueID
@@ -404,6 +454,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (session[`profile${profile}`].profile === null || $.isEmptyObject(session[`profile${profile}`].profile)) {
                 const fullProfile = Object.assign(getTeamMember(profile, type), {profile: profile, type: type});
                 const p = getClimber(fullProfile);
+//                console.log(p);
                 tm = {summary: p.getStorageSummary()};
                 if (Boolean(tm)) {
                     updateSession(`profile${profile}`, tm, (r) => {
@@ -418,19 +469,55 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!tm) {
             console.warn('cannot overwrite established team member (to force, use overwriteTeamMember instead)');
         }
+//        console.log(tm);
         return tm;
     };
+    const setMemberType = (p, t) => {
+        const m = session[`profile${p}`];
+//        console.log(p, t, m)
+        if (!m) {
+            console.warn(`profile${p} does not exist`);
+        } else {
+            const o = m.options;
+            const l = o.length;
+            if (t < l && t > -1) {
+                m.setType(t, (rp) => {
+//                    console.log(rp);
+                    session[`profile${p}`] = rp;
+//                    console.log(JSON.parse(JSON.stringify(session[`profile${p}`])));
+//                    console.log(JSON.parse(JSON.stringify(session)));
+
+//                    return;
+                    tm = {summary: m.getStorageSummary()};
+//                    console.log(tm);
+                    updateSession(`profile${m.profile}`, tm, (r) => {
+//                        console.log('updated the type:');
+//                        console.log(r);
+                    });
+                });
+//                return;
+//                tm = {summary: m.getStorageSummary()};
+//                console.log(tm);
+//                updateSession(`profile${m.profile}`, tm, (r) => {
+//                    console.log('updated the type');
+//                });
+            } else {
+                console.warn(`profile${p} has ${l} possible options`);
+            }
+        }
+    };
+//    window.setMemberType = setMemberType;
     const getTeamMember = (profile, type) => {
         const P = gameData.profiles;
         const p = `profile_${profile}`;
         const t = `type_${type}`;
         const l = Object.entries(P).length;
-        let r = null;
+        let r = {};
         if (profile < l) {
             if (P[p].hasOwnProperty(t)) {
                 r = P[p][t];
             } else {
-                console.warn(`profile ${profile} has only ${Object.entries(P[p]).length} types`);
+//                console.warn(`profile ${profile} has only ${Object.entries(P[p]).length} types`);
             }
         } else {
             console.warn(`there are only ${l} profiles`);
@@ -510,6 +597,66 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     };
 
+    // controls (page types)
+    const submitResources = (p) => {
+        const o = parseInt($('#oxygen').val());
+        const s = parseInt($('#sustenance').val());
+        const r = parseInt($('#emergencyRope').val());
+        const t = p.type;
+        p.setOxygen(o, (rp) => {
+            session[`profile${p.profile}`] = rp;
+            p.setSustenance(s, (rp) => {
+                session[`profile${p.profile}`] = rp;
+                p.setRope(r, (rp) => {
+                    session[`profile${p.profile}`] = rp;
+                    setMemberType(p.profile, t);
+//                    console.log();
+                    setupResources();
+                });
+            });
+        });
+    };
+    const setupResources = () => {
+        const sub = $('.form-submit-btn');
+        const p = session[sub.data('profile')];
+        if (p.type > -1) {
+//            console.log('not ok')
+            sub.prop('disabled', true);
+            sub.addClass('disabled');
+            $('.resop').addClass('disabled');
+            $('.resop').removeClass('abled');
+            $('input').prop('disabled', true);
+            updateResImg(p.profile, p.type);
+        } else {
+            sub.prop('disabled', false);
+            sub.removeClass('disabled',);
+            $('.resop').removeClass('disabled');
+            $('.resop').addClass('abled');
+            sub.off('click').on('click', function (ev) {
+    //            const p = session[$(this).data('profile')];
+                ev.preventDefault();
+                const inputValues = $('input[type="text"]').map((_, el) => parseInt($(el).val())).get();
+                const zeroValues = inputValues.filter(v => v === 0);
+                if (p.type < 0) {
+                    // no profile selected
+                    alert('you must pick an Option')
+                } else {
+                    if (inputValues.length === zeroValues.length) {
+                        const ok = confirm('You have not allocated any resources, are you sure you want to continue? You will not be able to change your mind later.');
+                        if (ok) {
+                            submitResources(p);
+                        }
+                    } else {
+                        const ok = confirm('Are you sure these are the values you want to set? You will not be able to change your mind later.');
+                        if (ok) {
+                            submitResources(p);
+                        }
+                    }
+                }
+    //            if () {}
+            });
+        }
+    };
     // rendering
     const updateAddress = (s) => {
         window.location.hash = s;
@@ -532,7 +679,7 @@ document.addEventListener('DOMContentLoaded', function () {
             renderHome();
         });
     }
-    const testResourceButton = (button) => {
+    const resChangeProfile = (button) => {
 //        console.log('set up res');
         $(button).off('click').on('click', function() {
 //            console.log('res')
@@ -547,19 +694,47 @@ document.addEventListener('DOMContentLoaded', function () {
             renderResources(adj);
         });
     };
+    const updateResImg = (p, t) => {
+        const img = $('.summit-graphic');
+        const P = getAlph(p).toUpperCase()
+        const T = getAlph(t).toUpperCase();
+        const src = `assets/profiles/ProfileImages_Profile${P}-${T}.png`
+        console.log('src', src);
+        img.attr('src', src);
+    };
+    const resOptionSelect = (button) => {
+        $(button).off('click').on('click', function () {
+
+            const disabled = $(this).attr('class').includes('disabled');
+            const id = $(this).attr('id').split('_');
+            const p = session[`profile${id[1]}`];
+            if (!disabled) {
+                $('.resop').removeClass('selected');
+                $(this).addClass('selected');
+
+                p.type = parseInt(id[2]);
+                updateResImg(p.profile, id[2]);
+//                assets/profiles/ProfileImages_ProfileA-A.png
+            }
+        })
+    };
     const renderResources = (n) => {
         renderNone(() => {
             const p = `profile${n === undefined || n === null? 0 : n}`;
-//            console.log(p);
             const rOb = session[p];
             renderTemplate('theatre', 'resources', rOb, () => {
                 updateAddress('resources');
+                $(`#resop_${rOb.profile}_${rOb.type}`).addClass('selected');
+                setupResources();
             })
         });
     };
     const renderTeam = () => {
+//        console.log(`renderTeam`);
         renderNone(() => {
-            renderTemplate('theatre', 'team', {}, () => {
+            const rOb = {profiles: Climber.getClimbers()}
+            console.log(rOb);
+            renderTemplate('theatre', 'team', rOb, () => {
                 updateAddress('team');
             })
         });
@@ -572,6 +747,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     initx: 10 + (index * 5)
                 }))
             };
+            console.log(`renderMap:`);
+            console.log(rOb);
             renderTemplate('theatre', 'map', rOb, () => {
                 updateAddress('map');
                 $('body').addClass('body-map');
@@ -586,7 +763,8 @@ document.addEventListener('DOMContentLoaded', function () {
     };
     const renderHome = () => {
         renderNone(() => {
-            renderTemplate('theatre', 'home', {}, () => {
+
+            renderTemplate('theatre', 'home', session, () => {
                 setupHome();
                 updateAddress('home');
             })
@@ -601,14 +779,16 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         })
     };
-    window.test1 = renderMap;
-    window.test2 = renderNone;
+//    window.test1 = renderMap;
+//    window.test2 = renderNone;
     //
-    window.setTeamMember = setTeamMember;
-    window.clearTeamMember = clearTeamMember;
-    window.clearTeam = clearTeam;
-    window.overwriteTeamMember = overwriteTeamMember;
-    window.renderMap = renderMap;
+//    window.setTeamMember = setTeamMember;
+//    window.clearTeamMember = clearTeamMember;
+//    window.clearTeam = clearTeam;
+//    window.overwriteTeamMember = overwriteTeamMember;
+//    window.renderMap = renderMap;
+    window.showSession = showSession;
+    window.showProfiles = showProfiles;
     //
 //    test();
     gTimer.updateDisplay = updateDisplay;
@@ -652,12 +832,21 @@ document.addEventListener('DOMContentLoaded', function () {
                 bId = '.resources_adj';
                 if ($(node).is(bId)) {
 //                    console.log(`found ${bId}`)
-                    testResourceButton(node);
+                    resChangeProfile(node);
                 }
                 // If the node is a container, search its descendants
                 $(node)
                     .find(bId)
-                    .each((_, descendant) => testResourceButton(descendant));
+                    .each((_, descendant) => resChangeProfile(descendant));
+                bId = '.resop';
+                if ($(node).is(bId)) {
+//                    console.log(`found ${bId}`)
+                    resOptionSelect(node);
+                }
+                // If the node is a container, search its descendants
+                $(node)
+                    .find(bId)
+                    .each((_, descendant) => resOptionSelect(descendant));
             });
         });
     });
@@ -695,20 +884,10 @@ document.addEventListener('DOMContentLoaded', function () {
             default:
                 renderHome();
         }
-
-        return;
-        Climber.getRouteMap(() => {
-            const i = setInterval(() => {
-                if (Climber.getClimbers().length === 3) {
-                    clearInterval(i);
-                    renderMap();
-                } else {
-//                    console.log('not enough climbers')
-                }
-            }, 1000);
-        });
+    };
+    const init = () => {
         gameflow('script init');
         newconnect = true;
     };
-//    init();
+    init();
 });

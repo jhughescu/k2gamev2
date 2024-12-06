@@ -160,6 +160,11 @@ document.addEventListener('DOMContentLoaded', function () {
             return false;
         }
     };
+    const getAlph = (n) => {
+        const s = 'abcdefghijklmnopqrstuvwxyz';
+        const a = s.split('');
+        return a[n];
+    };
 
     const getTemplate = (temp, ob, cb) => {
         // returns a compiled template, but does not render it
@@ -254,8 +259,8 @@ document.addEventListener('DOMContentLoaded', function () {
     };
     const renderTemplate = (targ, temp, ob, cb) => {
         if (temp !== 'blank') {
-            console.log(`renderTemplate`, targ, temp);
-            console.log(ob);
+//            console.log(`renderTemplate`, targ, temp);
+//            console.log(ob);
         }
         if (ob === undefined) {
             console.error('Error: Data object is undefined');
@@ -979,6 +984,7 @@ document.addEventListener('DOMContentLoaded', function () {
     window.loadCSS = loadCSS;
     window.loadJS = loadJS;
     window.isValidJSON = isValidJSON;
+    window.getAlph = getAlph;
     window.toCamelCase = toCamelCase;
     window.removeTemplate = removeTemplate;
     window.renderTemplate = renderTemplate;
