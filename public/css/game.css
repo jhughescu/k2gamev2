@@ -18,6 +18,9 @@
 #msg {
     display: none;
 }
+.wrong, p.wrong, .wrong .dyno {
+    color: red;
+}
 #overlay {
     position: absolute;
     top: 20px;
@@ -55,6 +58,9 @@
     width: 100%;
     z-index: 1;
 }
+.set-up-btn; disabled {
+    opacity: 0.5;
+}
 .resop {
     cursor: pointer;
 }
@@ -80,4 +86,8 @@
 }
 .form-submit-btn.disabled:hover {
     background-image: var(--button-gradient);
+}
+p.resource_value {
+    font-size: 16px;
+    font-weight: bold;
 }

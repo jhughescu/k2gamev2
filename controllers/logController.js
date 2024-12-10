@@ -5,6 +5,7 @@ const tools = require('./tools.js');
 const { getEventEmitter } = require('./../controllers/eventController');
 const eventEmitter = getEventEmitter();
 
+
 const LOG_UPDATE = 'logs/updates.json';
 const LOGF_UPDATE = 'updates';
 const LOGF_ROUNDS = 'rounds';
@@ -141,7 +142,38 @@ const writeMapFile = (o) => {
     fs.writeFile('data/routemap.json', beautify(o, null, 2, 100));
 //    writeBeautifiedJson('data', 'routemap.json', o);
 }
-
+const writeProfileFile = (o) => {
+    const n = o.name.replace(' ', '').toLowerCase();
+    const c = o.country.replace(' ', '').toLowerCase();
+    fs.writeFile(`data/profiles/profile_${c}_${n}.json`, beautify(o, null, 2, 100));
+}
+const getProfileFiles = async (dir, cb) => {
+    try {
+        const files = await fs.readdir(dir);
+        const out = {};
+        for (const file of files) {
+            const filePath = path.join(dir, file);
+            if (file.endsWith('.json')) {
+                try {
+                    const data = await fs.readFile(filePath, 'utf8');
+                    const i = file.split('_');
+                    if (!out.hasOwnProperty(i[1])) {
+                        out[i[1]] = {};
+                    }
+                    const od = JSON.parse(data);
+                    out[i[1]][od.name.replace(' ', '_').toLowerCase()] = od;
+                } catch (err) {
+                    console.error(`Error reading file ${file}: ${err.message}`);
+                }
+            } else {
+                console.log(`Skipping non-JSON file: ${file}`);
+            }
+        }
+        cb(out)
+    } catch (err) {
+        console.error(`Error reading directory: ${err.message}`);
+    }
+};
 const writeLogs = async () => {
     console.log(`writeLogs`);
     if (isDev()) {
@@ -213,5 +245,7 @@ module.exports = {
     addUpdate,
     getUpdateLog,
     addLog,
-    writeMapFile
+    writeMapFile,
+    writeProfileFile,
+    getProfileFiles
 };

@@ -169,6 +169,21 @@ function initSocket(server) {
                 });
             }
             // end mapper clients
+            // profile builder clients
+            if (sType === 'profilebuilder') {
+//                console.log('profilebuilder client');
+                socket.on('writeProfile', (o) => {
+//                    console.log('ok to write');
+                    logController.writeProfileFile(o);
+                });
+                socket.on('getData', (cb) => {
+                    sessionController.getGameData(cb);
+                });
+                socket.on('getProfileFiles', (path, cb) => {
+                    logController.getProfileFiles(path, cb);
+                });
+            }
+            // end profile builder clients
         }
     });
 

@@ -38,6 +38,7 @@ const processData = async () => {
         }
     } else {
         console.log('use prepped data');
+        console.log(persistentData);
         return persistentData;
     }
 };

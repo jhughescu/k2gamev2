@@ -77,32 +77,32 @@
 			<div class="table-grid-icons">
 				<div><img src="assets/icons/Icons_Oxygen.png" alt="Oxygen tank icon"/></div>
 				<p>Oxygen</p></div>
-			<div><p>x ÷ 10 = y</p></div>
-			<div><p>y x 5 = z</p></div>
+			<div><p class='resource_value' id='total_oxygen'></p></div>
+			<div><p class='resource_value' id='weight_oxygen'></p></div>
 					<!-- Sustenance Row -->
 			<div class="table-grid-icons">
 				<div><img src="assets/icons/Icons_Sustenance.png" alt="sustenance icon"/></div>
 				<p>Sustenance</p></div>
-			<div><p>x ÷ 10 = y</p></div>
-			<div><p>y x 5 = z</p></div>
+			<div><p class='resource_value' id='total_sustenance'></p></div>
+			<div><p class='resource_value' id='weight_sustenance'></p></div>
 					<!-- Rop Row -->
 			<div class="table-grid-icons">
 				<div><img src="assets/icons/Icons_RopeIcon.png" alt="rope icon"/></div>
 				<p>Emergency Rope (metres)</p></div>
-			<div><p>x ÷ 10 = y</p></div>
-			<div><p>y x 5 = z</p></div>
+			<div><p class='resource_value' id='total_rope'></p></div>
+			<div><p class='resource_value' id='weight_rope'></p></div>
 					<!-- Total Row -->
 			<div class="table-grid-icons">
 
 				<p>Total</p></div>
 			<div></div>
-			<div><p>z</p></div>
+			<div><p class='resource_value' id='resource_total'></p></div>
 					<!-- Remaining Row -->
 			<div class="table-grid-icons">
 
 				<p>Remaining</p></div>
 			<div></div>
-			<div><p>a</p></div>
+			<div><p class='resource_value' id='resource_remaining'></p></div>
 		</div>
 		<div class="inset-box">
 			<img src="assets/icons/questionMark.png" alt="question mark icon"/>
@@ -113,15 +113,16 @@
 			<form action="#">
 				<div>
 			  <label for="oxygen">Oxygen</label>
-			  <input type="text" id="oxygen" name="oxygen" value="3">
+			  <input type="number" id="oxygen" name="oxygen" value="">
 				</div>
 			<div>
-				<label for="oxygen">Sustenance</label>
-				<input type="text" id="sustenance" name="sustenance" value="1"></div>
-
-				<div>
-				<label for="oxygen">Emergency rope</label>
-					<input type="text" id="emergencyRope" name="emergencyRope" value="2"></div>
+				<label for="sustenance">Sustenance</label>
+				<input type="number" id="sustenance" name="sustenance" value="">
+            </div>
+            <div>
+				<label for="rope">Emergency rope</label>
+				<input type="number" id="rope" name="rope" value="">
+            </div>
 
 			  <input type="submit" value="Submit" class="form-submit-btn" data-profile='profile{{profile}}'>
 			</form>

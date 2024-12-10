@@ -1,0 +1,38 @@
+<form action='#'>
+    <div>
+        <label for='name'>name</label>
+        <input type='text' id='name' name='name' value=''>
+    </div>
+    <div>
+        <input type='radio' id='a' name='profile' value='A'>
+        <label for='a'>A</label>
+        <input type='radio' id='b' name='profile' value='B'>
+        <label for='b'>B</label>
+        <input type='radio' id='c' name='profile' value='C'>
+        <label for='c'>C</label>
+    </div>
+    <div>
+        <label for='country'>country</label>
+
+        <select id='country' name='country' value='moo'>
+            {{#each countries}}
+            <option value='{{this}}'>{{this}}</option>
+            {{/each}}
+        </select>
+    </div>
+    <div>
+        <label for='description1'>description 1</label>
+        <input type='text' class='tall' id='description1' name='description1' value=''>
+    </div>
+    <div>
+        <label for='description2'>description 2</label>
+        <input type='text' class='tall' id='description2' name='description2' value=''>
+    </div>
+    <div>
+        <label for='medical'>medical</label>
+        <input type='text' class='tall' id='medical' name='medical' value=''>
+    </div>
+
+
+    <input type='submit' value='Submit' class='form-submit-btn'>
+</form>

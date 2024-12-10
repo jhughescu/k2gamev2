@@ -127,5 +127,19 @@
             }
         }
     },
+    "constants": {
+        "oxygen": {
+            "weight": 5,
+            "unitTime": 10
+        },
+        "sustenance": {
+            "weight": 2.5,
+            "unitTime": 20
+        },
+        "rope": {
+            "weight": 5,
+            "unitLength": 5
+        }
+    },
     "route": {"ratio": [50, 50]}
 }

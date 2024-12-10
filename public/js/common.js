@@ -263,8 +263,9 @@ document.addEventListener('DOMContentLoaded', function () {
 //            console.log(ob);
         }
         if (ob === undefined) {
-            console.error('Error: Data object is undefined');
-            return;
+//            console.error('Error: Data object is undefined');
+//            return;
+            ob = {}
         }
         if (targ.indexOf('#', 0) === 0) {
             targ = targ.replace('#', '');

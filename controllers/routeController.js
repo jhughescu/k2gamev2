@@ -61,6 +61,9 @@ app.get('/test', (req, res) => {
 app.get('/map', (req, res) => {
     res.render('map');
 });
+app.get('/pbuilder', (req, res) => {
+    res.sendFile(path.join(basePath, 'dev_profile_builder.html'));
+});
 
 
 

@@ -474,7 +474,6 @@ document.addEventListener('DOMContentLoaded', function () {
     };
     const setMemberType = (p, t) => {
         const m = session[`profile${p}`];
-//        console.log(p, t, m)
         if (!m) {
             console.warn(`profile${p} does not exist`);
         } else {
@@ -482,25 +481,12 @@ document.addEventListener('DOMContentLoaded', function () {
             const l = o.length;
             if (t < l && t > -1) {
                 m.setType(t, (rp) => {
-//                    console.log(rp);
                     session[`profile${p}`] = rp;
-//                    console.log(JSON.parse(JSON.stringify(session[`profile${p}`])));
-//                    console.log(JSON.parse(JSON.stringify(session)));
-
-//                    return;
                     tm = {summary: m.getStorageSummary()};
-//                    console.log(tm);
                     updateSession(`profile${m.profile}`, tm, (r) => {
-//                        console.log('updated the type:');
-//                        console.log(r);
+                        //
                     });
                 });
-//                return;
-//                tm = {summary: m.getStorageSummary()};
-//                console.log(tm);
-//                updateSession(`profile${m.profile}`, tm, (r) => {
-//                    console.log('updated the type');
-//                });
             } else {
                 console.warn(`profile${p} has ${l} possible options`);
             }
@@ -529,6 +515,10 @@ document.addEventListener('DOMContentLoaded', function () {
             setTeamMember(p, t);
         });
 
+    };
+    const climbersReady = () => {
+        const r = Climber.getClimbers().filter(c => c.type === -1).length === 0;
+        return r;
     };
 
     // timing
@@ -582,13 +572,20 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // key page setup
     const setupHome = () => {
-        const bMap = $(`#btn-start`);
+        const bClimb = $(`#btn-start`);
         const bTeam = $(`#btn-team`);
         const bResources = $(`#btn-resources`);
-        const all = [bMap, bTeam, bResources];
-        bMap.off('click').on('click', () => {
-            renderMap();
-        });
+        const all = [bClimb, bTeam, bResources];
+        const cReady = climbersReady();
+        if (!cReady) {
+            bClimb.addClass('disabled');
+            bClimb.prop('disabled', true);
+        }
+        if (cReady) {
+            bClimb.off('click').on('click', () => {
+                renderMap();
+            });
+        }
         bTeam.off('click').on('click', () => {
             renderTeam();
         });
@@ -599,61 +596,128 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // controls (page types)
     const submitResources = (p) => {
-        const o = parseInt($('#oxygen').val());
-        const s = parseInt($('#sustenance').val());
-        const r = parseInt($('#emergencyRope').val());
-        const t = p.type;
+        const o = isNaN(parseInt($('#oxygen').val())) ? 0 : parseInt($('#oxygen').val());
+        const s = isNaN(parseInt($('#sustenance').val())) ? 0 : parseInt($('#sustenance').val());
+        const r = isNaN(parseInt($('#rope').val())) ? 0 : parseInt($('#rope').val());
+//        const t = p.type;
+        const t = p.temptype;
         p.setOxygen(o, (rp) => {
-            session[`profile${p.profile}`] = rp;
             p.setSustenance(s, (rp) => {
                 session[`profile${p.profile}`] = rp;
                 p.setRope(r, (rp) => {
                     session[`profile${p.profile}`] = rp;
                     setMemberType(p.profile, t);
-//                    console.log();
                     setupResources();
                 });
             });
         });
     };
-    const setupResources = () => {
+    const calculateLoad = () => {
+        const co = gameData.constants.oxygen;
+        const cs = gameData.constants.sustenance;
+        const P = session[$('.form-submit-btn').data('profile')];
+        const op = P.options;
+        const t = P.type > -1 ? P.type : P.temptype;
+        const o = op[t];
+        const time = (o.t1 + o.t2) * 2;
+        const load = (Math.ceil(time / co.unitTime) * co.weight) + (Math.ceil(time / cs.unitTime) * cs.weight);
+//        console.log(`${load}kg`);
+        return load;
+    };
+    const setupResourceExtras = (boo) => {
+
+        const nin = $('input[type=number]');
+        const remain = parseFloat($('#resource_remaining').find('div').length > 0 ? $('#resource_remaining').find('div').html() : $('#resource_remaining').html());
+        const c = gameData.constants;
+        const p = session[$('.form-submit-btn').data('profile')];
+
+//        console.log(`p is ${p}`);
+//        console.log(p);
+        console.log(`setupResourceExtras ${boo}`);
+//        console.log(nin.length);
+        nin.prop('disabled', !boo);
+        if (boo) {
+            const max = p.options[p.temptype].capacity;
+            nin.off('input').on('input', function () {
+                if ($(this).val() < 0) {
+//                    $(this).val(0);
+                }
+                let T = 0;
+                nin.each(function (n, i) {
+                    const e = $(i);
+                    const id = e.attr('id');
+                    const v = isNaN(parseFloat(e.val())) ? 0 : parseFloat(e.val());
+                    const w = c[id].weight;
+                    const t = v * w;
+                    p[id] = v;
+                    T += t;
+//                    console.log(n);
+                });
+                const l = calculateLoad();
+                const drt = $('#resource_total');
+                const drr = $('#resource_remaining');
+                drt.html(showDyno(T + l));
+                drr.html(showDyno(max - (T + l)));
+                max - (T + l) < 0 ? drr.addClass('wrong') : drr.removeClass('wrong');
+//                console.log(p);
+//                resOptionselect(p.profile, p.temptype);
+                if (T + l > max) {
+//                    alert('you are overloaded, reduce some of your extras')
+                }
+            })
+
+        }
+    };
+    const setupResources = async () => {
         const sub = $('.form-submit-btn');
         const p = session[sub.data('profile')];
+//        console.log(p);
+        setupResourceExtras(false);
         if (p.type > -1) {
-//            console.log('not ok')
             sub.prop('disabled', true);
             sub.addClass('disabled');
             $('.resop').addClass('disabled');
             $('.resop').removeClass('abled');
             $('input').prop('disabled', true);
+            console.log(p)
+            $('#oxygen').val(p.oxygen);
+            $('#sustenance').val(p.sustenance);
+            $('#rope').val(p.rope);
             updateResImg(p.profile, p.type);
+            resOptionselect(p.profile, p.type);
         } else {
             sub.prop('disabled', false);
-            sub.removeClass('disabled',);
+            sub.removeClass('disabled');
             $('.resop').removeClass('disabled');
             $('.resop').addClass('abled');
             sub.off('click').on('click', function (ev) {
-    //            const p = session[$(this).data('profile')];
                 ev.preventDefault();
-                const inputValues = $('input[type="text"]').map((_, el) => parseInt($(el).val())).get();
-                const zeroValues = inputValues.filter(v => v === 0);
-                if (p.type < 0) {
-                    // no profile selected
-                    alert('you must pick an Option')
+                console.log($('#resource_remaining').html().includes('-'));
+                if ($('#resource_remaining').html().includes('-')) {
+                    alert('you are overloaded, try removing some extras');
                 } else {
-                    if (inputValues.length === zeroValues.length) {
-                        const ok = confirm('You have not allocated any resources, are you sure you want to continue? You will not be able to change your mind later.');
-                        if (ok) {
-                            submitResources(p);
-                        }
+                    const inputValues = $('input[type="text"]').map((_, el) => parseInt($(el).val())).get();
+                    const zeroValues = inputValues.filter(v => v === 0);
+                    if (p.temptype < 0) {
+                        // no profile selected
+                        alert('you must pick an Option')
                     } else {
-                        const ok = confirm('Are you sure these are the values you want to set? You will not be able to change your mind later.');
-                        if (ok) {
-                            submitResources(p);
+                        const r = $('#resource_remaining').find('div').length > 0 ? $('#resource_remaining').find('div').html() : $('#resource_remaining').html();
+                        if (zeroValues.length > 1) {
+                            if (parseFloat(r) > 0) {
+                                const ok = confirm(`You have ${r}kg of remaining capacity and have not allocated any extra resources, are you sure you want to continue? You will not be able to change your mind later.`);
+                                if (ok) {
+                                    submitResources(p);
+                                }
+                            }
+                        } else {
+                            const ok = confirm('Are you sure these are the values you want to set? You will not be able to change your mind later.');
+                            if (ok) {
+                                submitResources(p);
+                            }
                         }
                     }
                 }
-    //            if () {}
             });
         }
     };
@@ -699,22 +763,53 @@ document.addEventListener('DOMContentLoaded', function () {
         const P = getAlph(p).toUpperCase()
         const T = getAlph(t).toUpperCase();
         const src = `assets/profiles/ProfileImages_Profile${P}-${T}.png`
-        console.log('src', src);
+//        console.log('src', src);
         img.attr('src', src);
     };
-    const resOptionSelect = (button) => {
+    const showDyno = (s) => {
+        return `<div class='dyno'>${s}</div>`;
+    };
+    const resOptionselect = (profile, type) => {
+        const c = gameData.constants;
+        const p = session[`profile${profile}`];
+        const pn = parseInt(profile);
+        const tn = parseInt(type);
+        p.temptype = tn;
+        updateResImg(pn, tn);
+        const o = p.options[tn];
+        const t_oxygen = Math.ceil((o.t1 + o.t2) * 2 / c.oxygen.unitTime) + p.oxygen;
+        const w_oxygen = t_oxygen * c.oxygen.weight;
+        const t_sustenance = Math.ceil((o.t1 + o.t2) * 2 / c.sustenance.unitTime) + p.sustenance;
+        const w_sustenance = t_sustenance * c.sustenance.weight;
+        const w_total = w_oxygen + w_sustenance;
+//        const w_remain = w_total < o.capacity ? o.capacity - w_total : 0;
+        const w_remain = o.capacity - w_total;
+        const dot = $('#total_oxygen');
+        const dow = $('#weight_oxygen');
+        const dst = $('#total_sustenance');
+        const dsw = $('#weight_sustenance');
+        const drt = $('#resource_total');
+        const drr = $('#resource_remaining');
+        dot.html(showDyno(t_oxygen));
+        dow.html(showDyno(w_oxygen));
+        dst.html(showDyno(t_sustenance));
+        dsw.html(showDyno(w_sustenance));
+        drt.html(showDyno(w_total));
+        drr.html(showDyno(w_remain));
+        w_remain < 0 ? drr.addClass('wrong') : drr.removeClass('wrong');
+//        console.log(`set up extras: ${w_remain}: ${typeof(w_remain)}`);
+//        setupResourceExtras(w_remain > 0 && p.type < 0);
+        setupResourceExtras(true);
+    };
+    const resOptionSetup = (button) => {
         $(button).off('click').on('click', function () {
-
             const disabled = $(this).attr('class').includes('disabled');
             const id = $(this).attr('id').split('_');
             const p = session[`profile${id[1]}`];
             if (!disabled) {
+                resOptionselect(id[1], id[2]);
                 $('.resop').removeClass('selected');
                 $(this).addClass('selected');
-
-                p.type = parseInt(id[2]);
-                updateResImg(p.profile, id[2]);
-//                assets/profiles/ProfileImages_ProfileA-A.png
             }
         })
     };
@@ -722,6 +817,7 @@ document.addEventListener('DOMContentLoaded', function () {
         renderNone(() => {
             const p = `profile${n === undefined || n === null? 0 : n}`;
             const rOb = session[p];
+//            console.log(rOb)
             renderTemplate('theatre', 'resources', rOb, () => {
                 updateAddress('resources');
                 $(`#resop_${rOb.profile}_${rOb.type}`).addClass('selected');
@@ -779,14 +875,6 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         })
     };
-//    window.test1 = renderMap;
-//    window.test2 = renderNone;
-    //
-//    window.setTeamMember = setTeamMember;
-//    window.clearTeamMember = clearTeamMember;
-//    window.clearTeam = clearTeam;
-//    window.overwriteTeamMember = overwriteTeamMember;
-//    window.renderMap = renderMap;
     window.showSession = showSession;
     window.showProfiles = showProfiles;
     //
@@ -841,12 +929,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 bId = '.resop';
                 if ($(node).is(bId)) {
 //                    console.log(`found ${bId}`)
-                    resOptionSelect(node);
+                    resOptionSetup(node);
                 }
                 // If the node is a container, search its descendants
                 $(node)
                     .find(bId)
-                    .each((_, descendant) => resOptionSelect(descendant));
+                    .each((_, descendant) => resOptionSetup(descendant));
             });
         });
     });
