@@ -134,7 +134,7 @@ class Climber {
     }
 
     log(s) {
-        if (this.profile === 0) {
+        if (this.profile === 0 || 2 < 8) {
             console.log(s);
         }
     }
@@ -289,7 +289,7 @@ class Climber {
         if (!this.finished) {
 //            this.log(`updateViewFromTime: ${s}, finished? ${this.finished}`);
             this.updatePosition(s);
-    //        this.log(`time (${s}) sets pos: ${this.position}`);
+//            this.log(`time (${s}) sets pos: ${this.position}`);
             this.updateView();
         }
     }

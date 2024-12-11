@@ -21,6 +21,10 @@ document.addEventListener('DOMContentLoaded', function () {
     });
     const msgWin = $('#msg');
     const msgs = [];
+    // common words
+    const OX = 'oxygen';
+    const SUS = 'sustenance';
+    const RP = 'rope';
 
     const sessionPlayPause = $('#b_playpause');
     const sessionReset = $('#b_reset');
@@ -230,6 +234,7 @@ document.addEventListener('DOMContentLoaded', function () {
         initRender();
         updateView();
     };
+    // Main init method:
     const checkSession = () => {
         const gid = getStoreID();
         const lid = localStorage.getItem(gid);
@@ -392,6 +397,8 @@ document.addEventListener('DOMContentLoaded', function () {
 //            gameflow(`game data ready (check console)`);
             gameflow(`game data ready`);
             gameData = processData(d);
+            setSessionMax(gameData.gameTime);
+            set_tAdj();
 //            console.log(gameData);
         });
     };
@@ -528,8 +535,17 @@ document.addEventListener('DOMContentLoaded', function () {
     const runTime = endTime - startTime;
     const gameHours = gTimer.getHoursFromMilli(runTime);
     const gameMinutes = gTimer.getMinutesFromMilli(runTime);
-    const sessionMax = 20; /* total play time before game death in minutes */
-    const tAdj = gameMinutes / sessionMax; /* factor by which time is speeded up */
+    let sessionMax = null; /* total play time before game death in minutes. Set via gameData on startup */
+    const setSessionMax = (n) => {
+        sessionMax = parseInt(n);
+//        console.log(`sessionMax: ${sessionMax}, n: ${n}`);
+    };
+    const set_tAdj = () => {
+        tAdj = gTimer.getMinutesFromMilli(runTime) / sessionMax;
+//        console.log(`tAdj: ${tAdj}`);
+    };
+    //let tAdj = gameMinutes / sessionMax; /* factor by which time is speeded up */
+    let tAdj = null; /* factor by which time is speeded up */
 //    console.log(`tAdj = ${tAdj}`);
     const formatTime = (ms) => {
         // Calculate hours, minutes, and seconds
@@ -566,6 +582,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const updateDisplay = () => {
 //        console.log(`updateDisplay`)
         const cs = getCurrentState();
+//        console.log(cs);
         updateClimbers(cs.sec);
         showtime();
     };
@@ -599,7 +616,11 @@ document.addEventListener('DOMContentLoaded', function () {
         const o = isNaN(parseInt($('#oxygen').val())) ? 0 : parseInt($('#oxygen').val());
         const s = isNaN(parseInt($('#sustenance').val())) ? 0 : parseInt($('#sustenance').val());
         const r = isNaN(parseInt($('#rope').val())) ? 0 : parseInt($('#rope').val());
-//        const t = p.type;
+        //
+//        console.log(`submitResources`);
+//        console.log(o, s, r);
+//        console.log(p);
+        //
         const t = p.temptype;
         p.setOxygen(o, (rp) => {
             p.setSustenance(s, (rp) => {
@@ -624,23 +645,23 @@ document.addEventListener('DOMContentLoaded', function () {
 //        console.log(`${load}kg`);
         return load;
     };
+    // inputs for ox, sus & rope AFTER option selected
     const setupResourceExtras = (boo) => {
-
         const nin = $('input[type=number]');
+        const adj = $(`.adjust_btn`);
         const remain = parseFloat($('#resource_remaining').find('div').length > 0 ? $('#resource_remaining').find('div').html() : $('#resource_remaining').html());
         const c = gameData.constants;
         const p = session[$('.form-submit-btn').data('profile')];
-
-//        console.log(`p is ${p}`);
-//        console.log(p);
-        console.log(`setupResourceExtras ${boo}`);
-//        console.log(nin.length);
         nin.prop('disabled', !boo);
         if (boo) {
             const max = p.options[p.temptype].capacity;
+            nin.each(function (n, i) {
+                const nn = parseFloat($(i).val());
+                $(i).val(isNaN(nn) ? 0 : nn);
+            });
             nin.off('input').on('input', function () {
                 if ($(this).val() < 0) {
-//                    $(this).val(0);
+                    $(this).val(0);
                 }
                 let T = 0;
                 nin.each(function (n, i) {
@@ -651,7 +672,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     const t = v * w;
                     p[id] = v;
                     T += t;
-//                    console.log(n);
                 });
                 const l = calculateLoad();
                 const drt = $('#resource_total');
@@ -659,13 +679,18 @@ document.addEventListener('DOMContentLoaded', function () {
                 drt.html(showDyno(T + l));
                 drr.html(showDyno(max - (T + l)));
                 max - (T + l) < 0 ? drr.addClass('wrong') : drr.removeClass('wrong');
-//                console.log(p);
-//                resOptionselect(p.profile, p.temptype);
-                if (T + l > max) {
-//                    alert('you are overloaded, reduce some of your extras')
-                }
-            })
-
+                resOptionselect(p.profile, p.temptype);
+            });
+            adj.off('click').on('click', function () {
+                const i = $(this).parent().find('input');
+                const a = $(this).attr('class').includes('plus') ? 1 : -1;
+                let n = parseFloat(i.val()) + a;
+                n = n < 0 ? 0 : n;
+                const v = i.attr('id');
+                updateProfile(p, v, n);
+                updateResourceView(p);
+                console.log(`adjust ${v} to ${n}`);
+            });
         }
     };
     const setupResources = async () => {
@@ -676,25 +701,29 @@ document.addEventListener('DOMContentLoaded', function () {
         if (p.type > -1) {
             sub.prop('disabled', true);
             sub.addClass('disabled');
+            $('.adjust_btn').addClass('disabled');
             $('.resop').addClass('disabled');
             $('.resop').removeClass('abled');
             $('input').prop('disabled', true);
-            console.log(p)
+//            console.log(`setupResources, profile type already set (${p.type})`);
+//            console.log(p);
             $('#oxygen').val(p.oxygen);
             $('#sustenance').val(p.sustenance);
             $('#rope').val(p.rope);
             updateResImg(p.profile, p.type);
-            resOptionselect(p.profile, p.type);
+            updateResourceView(p);
+//            resOptionselect(p.profile, p.type);
         } else {
             sub.prop('disabled', false);
             sub.removeClass('disabled');
             $('.resop').removeClass('disabled');
             $('.resop').addClass('abled');
+            $('.adjust_btn').addClass('disabled');
             sub.off('click').on('click', function (ev) {
                 ev.preventDefault();
-                console.log($('#resource_remaining').html().includes('-'));
+//                console.log($('#resource_remaining').html().includes('-'));
                 if ($('#resource_remaining').html().includes('-')) {
-                    alert('you are overloaded, try removing some extras');
+                    alert(`${p.name} is ${Math.abs(getWeight(p).remaining)}kg over capacity, please adjust resources`);
                 } else {
                     const inputValues = $('input[type="text"]').map((_, el) => parseInt($(el).val())).get();
                     const zeroValues = inputValues.filter(v => v === 0);
@@ -702,6 +731,8 @@ document.addEventListener('DOMContentLoaded', function () {
                         // no profile selected
                         alert('you must pick an Option')
                     } else {
+//                        console.log(getRequirement(p));
+//                        console.log(getWeight(p));
                         const r = $('#resource_remaining').find('div').length > 0 ? $('#resource_remaining').find('div').html() : $('#resource_remaining').html();
                         if (zeroValues.length > 1) {
                             if (parseFloat(r) > 0) {
@@ -710,8 +741,18 @@ document.addEventListener('DOMContentLoaded', function () {
                                     submitResources(p);
                                 }
                             }
+                        } else if (getWeight(p).remaining > 0) {
+                            const m = `${p.name} has ${getWeight(p).remaining}kg unused carrying capacity, are you sure you don't want to use it? You will not be able to change your mind later.`;
+                            const ok = confirm(m);
+                            if (ok) {
+                                submitResources(p);
+                            }
                         } else {
-                            const ok = confirm('Are you sure these are the values you want to set? You will not be able to change your mind later.');
+                            const m1 = 'Are you sure these are the values you want to set? You will not be able to change your mind later.';
+                            const m2 = `${p.name} is carrying fewer resources than necessary for the expedition and will need to resupply later. If you are happy with this, please continue.`;
+                            const req = getRequirement(p);
+                            const m = p.oxygen < req.oxygen || p.sustenance < req.sustenance ? m2 : m1;
+                            const ok = confirm(m);
                             if (ok) {
                                 submitResources(p);
                             }
@@ -769,6 +810,13 @@ document.addEventListener('DOMContentLoaded', function () {
     const showDyno = (s) => {
         return `<div class='dyno'>${s}</div>`;
     };
+    // make a change to a property of the current profile (does not make changes permanent)
+    const updateProfile = (p, prop, val) => {
+        const prof = typeof(p) === 'string' || typeof(p) === 'number' ? session[`profile${p}`] : p;
+        prof[prop] = val;
+//        console.log(`updateProfile: ${prof.name} ${prop} set to ${prof[prop]}`);
+    };
+    // On Option tile click, calculate requisites
     const resOptionselect = (profile, type) => {
         const c = gameData.constants;
         const p = session[`profile${profile}`];
@@ -776,31 +824,92 @@ document.addEventListener('DOMContentLoaded', function () {
         const tn = parseInt(type);
         p.temptype = tn;
         updateResImg(pn, tn);
+        const req = getRequirement(p);
         const o = p.options[tn];
-        const t_oxygen = Math.ceil((o.t1 + o.t2) * 2 / c.oxygen.unitTime) + p.oxygen;
+        const t_oxygen = req.oxygen;
         const w_oxygen = t_oxygen * c.oxygen.weight;
-        const t_sustenance = Math.ceil((o.t1 + o.t2) * 2 / c.sustenance.unitTime) + p.sustenance;
+        const t_sustenance = req.sustenance;
         const w_sustenance = t_sustenance * c.sustenance.weight;
         const w_total = w_oxygen + w_sustenance;
-//        const w_remain = w_total < o.capacity ? o.capacity - w_total : 0;
         const w_remain = o.capacity - w_total;
-        const dot = $('#total_oxygen');
-        const dow = $('#weight_oxygen');
-        const dst = $('#total_sustenance');
-        const dsw = $('#weight_sustenance');
-        const drt = $('#resource_total');
-        const drr = $('#resource_remaining');
-        dot.html(showDyno(t_oxygen));
-        dow.html(showDyno(w_oxygen));
-        dst.html(showDyno(t_sustenance));
-        dsw.html(showDyno(w_sustenance));
-        drt.html(showDyno(w_total));
-        drr.html(showDyno(w_remain));
-        w_remain < 0 ? drr.addClass('wrong') : drr.removeClass('wrong');
-//        console.log(`set up extras: ${w_remain}: ${typeof(w_remain)}`);
-//        setupResourceExtras(w_remain > 0 && p.type < 0);
+        // update the profile
+        updateProfile(profile, 'oxygen', t_oxygen);
+        updateProfile(profile, 'sustenance', t_sustenance);
+        updateResourceView(profile);
         setupResourceExtras(true);
+        $('.adjust_btn').removeClass('disabled');
     };
+    // calculate weight (total & remaining) from profile
+    const getWeight = (p) => {
+        const w = {};
+        const c = gameData.constants;
+        const t = p.type < 0 ? p.temptype : p.type;
+        w.total = p[OX] * c[OX].weight;
+        w.total += p[SUS] * c[SUS].weight;
+        w.total += p[RP] * c[RP].weight;
+        w.remaining = p.options[t].capacity - w.total;
+        return w;
+    };
+    // calculate required resources to complete expedition:
+    const getRequirement = (prof) => {
+        const p = typeof(prof) === 'string' || typeof(prof) === 'number' ? session[`profile${prof}`] : prof;
+        const t = p.type > -1 ? p.type : p.temptype;
+        const o = p.options[t];
+        const time = (o.t1 + o.t2) * 2;
+        const r = {oxygen: 0, sustenance: 0};
+        r.oxygen = Math.ceil(time / gameData.constants.oxygen.unitTime);
+        r.sustenance = Math.ceil(time / gameData.constants.sustenance.unitTime);
+        r.rope = 0;
+        return r;
+    };
+    // update the resource screen with data from current profile:
+    const updateResourceView = (profile) => {
+        // method can take a profile identifier or full profile as arg
+        const p = typeof(profile) === 'string' || typeof(profile) === 'number' ? session[`profile${profile}`] : profile;
+        const w = getWeight(p);
+        const req = getRequirement(p);
+        const cOx = gameData.constants[OX];
+        const cSus = gameData.constants[SUS];
+        const cRp = gameData.constants[RP];
+//        console.log(req);
+//        console.log(req[OX]);
+        //
+        const dot = $(`#total_${OX}`);
+        const dow = $(`#weight_${OX}`);
+        //
+        const dst = $(`#total_${SUS}`);
+        const dsw = $(`#weight_${SUS}`);
+        //
+        const drt = $(`#total_${RP}`);
+        const drw = $(`#weight_${RP}`);
+        //
+        const dt = $(`#resource_total`);
+        const dr = $(`#resource_remaining`);
+        //
+        // inputs
+        const doi = $(`#${OX}`);
+        const dsi = $(`#${SUS}`);
+        const dri = $(`#${RP}`);
+        //
+        dot.html(showDyno(`${req[OX]} (${p[OX]})`));
+        dow.html(showDyno(`${req[OX] * cOx.weight}kg (${p[OX] * cOx.weight}kg)`));
+        //
+        dst.html(showDyno(`${req[SUS]} (${p[SUS]})`));
+        dsw.html(showDyno(`${req[SUS] * cSus.weight}kg (${p[SUS] * cSus.weight}kg)`));
+        //
+        drt.html(showDyno(`${req[RP]} (${p[RP]})`));
+        drw.html(showDyno(`${req[RP] * cRp.weight}kg (${p[RP] * cRp.weight}kg)`));
+        //
+        dt.html(showDyno(`${w.total}kg`));
+        dr.html(showDyno(`${w.remaining}kg`));
+        // input elements
+        doi.prop('value', p[OX]);
+        dsi.prop('value', p[SUS]);
+        dri.prop('value', p[RP]);
+        //
+        w.remaining < 0 ? dr.addClass('wrong') : dr.removeClass('wrong');
+    };
+    // Option tile click:
     const resOptionSetup = (button) => {
         $(button).off('click').on('click', function () {
             const disabled = $(this).attr('class').includes('disabled');
@@ -810,6 +919,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 resOptionselect(id[1], id[2]);
                 $('.resop').removeClass('selected');
                 $(this).addClass('selected');
+                // use timeout to allow screen to updatre before alert
+                setTimeout(() => {
+                    if ($('#resource_remaining').html().includes('-')) {
+                        // negative resource remaining
+                        alert(`${p.name} is ${Math.abs(getWeight(p).remaining)}kg over capacity, please adjust the load.`);
+                    }
+                }, 100);
             }
         })
     };
@@ -817,7 +933,7 @@ document.addEventListener('DOMContentLoaded', function () {
         renderNone(() => {
             const p = `profile${n === undefined || n === null? 0 : n}`;
             const rOb = session[p];
-//            console.log(rOb)
+//            console.log(rOb);
             renderTemplate('theatre', 'resources', rOb, () => {
                 updateAddress('resources');
                 $(`#resop_${rOb.profile}_${rOb.type}`).addClass('selected');
@@ -843,8 +959,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     initx: 10 + (index * 5)
                 }))
             };
-            console.log(`renderMap:`);
-            console.log(rOb);
+//            console.log(`renderMap:`);
+//            console.log(rOb);
             renderTemplate('theatre', 'map', rOb, () => {
                 updateAddress('map');
                 $('body').addClass('body-map');
@@ -910,7 +1026,6 @@ document.addEventListener('DOMContentLoaded', function () {
             mutation.addedNodes.forEach((node) => {
                 let bId = '.back-btn';
                 if ($(node).is(bId)) {
-//                    console.log(`found ${bId}`)
                     setupBackButton(node);
                 }
                 // If the node is a container, search its descendants
@@ -919,7 +1034,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     .each((_, descendant) => setupBackButton(descendant));
                 bId = '.resources_adj';
                 if ($(node).is(bId)) {
-//                    console.log(`found ${bId}`)
                     resChangeProfile(node);
                 }
                 // If the node is a container, search its descendants
@@ -928,7 +1042,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     .each((_, descendant) => resChangeProfile(descendant));
                 bId = '.resop';
                 if ($(node).is(bId)) {
-//                    console.log(`found ${bId}`)
                     resOptionSetup(node);
                 }
                 // If the node is a container, search its descendants

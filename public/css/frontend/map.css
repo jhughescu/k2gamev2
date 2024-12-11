@@ -37,6 +37,7 @@
     margin: 10%;
 }
 .map-pointer-label {
+    display: none;
     position: absolute;
     bottom: 90px;
     width: 100px;

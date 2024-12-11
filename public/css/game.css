@@ -91,3 +91,77 @@ p.resource_value {
     font-size: 16px;
     font-weight: bold;
 }
+.resource_adjust input[type='number'] {
+    width: 40px;
+}
+/* prevent 'up' + 'down' arrow buttons for number inputs */
+/* For Chrome, Edge, and Safari */
+.resource_adjust input[type="number"]::-webkit-inner-spin-button,
+.resource_adjust input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* For Firefox */
+.resource_adjust input[type="number"] {
+    -moz-appearance: textfield;
+}
+/*
+.adjust_btn {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background-color: yellow;
+    color: black;
+    font-weight: bold;
+    font-size: 16px;
+}
+.adjust_btn.plus:before {
+    content: '+';
+}
+.adjust_btn.minus:before {
+    content: '-';
+}
+.adjust_btn:before {
+
+    width: 20px;
+    text-align: center;
+}
+*/
+.input-group {
+    display: flex; /* Enable flexbox */
+    align-items: center; /* Align items vertically */
+    gap: 5px; /* Optional: Add space between elements */
+    margin: 0px;
+}
+
+.input-group label {
+    flex-basis: 200px;
+    margin-right: 10px; /* Optional: Space between label and input */
+}
+
+.input-group input[type="number"] {
+    width: 30px; /* Adjust width as needed */
+}
+
+.adjust_btn {
+    width: 20px; /* Set width of the buttons */
+    height: 20px; /* Set height of the buttons */
+    background-color: #ccc; /* Example styling */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border-radius: 3px; /* Optional: Rounded corners */
+}
+.adjust_btn.minus::after {
+    content: "-"; /* Example: Display minus sign */
+}
+
+.adjust_btn.plus::after {
+    content: "+"; /* Example: Display plus sign */
+}
+.adjust_btn.disabled {
+    opacity: 0.5;
+    cursor: default;
+}

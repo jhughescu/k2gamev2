@@ -71,8 +71,8 @@
 		<p>One line here if needed?</p>
 		<div class="resources-table-grid">
 			<div></div>
-			<div><p>Required Amount</p></div>
-			<div><p>Weight</p></div>
+			<div><p>Required Amount (Carried)</p></div>
+			<div><p>Weight (Carried)</p></div>
 					<!-- Oxygen Row -->
 			<div class="table-grid-icons">
 				<div><img src="assets/icons/Icons_Oxygen.png" alt="Oxygen tank icon"/></div>
@@ -108,23 +108,28 @@
 			<img src="assets/icons/questionMark.png" alt="question mark icon"/>
 			<p>Would you prefer to prioritise speed or to take extra resources and move at a slower pace, ensuring better preparedness for an inexperienced climber?</p>
 		</div>
-		<div class="content-block">
+		<div class="content-block resource_adjust">
 			<p>Enter your amounts below:</p>
 			<form action="#">
-				<div>
-			  <label for="oxygen">Oxygen</label>
-			  <input type="number" id="oxygen" name="oxygen" value="">
-				</div>
-			<div>
-				<label for="sustenance">Sustenance</label>
-				<input type="number" id="sustenance" name="sustenance" value="">
-            </div>
-            <div>
-				<label for="rope">Emergency rope</label>
-				<input type="number" id="rope" name="rope" value="">
-            </div>
-
-			  <input type="submit" value="Submit" class="form-submit-btn" data-profile='profile{{profile}}'>
+                <div class="input-group">
+                    <label for="oxygen">Oxygen ({{gameData.constants.oxygen.weight}}kg each)</label>
+                    <input type="number" id="oxygen" name="oxygen" value="" step="1" min="-9999" max="9999">
+                    <div class="adjust_btn minus"></div>
+                    <div class="adjust_btn plus"></div>
+                </div>
+                <div class="input-group">
+                    <label for="sustenance">Sustenance ({{gameData.constants.sustenance.weight}}kg each)</label>
+                    <input type="number" id="sustenance" name="sustenance" value="" step='1' min='-9999' max='9999'>
+                    <div class="adjust_btn minus"></div>
+                    <div class="adjust_btn plus"></div>
+                </div>
+                <div class="input-group">
+                    <label for="rope">Emergency rope ({{gameData.constants.rope.weight}}kg each)</label>
+                    <input type="number" id="rope" name="rope" value="" step='1' min='-9999' max='9999'>
+                    <div class="adjust_btn minus"></div>
+                    <div class="adjust_btn plus"></div>
+                </div>
+                <input type="submit" value="Submit" class="form-submit-btn" data-profile='profile{{profile}}'>
 			</form>
 		</div>
 	</div>
