@@ -15,6 +15,15 @@
     z-index: 10;
 /*    display: none;*/
 }
+.fullscreen {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    background-color: transparent;
+    pointer-events: none;
+    z-index: 9999;
+    overflow: hidden;
+}
 #msg {
     display: none;
 }
@@ -26,7 +35,7 @@
     top: 20px;
     right: 30px;
     width: 250px;
-    height: 150px;
+    height: 100px;
     background-color: white;
     box-shadow: -2px 2px 3px rgba(28, 28, 28, 0.85);
     z-index: 2000;
@@ -164,4 +173,43 @@ p.resource_value {
 .adjust_btn.disabled {
     opacity: 0.5;
     cursor: default;
+}
+
+/* modal */
+#overlay_modal {
+    background-color: rgba(93, 109, 139, 0.28);
+/*    background-color: rgba(9, 91, 245, 0.53);*/
+    display: flex; /* Enable Flexbox */
+    justify-content: center; /* Horizontally center */
+    align-items: center; /* Vertically center */
+    opacity: 0;
+    pointer-events: none;
+}
+#overlay_modal.clickable {
+    /* Make the overlay clickable so it can be closed */
+    /* Class to be removed on closedown */
+    pointer-events: auto;
+}
+.modal {
+    position: absolute;
+    width: 400px;
+    height: 600px;
+    background-color: white;
+    border-radius: 20px;
+    box-shadow: -2px 2px 3px rgba(28, 28, 28, 0.85);
+    text-align: center;
+/*    padding: 20px;*/
+/*    border: 1px solid blue;*/
+}
+.modal-footer {
+    position: absolute;
+    bottom: 0px;
+    width: 100%;
+}
+#modal_content, .modal {
+    pointer-events: all;
+}
+.k2-modal-btn {
+    border: 0px solid white;
+    cursor: pointer;
 }

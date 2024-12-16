@@ -36,6 +36,7 @@
 /*     jh */
     margin: 10%;
 }
+/*
 .map-pointer-label {
     display: none;
     position: absolute;
@@ -50,7 +51,6 @@
     vertical-align: top;
 }
 .map-pointer-label p {
-/*    padding: 0px 4px;*/
     margin: 0px 4px;
 }
 .map-pointer-label .rAlign {
@@ -58,6 +58,7 @@
     position: absolute;
     right: 40px;
 }
+*/
 .mountain {
     position: absolute;
     width: 100vw;

@@ -57,6 +57,10 @@ document.addEventListener('DOMContentLoaded', function () {
     let newconnect = false;
     let theState = null;
     let gameData = null;
+    let eventStack = null;
+    let devController = null;
+    let devTimer = null;
+    let mArray = [];
 
     // bg gradient change
     const gradientStops = [
@@ -130,6 +134,20 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         return a;
     };
+    const getQueries = () => {
+        let q = window.location.search;
+        let o = {};
+        if (q) {
+            q = q.replace('?', '').split('&');
+//            console.log(q);
+            q.forEach((e, id) => {
+//                const o = {};
+                o[e.split('=')[0]] = procVal(e.split('=')[1])
+//                q[i] = ob;
+            });
+        }
+        return o;
+    };
     const summariseSession = () => {
         gameflow(`your country is ${session.team.country}`);
 //        console.log(session);
@@ -173,6 +191,58 @@ document.addEventListener('DOMContentLoaded', function () {
     const hideOverlay = () => {
         const o = $('#overlay');
         o.fadeOut();
+    };
+    const showModal = (id, ob) => {
+        const m = $('#overlay_modal');
+        const o = ob ? ob : {};
+        m.show();
+        m.addClass('clickable');
+        renderTemplate('overlay_modal', 'modal', {}, () => {
+            renderTemplate('modal_content', id, o, () => {
+                document.querySelector('#overlay_modal').addEventListener('click', () => {
+                    closeModal();
+                });
+                document.querySelector('.modal').addEventListener('click', (event) => {
+                    event.stopPropagation(); // Prevents the click event from bubbling up to the parent
+                });
+                if (devController) {
+                    devController.setupGameTimeSelect();
+                }
+            })
+        });
+    };
+    const showModalEvent = (ev) => {
+
+        const m = $('#overlay_modal');
+        m.show();
+        m.addClass('clickable');
+        renderTemplate('overlay_modal', `modal`, {type: 'event'}, () => {
+            renderTemplate('modal_content', `modal/event/${ev.event}`, ev, () => {
+                document.querySelector('#overlay_modal').addEventListener('click', () => {
+                    closeModal();
+                });
+                document.querySelector('.modal').addEventListener('click', (event) => {
+                    event.stopPropagation(); // Prevents the click event from bubbling up to the parent
+                });
+                if (devController) {
+                    devController.setupGameTimeSelect();
+                }
+            })
+        });
+    };
+    const closeModal = () => {
+        const m = $('#overlay_modal');
+        const isEventModal = m.find('.modal-event').length > 0;
+        if(isEventModal) {
+            playPauseSession();
+        }
+        m.removeClass('clickable');
+        m.hide();
+    };
+    const setupCloseModal = (btn) => {
+        $(btn).off('click').on('click', () => {
+            closeModal();
+        })
     };
 
     const storeLocal = (p, v) => {
@@ -226,6 +296,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const setSession = (sesh, type) => {
         // unified method for setting the session
         session = sesh;
+//        console.log(session);
+//        console.log(getCurrentState());
         gameflow(`session initialised (${type}) with ID ${session.uniqueID}`);
         theState = new State(socket, session);
         gTimer.setTimer(session.time);
@@ -233,6 +305,11 @@ document.addEventListener('DOMContentLoaded', function () {
         summariseSession();
         initRender();
         updateView();
+//        console.log(`let's go: ${session.time}`);
+//        console.log('eventStack', eventStack);
+
+//        console.log(gameData);
+//        console.log(session);
     };
     // Main init method:
     const checkSession = () => {
@@ -262,12 +339,20 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         } else {
             gameflow('no game in progress, start new game');
+            console.log('starting');
             socket.emit('newSession', sesh => {
                 setSession(sesh, 'new');
                 setTeamMember(0, -1);
                 setTeamMember(1, -1);
                 setTeamMember(2, -1);
                 localStorage.setItem(gid, session.uniqueID);
+                setTimeout(() => {
+                    // delay required to allow for async retrieval of gameData
+                    if (gameData.isDev) {
+//                        alert(`gameTime set to ${gameData.gameTime} minutes`);
+                        showModal('dev.initsetup', gameData);
+                    }
+                }, 500);
             });
         }
     };
@@ -306,6 +391,7 @@ document.addEventListener('DOMContentLoaded', function () {
 //        gameTime.now = startTime;
         gTimer.resetTimer();
         theState.storeTime(gTimer.elapsedTime);
+        eventStack.initSessionEvents(0);
         resetClimbers();
     };
     const showSession = () => {
@@ -317,6 +403,16 @@ document.addEventListener('DOMContentLoaded', function () {
     };
     const playPauseSession = () => {
         toggleTimer();
+    };
+    const pauseSession = () => {
+        if (gTimer.hasStarted) {
+            if (gTimer.isRunning) {
+                gTimer.pauseTimer();
+                storeLocal('time', gTimer.elapsedTime);
+                theState.storeTime(gTimer.elapsedTime);
+                showtime();
+            }
+        }
     };
     const packState = () => {
         const ps = JSON.stringify(tstate);
@@ -359,8 +455,20 @@ document.addEventListener('DOMContentLoaded', function () {
         // creates an object which can be used to update the view at a given point in the timeline - use tAdj to convert real time to game time
         const sec = roundNumber((gTimer.elapsedTime * tAdj) / 1000, 2);
         const min = roundNumber((gTimer.elapsedTime * tAdj) / 60000, 2);
+        const realtime = {
+            ms: gTimer.elapsedTime,
+            s: gTimer.elapsedTime / 1000,
+            m: gTimer.elapsedTime / 60000,
+        }
+        // sessiontime is realtime adjusted for testing, i.e. simulates the 70 minute game regardless of sessionMax
+        const sessiontime = {
+            m: realtime.m * (70 / sessionMax),
+            s: (realtime.s * (70 / sessionMax))
+        }
 //        console.log(`min: ${min}, sec: ${sec}`);
-        return {sec: sec, min: min};
+        const cs = {sec: sec, min: min, realtime: realtime, sessiontime: sessiontime, gametime: formatTime((gTimer.elapsedTime * tAdj) + startTime)};
+//        console.log(cs);
+        return cs;
     };
     const diceRoll = () => {
         let numbers = Array.from({
@@ -394,22 +502,33 @@ document.addEventListener('DOMContentLoaded', function () {
     };
     const getData = () => {
         socket.emit('getGameData', (d) => {
-//            gameflow(`game data ready (check console)`);
             gameflow(`game data ready`);
             gameData = processData(d);
-            setSessionMax(gameData.gameTime);
+            const qTime = getQueries().gtime;
+            const gTime = Boolean(qTime) ? qTime : gameData.gameTime;
+//            console.log(getQueries().gtime);
+            setSessionMax(gTime);
             set_tAdj();
+            eventStack = new EventStack(gameData);
+            if (gameData.isDev) {
+                devController = new DevController(gameData);
+                devController.setSessionMax = setSessionMax;
+//                console.log(devController.setSessionMax)
+            }
 //            console.log(gameData);
         });
+    };
+    const showData = () => {
+        console.log(gameData);
     };
     // teams
     const resetClimbers = () => {
 //        console.log(`resetClimbers`);
         Climber.resetAll();
-        updateClimbers(0);
+        updateClimbers({sec: 0});
     };
-    const updateClimbers = (s) => {
-        Climber.updateViews(s);
+    const updateClimbers = (cs) => {
+        Climber.updateViews(cs);
     };
     const clearTeamMember = (p, cb) => {
         const id = `profile${p}`;
@@ -529,24 +648,6 @@ document.addEventListener('DOMContentLoaded', function () {
     };
 
     // timing
-    const gTimer = new GameTimer();
-    const startTime = gTimer.getHourInMilli(5);
-    const endTime = gTimer.getHourInMilli(18);
-    const runTime = endTime - startTime;
-    const gameHours = gTimer.getHoursFromMilli(runTime);
-    const gameMinutes = gTimer.getMinutesFromMilli(runTime);
-    let sessionMax = null; /* total play time before game death in minutes. Set via gameData on startup */
-    const setSessionMax = (n) => {
-        sessionMax = parseInt(n);
-//        console.log(`sessionMax: ${sessionMax}, n: ${n}`);
-    };
-    const set_tAdj = () => {
-        tAdj = gTimer.getMinutesFromMilli(runTime) / sessionMax;
-//        console.log(`tAdj: ${tAdj}`);
-    };
-    //let tAdj = gameMinutes / sessionMax; /* factor by which time is speeded up */
-    let tAdj = null; /* factor by which time is speeded up */
-//    console.log(`tAdj = ${tAdj}`);
     const formatTime = (ms) => {
         // Calculate hours, minutes, and seconds
 //        console.log(ms);
@@ -562,6 +663,42 @@ document.addEventListener('DOMContentLoaded', function () {
         // Concatenate to HH:MM:SS format
         return `${hoursStr}:${minutesStr}:${secondsStr}`;
     }
+    const addTimesToData = () => {
+        if (gameData) {
+            gameData.timings = {};
+            gameData.timings.startTime = formatTime(startTime);
+            gameData.timings.endTime = formatTime(endTime);
+            gameData.timings.runTime = runTime;
+            gameData.timings.hours = gameHours;
+            gameData.timings.minutes = gameMinutes;
+//            console.log(gameData.timings);
+        } else {
+            // gameData isn't ready yet - but it will be soon
+            setTimeout(addTimesToData, 100);
+        }
+    }
+    const gTimer = new GameTimer();
+    const startTime = gTimer.getHourInMilli(5);
+    const endTime = gTimer.getHourInMilli(6);
+    const runTime = endTime - startTime;
+    const gameHours = gTimer.getHoursFromMilli(runTime);
+    const gameMinutes = gTimer.getMinutesFromMilli(runTime);
+//    console.log(`startTime: ${formatTime(startTime)}, endTime: ${formatTime(endTime)}, runTime: ${gameHours} hours (${gameMinutes} minutes)`);
+    addTimesToData();
+    let sessionMax = null; /* total play time before game death in minutes. Set via gameData on startup */
+    const setSessionMax = (n) => {
+        sessionMax = parseInt(n);
+        gameData.gameTime = sessionMax;
+//        console.log(`sessionMax: ${sessionMax}, n: ${n}`);
+    };
+    const set_tAdj = () => {
+        tAdj = gTimer.getMinutesFromMilli(runTime) / sessionMax;
+//        console.log(`tAdj: ${tAdj}`);
+    };
+    //let tAdj = gameMinutes / sessionMax; /* factor by which time is speeded up */
+    let tAdj = null; /* factor by which time is speeded up */
+//    console.log(`tAdj = ${tAdj}`);
+
     const showtime = () => {
         const gtime = gTimer.elapsedTime;
         const adj = gtime * tAdj;
@@ -580,10 +717,19 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     };
     const updateDisplay = () => {
-//        console.log(`updateDisplay`)
         const cs = getCurrentState();
-//        console.log(cs);
-        updateClimbers(cs.sec);
+        mArray.push(cs.sessiontime.m);
+        if (mArray.length > 1) {
+            const l = mArray.length;
+            if (Math.ceil(mArray[l - 1]) !== Math.ceil(mArray[l - 2])) {
+//                console.log(`minute changes to ${Math.round(cs.sessiontime.m)}`);
+            }
+        }
+        updateClimbers(cs);
+        eventStack.updateTime(cs.sessiontime.m, eventTrigger);
+        if (devTimer) {
+            devTimer.updateTime(cs);
+        }
         showtime();
     };
 
@@ -731,8 +877,6 @@ document.addEventListener('DOMContentLoaded', function () {
                         // no profile selected
                         alert('you must pick an Option')
                     } else {
-//                        console.log(getRequirement(p));
-//                        console.log(getWeight(p));
                         const r = $('#resource_remaining').find('div').length > 0 ? $('#resource_remaining').find('div').html() : $('#resource_remaining').html();
                         if (zeroValues.length > 1) {
                             if (parseFloat(r) > 0) {
@@ -951,6 +1095,24 @@ document.addEventListener('DOMContentLoaded', function () {
             })
         });
     };
+    // Events
+    const eventTrigger = (ev) => {
+        // EventStack calls this method when a new event is to be triggered
+        pauseSession();
+        if (ev.hasOwnProperty('profiles')) {
+            // NOTE: the event model CAN send in  any number of profiles, the line below assumes only a single profile, edit if events effect multiple profiles
+            ev.theProfile = session[`profile${ev.profiles[0]}`];
+        }
+        console.log(`event`, ev);
+        if (ev.hasOwnProperty('delay')) {
+            ev.profiles.forEach(p => {
+                console.log(p, session[`profile${p}`])
+                session[`profile${p}`].setDelay(ev.delay);
+            });
+        }
+        showModalEvent(ev);
+    };
+    //
     const renderMap = () => {
         renderNone(() => {
             const rOb = {
@@ -959,20 +1121,26 @@ document.addEventListener('DOMContentLoaded', function () {
                     initx: 10 + (index * 5)
                 }))
             };
-//            console.log(`renderMap:`);
-//            console.log(rOb);
             renderTemplate('theatre', 'map', rOb, () => {
                 updateAddress('map');
                 $('body').addClass('body-map');
+                renderTemplateWithStyle('timerpanel', 'dev.timer.panel', gameData, () => {
+//                    console.log('timer rendered');
+                    devTimer = new DevTimer();
+                });
                 Climber.getRouteMap(() => {
                     Climber.setViews($('.map-pointer-container'));
                     Climber.setBounds(0, $('#mapzone').height());
                     timeDisplay = $('.game-time');
                     updateDisplay();
+//                    console.log(`renderMap`);
+                    eventStack.initSessionEvents(getCurrentState().sessiontime.m);
+//                    eventStack.setCurrentEventFromTime(getCurrentState().sessiontime.m);
                 });
             })
         });
     };
+
     const renderHome = () => {
         renderNone(() => {
 
@@ -992,6 +1160,7 @@ document.addEventListener('DOMContentLoaded', function () {
         })
     };
     window.showSession = showSession;
+    window.showData = showData;
     window.showProfiles = showProfiles;
     //
 //    test();
@@ -1017,9 +1186,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // end timing
 
-
-
-    // Initialize the MutationObserver
+    // Initialize the MutationObserver - set up common button methods
     const observer = new MutationObserver((mutationsList) => {
         mutationsList.forEach((mutation) => {
             // Check added nodes for the target selector
@@ -1032,6 +1199,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 $(node)
                     .find(bId)
                     .each((_, descendant) => setupBackButton(descendant));
+                //
                 bId = '.resources_adj';
                 if ($(node).is(bId)) {
                     resChangeProfile(node);
@@ -1040,6 +1208,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 $(node)
                     .find(bId)
                     .each((_, descendant) => resChangeProfile(descendant));
+                //
                 bId = '.resop';
                 if ($(node).is(bId)) {
                     resOptionSetup(node);
@@ -1048,6 +1217,15 @@ document.addEventListener('DOMContentLoaded', function () {
                 $(node)
                     .find(bId)
                     .each((_, descendant) => resOptionSetup(descendant));
+                //
+                bId = '.k2-modal-btn';
+                if ($(node).is(bId)) {
+                    setupCloseModal(node);
+                }
+                // If the node is a container, search its descendants
+                $(node)
+                    .find(bId)
+                    .each((_, descendant) => setupCloseModal(descendant));
             });
         });
     });

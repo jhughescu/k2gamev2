@@ -314,6 +314,21 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
         }
     };
+    const renderTemplateWithStyle = (targ, temp, ob, cb) => {
+        renderTemplate(targ, temp, ob, () => {
+            const ss = `public/css/${temp}.css`;
+            const link = $('<link>', {
+                rel: 'stylesheet',
+                type: 'text/css',
+                href: ss
+            });
+
+            $('head').append(link);
+            if (cb) {
+                cb();
+            }
+        });
+    };
 
 //    console.log(`register it now!`);
     const getDyno = (name) => {
@@ -989,6 +1004,7 @@ document.addEventListener('DOMContentLoaded', function () {
     window.toCamelCase = toCamelCase;
     window.removeTemplate = removeTemplate;
     window.renderTemplate = renderTemplate;
+    window.renderTemplateWithStyle = renderTemplateWithStyle;
     window.renderPartial = renderPartial;
     window.getTemplate = getTemplate;
     window.setupPanel = setupPanel;

@@ -31,6 +31,7 @@ const processData = async () => {
                 data = JSON.parse(data);
             }
             persistentData = developData(data);
+            persistentData.isDev = tools.procVal(process.env.ISDEV);
             return persistentData;
         } catch (error) {
             console.error('Error reading or parsing JSON file:', error);
@@ -38,7 +39,8 @@ const processData = async () => {
         }
     } else {
         console.log('use prepped data');
-        console.log(persistentData);
+//        console.log(persistentData);
+        persistentData.isDev = tools.procVal(process.env.ISDEV);
         return persistentData;
     }
 };

@@ -142,5 +142,30 @@
             "unitLength": 5
         }
     },
-    "route": {"ratio": [50, 50]}
+    "route": {"ratio": [50, 50]},
+    "events": [
+        {
+            "time": 0,
+            "event": "equipment",
+            "profiles": [2],
+            "delay": 7
+        },
+        {
+            "time": 5,
+            "event": "injury",
+            "profiles": [0]
+        },
+        {
+            "time": 10,
+            "event": "crampons"
+        },
+        {
+            "time": 15,
+            "event": "icefall1"
+        },
+        {
+            "time": 20,
+            "event": "photo1"
+        }
+    ]
 }

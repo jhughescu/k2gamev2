@@ -1,6 +1,6 @@
 {
-  "timestamp": "2024-12-11T14:42:34Z",
-  "commitHash": "6771a3fb721bb318a1cb59432f03f16e70db4c82",
-  "commitMessage": "Resource calculation complete, but capacity overloading is possible",
+  "timestamp": "2024-12-16T12:18:47Z",
+  "commitHash": "bdaca4ba7866d6ea713ac3d71e822a888478c53a",
+  "commitMessage": "Resources page fully set up (not finalised; still to be seen by client, some features not yet agreed)",
   "branch": "master"
 }

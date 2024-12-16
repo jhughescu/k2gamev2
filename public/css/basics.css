@@ -5,7 +5,7 @@ html, body {
     color: black;
 }
 body {
-    font-family: monospace;
+    font-family: 'Courier New', Courier, 'Lucida Console', Monaco, Consolas, monospace;
 /*    font-size: 1.5em;*/
 }
 .buttonNO {
@@ -26,6 +26,10 @@ body {
     background-color: #545a54;
     background-image: url(../assets/forest.jpg);
     text-shadow: 2px 2px 2px rgb(23, 28, 19, 0.8);
+}
+.mono {
+/*    for monospaced text */
+    font-family: monospace;
 }
 /* Add any classes which should never have text-shadow below */
 .fa {

@@ -564,7 +564,7 @@ background-color: none		}
 	margin: 0 auto;
 }
 
-.help-yes img{
+img.help-yes {
 	width: 250px;
 }
 

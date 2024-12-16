@@ -15,14 +15,16 @@ const logList = [];
 let updateTime = null;
 let logTime = null;
 
-
+const isLocal = () => {
+    return Boolean(tools.procVal(process.env.ISLOCAL));
+}
 const isDev = () => {
 //    return true;
-    return Boolean(tools.procVal(process.env.isDev));
+    return Boolean(tools.procVal(process.env.ISDEV));
 };
 const emptyFolder = async (directoryPath) => {
     console.log(`emptyFolder: ${isDev()}`);
-    if (isDev()) {
+    if (isLocal()) {
         try {
             const filesIn = await fs.readdir(directoryPath);
             const terms = [LOGF_UPDATE, LOGF_ROUNDS];
@@ -93,7 +95,7 @@ const writeBeautifiedJson = async (directoryPath, fileName, data) => {
 };
 const updateUpdates = async () => {
     console.log(`updateUpdates: ${isDev()}`);
-    if (isDev()) {
+    if (isLocal()) {
         let uf = await fs.readFile(LOG_UPDATE);
         uf = JSON.parse(uf);
         let index = Object.keys(uf).length;
@@ -138,45 +140,51 @@ const writeLogsV1 = async () => {
 };
 
 const writeMapFile = (o) => {
-    console.log('write it');
-    fs.writeFile('data/routemap.json', beautify(o, null, 2, 100));
-//    writeBeautifiedJson('data', 'routemap.json', o);
+    if (isLocal()) {
+        console.log('write it');
+        fs.writeFile('data/routemap.json', beautify(o, null, 2, 100));
+    //    writeBeautifiedJson('data', 'routemap.json', o);
+    }
 }
 const writeProfileFile = (o) => {
-    const n = o.name.replace(' ', '').toLowerCase();
-    const c = o.country.replace(' ', '').toLowerCase();
-    fs.writeFile(`data/profiles/profile_${c}_${n}.json`, beautify(o, null, 2, 100));
+    if (isLocal()) {
+        const n = o.name.replace(' ', '').toLowerCase();
+        const c = o.country.replace(' ', '').toLowerCase();
+        fs.writeFile(`data/profiles/profile_${c}_${n}.json`, beautify(o, null, 2, 100));
+    }
 }
 const getProfileFiles = async (dir, cb) => {
-    try {
-        const files = await fs.readdir(dir);
-        const out = {};
-        for (const file of files) {
-            const filePath = path.join(dir, file);
-            if (file.endsWith('.json')) {
-                try {
-                    const data = await fs.readFile(filePath, 'utf8');
-                    const i = file.split('_');
-                    if (!out.hasOwnProperty(i[1])) {
-                        out[i[1]] = {};
+    if (isLocal()) {
+        try {
+            const files = await fs.readdir(dir);
+            const out = {};
+            for (const file of files) {
+                const filePath = path.join(dir, file);
+                if (file.endsWith('.json')) {
+                    try {
+                        const data = await fs.readFile(filePath, 'utf8');
+                        const i = file.split('_');
+                        if (!out.hasOwnProperty(i[1])) {
+                            out[i[1]] = {};
+                        }
+                        const od = JSON.parse(data);
+                        out[i[1]][od.name.replace(' ', '_').toLowerCase()] = od;
+                    } catch (err) {
+                        console.error(`Error reading file ${file}: ${err.message}`);
                     }
-                    const od = JSON.parse(data);
-                    out[i[1]][od.name.replace(' ', '_').toLowerCase()] = od;
-                } catch (err) {
-                    console.error(`Error reading file ${file}: ${err.message}`);
+                } else {
+                    console.log(`Skipping non-JSON file: ${file}`);
                 }
-            } else {
-                console.log(`Skipping non-JSON file: ${file}`);
             }
+            cb(out)
+        } catch (err) {
+            console.error(`Error reading directory: ${err.message}`);
         }
-        cb(out)
-    } catch (err) {
-        console.error(`Error reading directory: ${err.message}`);
     }
 };
 const writeLogs = async () => {
     console.log(`writeLogs`);
-    if (isDev()) {
+    if (isLocal()) {
         try {
             let uf;
             // Check if the log file exists
@@ -211,7 +219,7 @@ const writeLogs = async () => {
 };
 const getUpdateLog = async (cb) => {
     console.log(`getUpdateLog: ${isDev()}`);
-    if (isDev()) {
+    if (isLocal()) {
         const ul = await fs.readFile(LOG_UPDATE, 'utf-8');
         if (cb) {
             cb(ul);
