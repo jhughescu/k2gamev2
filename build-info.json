@@ -1,6 +1,6 @@
 {
-  "timestamp": "2024-12-16T12:18:47Z",
-  "commitHash": "bdaca4ba7866d6ea713ac3d71e822a888478c53a",
-  "commitMessage": "Resources page fully set up (not finalised; still to be seen by client, some features not yet agreed)",
+  "timestamp": "2024-12-19T14:38:35Z",
+  "commitHash": "3e55e024e368515be5ccb6a47d95d206572fb842",
+  "commitMessage": "Event model initialised & working, but some changes required to the timing model (24 hour display to be disregarded, events now to occur in gametime)",
   "branch": "master"
 }

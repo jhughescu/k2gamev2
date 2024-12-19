@@ -1,0 +1,72 @@
+{
+    "canada": {
+        "profiles": {
+            "p0": "Frederic Harris",
+            "p1": "Gabela Bouchard",
+            "p2": "Jacques Ouellet"
+        }
+    },
+    "czechoslovakia": {
+        "profiles": {
+            "p0": "Hana Dvorakova",
+            "p1": "Jan Svoboda",
+            "p2": "Petr Novak"
+        }
+    },
+    "finland": {
+        "profiles": {
+            "p0": "Juhani Karppinen",
+            "p1": "Luukas Aalto",
+            "p2": "Oona Takala"
+        }
+    },
+    "france": {
+        "profiles": {
+            "p0": "Adrien Romane",
+            "p1": "Camille Duval",
+            "p2": "Sébastien Martin"
+        }
+    },
+    "germany": {
+        "profiles": {
+            "p0": "Heinz Mascher",
+            "p1": "Irene Koller",
+            "p2": "Peter Schmidt"
+        }
+    },
+    "italy": {
+        "profiles": {
+            "p0": "Andrea D’Angelo",
+            "p1": "Celia Serra",
+            "p2": "Tommaso Lombardi"
+        }
+    },
+    "netherlands": {
+        "profiles": {
+            "p0": "Karel de Bakker",
+            "p1": "Lotte Brouwer",
+            "p2": "Ronald van Coevorden"
+        }
+    },
+    "norway": {
+        "profiles": {
+            "p0": "Edvard Jenssen",
+            "p1": "Frida Nilsen",
+            "p2": "Roald Bakke"
+        }
+    },
+    "spain": {
+        "profiles": {
+            "p0": "Alejandro Sánchez",
+            "p1": "Enriqua García",
+            "p2": "Hermosa Martín"
+        }
+    },
+    "usa": {
+        "profiles": {
+            "p0": "John Steele",
+            "p1": "Michael Smith",
+            "p2": "Susan Trump"
+        }
+    }
+}

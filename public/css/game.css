@@ -115,42 +115,27 @@ p.resource_value {
 .resource_adjust input[type="number"] {
     -moz-appearance: textfield;
 }
-/*
-.adjust_btn {
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    background-color: yellow;
-    color: black;
-    font-weight: bold;
-    font-size: 16px;
-}
-.adjust_btn.plus:before {
-    content: '+';
-}
-.adjust_btn.minus:before {
-    content: '-';
-}
-.adjust_btn:before {
-
-    width: 20px;
-    text-align: center;
-}
-*/
 .input-group {
     display: flex; /* Enable flexbox */
     align-items: center; /* Align items vertically */
     gap: 5px; /* Optional: Add space between elements */
     margin: 0px;
 }
-
 .input-group label {
     flex-basis: 200px;
     margin-right: 10px; /* Optional: Space between label and input */
 }
-
 .input-group input[type="number"] {
     width: 30px; /* Adjust width as needed */
+}
+
+.btn {
+    cursor: pointer;
+}
+.btn:disabled {
+    cursor: default;
+    opacity: 0.6;
+    pointer-events: none;
 }
 
 .adjust_btn {
@@ -212,4 +197,21 @@ p.resource_value {
 .k2-modal-btn {
     border: 0px solid white;
     cursor: pointer;
+}
+.dieroll {
+    width: 100px; /* Set width of the button */
+    height: 100px; /* Set height of the button */
+    background-image: url('../assets/icons/icon_die_2.png'); /* Add your graphic */
+    background-size: cover; /* Ensure the image covers the button */
+    background-repeat: no-repeat;
+    background-position: center;
+    border: none; /* Optional: remove default button border */
+    cursor: pointer; /* Makes it clear it's clickable */
+
+    /* Remove button text */
+    text-indent: -9999px; /* Move text far outside view */
+    overflow: hidden; /* Prevent text from showing */
+    white-space: nowrap; /* Prevent wrapping */
+    padding: 0; /* Remove padding to ensure proper alignment */
+    margin: 10px;
 }

@@ -78,21 +78,16 @@ const restoreSession = async (sOb, cb) => {
         cb(`session not found`);
     }
 };
-const updateSession = async (sOb, cb) => {
-    const s = await Session.findOne({uniqueID: sOb.uniqueID});
-//    const new = Object.assign({}, sOb);
-//    delete
-    console.log(`updateSession`);
+
+const updateSessionv1 = async (sOb, cb) => {
+    console.log(`updateSession:`);
     console.log(sOb);
-//    console.log(s);
+    const s = await Session.findOne({uniqueID: sOb.uniqueID});
     if (s) {
         Object.entries(sOb).forEach((p, v) => {
-//            console.log(p, v);
             s[p[0]] = p[1];
         })
-//        console.log(s);
         s.save();
-//        s[sOb]
         if (cb) {
             cb(s);
         } else {
@@ -100,6 +95,69 @@ const updateSession = async (sOb, cb) => {
         }
     }
 };
+const updateSessionV2 = async (sOb, cb) => {
+    try {
+        console.log(`updateSession:`);
+        console.log(sOb);
+        // Fetch the session by uniqueID
+        const s = await Session.findOne({ uniqueID: sOb.uniqueID });
+        if (!s) {
+            throw new Error(`Session with uniqueID ${sOb.uniqueID} not found.`);
+        }
+        // Update fields dynamically
+        for (const [key, value] of Object.entries(sOb)) {
+            // Handle arrays like `events` carefully
+            if (key === 'events' && Array.isArray(value)) {
+                s[key] = value; // Replace the array completely
+            } else {
+                s[key] = value; // Standard assignment for other fields
+            }
+        }
+        // Save the session and handle errors
+        await s.save();
+        // Callback if provided
+        if (cb) {
+            cb(s);
+        }
+    } catch (err) {
+        console.error(`Error in updateSession: ${err.message}`);
+        if (cb) cb(null, err);
+    }
+};
+const updateSession = async (sOb, cb) => {
+    try {
+        console.log(`updateSession:`);
+        console.log(sOb);
+        const filter = { uniqueID: sOb.uniqueID };
+        const update = {};
+        for (const [key, value] of Object.entries(sOb)) {
+            if (key === 'events' && Array.isArray(value)) {
+                // Replace the array completely
+                update[key] = value;
+            } else {
+                // Standard assignment for other fields
+                update[key] = value;
+            }
+        }
+        // Use direct MongoDB update to avoid triggering __v increment
+        const result = await Session.updateOne(filter, { $set: update });
+        if (result.modifiedCount === 0) {
+            throw new Error(`No document was updated for uniqueID ${sOb.uniqueID}`);
+        }
+        console.log(`Document with uniqueID ${sOb.uniqueID} successfully updated.`);
+        if (cb) {
+            // Fetch the updated document and pass it to the callback
+            const updatedSession = await Session.findOne(filter);
+            cb(updatedSession);
+        }
+    } catch (err) {
+        console.error(`Error in updateSession: ${err.message}`);
+        if (cb) cb(null, err);
+    }
+};
+
+
+
 const getSession = async (sOb, cb) => {
     const s = await Session.findOne({uniqueID: sOb.uniqueID});
 //    console.log(`getSession`);
@@ -128,7 +186,13 @@ const deleteSession = async (sOb, cb) => {
     }
 };
 const getGameData = (cb) => {
-    cb(persistentData);
+    // run interval in case persistentData not yet ready (crap approach, yes, but it works)
+    const i = setInterval(() => {
+        if (persistentData !== null) {
+            cb(persistentData);
+            clearInterval(i);
+        }
+    }, 100);
 };
 
 const getSessions = async (sOb, cb) => {

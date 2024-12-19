@@ -4,56 +4,14 @@ const routeController = require('./../controllers/routeController');
 const sessionController = require('./../controllers/sessionController');
 const downloadController = require('./../controllers/downloadController');
 const logController = require('./../controllers/logController');
+const databaseController = require('./../controllers/databaseController');
 
 const tools = require('./../controllers/tools');
 
 const eventEmitter = getEventEmitter();
 
 let io = null;
-if (1 == 2) {
-//let adminDashboardNamespace = null;
-//let facilitatorDashboardNamespace = null;
-//let playerNamespace = null;
-//const logging = false;
-/*
-const gameNamespaces = {};
 
-const log = (msg) => {
-    if (process.env.ISDEV && logging) {
-        if (typeof(msg) === 'object' && !msg.hasOwnProperty('length')) {
-            console.log(Object.assign({loggedBy: 'socketController'}, msg));
-        } else {
-            console.log(`socketController: ${msg}`);
-        }
-    }
-}
-const procVal = (v) => {
-    // process values into numbers, booleans etc
-    if (!isNaN(parseInt(v))) {
-        v = parseInt(v);
-    } else if (v === 'true') {
-        v = true;
-    } else if (v === 'false') {
-        v = false;
-    }
-    return v;
-}
-const getQueries = (u) => {
-//    log(u);
-    let r = u.split('?');
-    let qu = {};
-    if (r.length > 1) {
-        r = r[1].split('&');
-        r.forEach(q => {
-            q = q.split('=');
-            qu[q[0]] = procVal(q[1]);
-        });
-    }
-//    console.log(qu);
-    return qu;
-};
-*/
-}
 const showRoomSize = (id) => {
     const roomName = id;
     const room = io.sockets.adapter.rooms.get(roomName);
@@ -159,6 +117,17 @@ function initSocket(server) {
                     sessionController.deleteSessions(sOb, cb);
                 });
             }
+            if (sType === 'session.admin') {
+                socket.on('getAllSessions', (dbName, collectionName, cb) => {
+                    databaseController.getAllSessions(dbName, collectionName, cb);
+                });
+                socket.on('deleteSession', (dbName, collectionName, sessionID, cb) => {
+                    databaseController.deleteSession(dbName, collectionName, sessionID, cb);
+                });
+//                socket.on('deleteSessions', (sOb, cb) => {
+//                    sessionController.deleteSessions(sOb, cb);
+//                });
+            }
             // end admin clients
             // mapper clients
             if (sType === 'mapper') {
@@ -181,6 +150,9 @@ function initSocket(server) {
                 });
                 socket.on('getProfileFiles', (path, cb) => {
                     logController.getProfileFiles(path, cb);
+                });
+                socket.on('writeJsonFile', (dir, f, o) => {
+                    logController.writeBeautifiedJson(dir, f, o);
                 });
             }
             // end profile builder clients

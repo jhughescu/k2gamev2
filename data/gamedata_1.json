@@ -15,11 +15,25 @@
     "teams": [
         {
             "id": 0,
-            "country": "Canada"
+            "country": "Canada",
+            "adjective": "Canadian",
+            "active": true,
+            "profiles": {
+                "p0": "Frederic Harris",
+                "p1": "Gabela Bouchard",
+                "p2": "Jacques Ouellet"
+            }
         },
         {
             "id": 1,
-            "country": "Czechoslovakia"
+            "country": "Czechoslovakia",
+            "adjective": "Czech",
+            "active": true,
+            "profiles": {
+                "p0": "Hana Dvorakova",
+                "p1": "Jan Svoboda",
+                "p2": "Petr Novak"
+            }
         },
         {
             "id": 2,
@@ -46,28 +60,68 @@
         {
             "id": 4,
             "country": "Germany",
-            "active": false
+            "adjective": "German",
+            "active": true,
+            "profiles": {
+                "p0": "Heinz Mascher",
+                "p1": "Irene Koller",
+                "p2": "Peter Schmidt"
+            }
         },
         {
             "id": 5,
             "country": "Italy",
-            "active": false
+            "adjective": "Italian",
+            "active": true,
+            "profiles": {
+                "p0": "Andrea D’Angelo",
+                "p1": "Celia Serra",
+                "p2": "Tommaso Lombardi"
+            }
         },
         {
             "id": 6,
-            "country": "Netherlands"
+            "country": "Netherlands",
+            "adjective": "Dutch",
+            "active": true,
+            "profiles": {
+                "p0": "Karel de Bakker",
+                "p1": "Lotte Brouwer",
+                "p2": "Ronald van Coevorden"
+            }
         },
         {
             "id": 7,
-            "country": "Norway"
+            "country": "Norway",
+            "adjective": "Norwegian",
+            "active": true,
+            "profiles": {
+                "p0": "Edvard Jenssen",
+                "p1": "Frida Nilsen",
+                "p2": "Roald Bakke"
+            }
         },
         {
             "id": 8,
-            "country": "Spain"
+            "country": "Spain",
+            "adjective": "Spanish",
+            "active": true,
+            "profiles": {
+                "p0": "Alejandro Sánchez",
+                "p1": "Enriqua García",
+                "p2": "Hermosa Martín"
+            }
         },
         {
             "id": 9,
-            "country": "USA"
+            "country": "USA",
+            "adjective": "American",
+            "active": true,
+            "profiles": {
+                "p0": "John Steele",
+                "p1": "Michael Smith",
+                "p2": "Susan Trump"
+            }
         }
     ],
     "profiles": {
@@ -145,15 +199,25 @@
     "route": {"ratio": [50, 50]},
     "events": [
         {
-            "time": 0,
+            "time": 0.5,
             "event": "equipment",
             "profiles": [2],
             "delay": 7
         },
         {
             "time": 5,
-            "event": "injury",
-            "profiles": [0]
+            "event": "injury1",
+            "profiles": [0],
+            "method": "injury1Setup",
+            "metrics": {
+                "threshold": 3,
+                "penalty": "t1",
+                "treat": {
+                    "results": [[7, 5], [7, 5], [5, 3]]},
+                "leave": {
+                    "results": [[0, 7], [0, 7], [0, 5]]
+                }
+            }
         },
         {
             "time": 10,
@@ -166,6 +230,50 @@
         {
             "time": 20,
             "event": "photo1"
+        },
+        {
+            "time": 25,
+            "event": "icefall2"
+        },
+        {
+            "time": 30,
+            "event": "slip"
+        },
+        {
+            "time": 35,
+            "event": "ai1"
+        },
+        {
+            "time": 40,
+            "event": "photo_storm"
+        },
+        {
+            "time": 45,
+            "event": "injury2"
+        },
+        {
+            "time": 50,
+            "event": "foundoxygen"
+        },
+        {
+            "time": 55,
+            "event": "snowblindness"
+        },
+        {
+            "time": 60,
+            "event": "ai2"
+        },
+        {
+            "time": 62,
+            "event": "announcestorm"
+        },
+        {
+            "time": 65,
+            "event": "collision"
+        },
+        {
+            "time": 70,
+            "event": "killerstorm"
         }
     ]
 }

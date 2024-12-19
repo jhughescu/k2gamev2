@@ -10,6 +10,7 @@ const sessionSchema = new Schema({
     state: String,
     time: Number,
     team: Array,
+    events: Array,
     profile0: Object,
     profile1: Object,
     profile2: Object

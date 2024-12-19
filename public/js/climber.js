@@ -18,10 +18,8 @@ class Climber {
         this.option = this.getOption(init.profile);
         this.OPTION = this.getOption(init.profile).toUpperCase();
         this.name = init.team.profiles[`p${init.profile}`];
-        this.filename = this.name.replace(' ', '');
-        const stored = Object.assign({position: init.position, currentTime: 0, delay: {d: 0, i: 0}}, this.unpackStorageSummary(this.getStoredSummary()));
-        // timeObject contains various time values and is only ever supplied by the game code (read only)
-        this.timeObject = null;
+        this.filename = this.name.replace(' ', '').replace(/[^a-zA-Z0-9]/g, '');
+        const stored = Object.assign({position: init.position, currentTime: 0, delayExpiry: 0}, this.unpackStorageSummary(this.getStoredSummary()));
         this.type = init.type;
         this.capacity = init.capacity;
         this.t1 = init.t1;
@@ -32,10 +30,12 @@ class Climber {
         this.sustenance = init.hasOwnProperty('sustenance') ? init.sustenance : 0;
         this.rope = init.hasOwnProperty('rope') ? init.rope : 0;
         this.position = stored.position > 0 ? stored.position : 0;
-
+        // currentTime is a simple integer which can be written/read from the database
         this.currentTime = stored.currentTime > 0 ? stored.currentTime : 0;
-        // delay is an object containing d: total delay and i: delay start time in minutes
-        this.delay = stored.delay > 0 ? stored.delay : 0;
+        // currentTimeObject is a read-only object sent in by the game code (see updatePosition)
+        this.currentTimeObject = {};
+        // delay in minutes
+        this.delayExpiry = stored.delayExpiry > 0 ? stored.delayExpiry : 0;
         this.eventTime = stored.eventTime > 0 ? stored.eventTime : 0;
         this.currentStage = 0;
         this.finished = false;
@@ -55,15 +55,17 @@ class Climber {
         }
     }
 
-    static resetAll() {
+    static resetAll(cs) {
+//        console.log('resetAll', cs);
         Climber.allClimbers.forEach(c => {
-            c.reset();
+            c.reset(cs);
         })
     }
-    static zeroAll() {
+    static zeroAll(cs) {
+//        console.log('zeroAll', cs);
         // More vigorous version of resetAll, nukes all values.
         Climber.allClimbers.forEach(c => {
-            c.zero();
+            c.zero(cs);
         })
         this.allClimbers = [];
     }
@@ -127,7 +129,7 @@ class Climber {
     log(s) {
 //        if (this.profile === 0 || 2 < 8) {
         return;
-        if (this.profile === 0) {
+        if (this.profile === 2) {
             if (typeof(s) === 'string' || typeof(s) === 'number') {
                 console.log(`%c${this.name} %c${s}`, 'color: white;', 'color: yellow;');
             } else {
@@ -139,6 +141,7 @@ class Climber {
 
     // gets
     getSummaryMap() {
+        // mapped values to be stored in DB (store strings and numbers only, no objects etc)
         const m = {
             p: 'profile',
             t: 'type',
@@ -152,7 +155,7 @@ class Climber {
             r: 'rope',
             pos: 'position',
             st: 'currentStage',
-            d: 'delay', /* delay is a time in minutes  */
+            de: 'delayExpiry', /* delay is a time in minutes  */
             et: 'eventTime', /* if under the effect of an event, this is the time in minutes when the event occured */
         }
         return m;
@@ -207,9 +210,13 @@ class Climber {
     }
     setDelay(n) {
         // a game event has sent a delay to this climber. Prevent updates until the delay (in minutes) has expired
-        this.delay = n;
-        console.log(`**  ${this.name} delayed for ${n} minutes at ${this.currentTime}`);
-        console.log(this.timeObject);
+        if (this.currentTimeObject) {
+            if (this.currentTimeObject.gametime) {
+                this.delayExpiry = this.currentTimeObject.gametime.m + n;
+            } else {
+                console.warn('cannot set delay; currentTimeObject not yet defined');
+            }
+        }
     }
     // storage/summarising
     storeSummary() {
@@ -252,75 +259,67 @@ class Climber {
         const up = this.position <= r[0];
         const cs = this.currentStage;
         const tm = cs > 0 && cs < 3  ? this.t2 : this.t1; /* time to ascend/descend in minutes */
+//        console.log(`using ${(cs > 0 && cs < 3  ? 't2' : 't1')} t1: ${this.t1} t2: ${this.t2}`);
         const ts = tm * 60; /* time to ascend/descend in seconds */
         const stage = s[cs];
-        const rate = (100/4)/ts; /* distance travelled each second */
+        let rate = (100/4)/ts; /* distance travelled each second */
+        if (isNaN(rate)) {
+            rate = 0;
+        }
+//        console.log(`${this.name} calculateClimbRate based on t${cs} at ${tm} before: ${this.currentSpeed}, after: ${rate}`);
+//        console.log(this.options[this.type]);
         if (!isNaN(rate)) {
             this.setCurrentSpeed(rate);
         }
-        this.currentStage += 1;
+//        this.currentStage += 1;
     }
     updatePosition(o, cb) {
-        this.log(`updatePosition`);
-        this.log(o);
+//        console.log(`updatePosition`);
+//        console.log(o);
+        this.currentTimeObject = JSON.parse(JSON.stringify(o));
+        const gt = this.currentTimeObject.gametime;
         if (!this.finished) {
             const d = o.sec - this.currentTime;
             const step = d * this.currentSpeed;
             this.currentTime = o.sec;
-            this.timeObject = o;
             if (this.position > this.gameData.route.stages[this.currentStage]) {
                 // stage has changed; climb rate must be recalculated
+                // Note: change the currentStage here NOT in the calculation method as that can be called at other times.
+//                console.log(`calculateClimbRate, reset times if they have changed: ${this.t1}, ${this.t2}, ${this.currentStage}, ${this.options[this.type].t1}, ${this.options[this.type].t2}`);
+                const adjustID = `t${this.currentStage}`;
+                const adjusting = this[adjustID];
+//                console.log(`adjusting ${adjustID} which is currently ${adjusting}, the updated value is ${this.options[this.type][adjustID]}`);
+                // set the current t value to the predefined value, in case it has been adjusted by an event
+//                this[adjustID] = this.options[this.type][adjustID];
+                // reset all timings - adjusted timings do not persist across stages
+                this.t1 = this.options[this.type].t1;
+                this.t2 = this.options[this.type].t2;
+
                 this.calculateClimbRate();
+                this.currentStage += 1;
                 if (cb) {
                     cb('reset');
                 }
             }
             if (this.position + step < 100) {
-                if (this.delay === 0) {
-                    this.position += step;
-                    const r = Math.round(Math.random() * 10);
+//                console.log(this.delayExpiry)
+                if (this.delayExpiry > 0 && gt.m < this.delayExpiry) {
+//                    console.log(`${this.name} is delayed here for ${this.delayExpiry - gt.m} minutes`);
+                    // climber is delayed
                 } else {
-//                    console.log(` * * * ${this.name} is currently delayed for ${this.delay} minutes`);
+                    this.position += step;
+
                 }
             } else {
-
                 this.position = 100;
             }
             this.log(`position: ${this.position}`);
             return this.position;
         }
     }
-    updatePositionV1(t, cb) {
-        if (!this.finished) {
-//            this.log(`t: ${t}`);
-            const d = t - this.currentTime;
-            const step = d * this.currentSpeed;
-            this.currentTime = t;
-            this.log(this.currentTime / 60);
-            if (this.position > this.gameData.route.stages[this.currentStage]) {
-                // stage has changed; climb rate must be recalculated
-                this.calculateClimbRate();
-                if (cb) {
-                    cb('reset');
-                }
-            }
-            if (this.position + step < 100) {
-                if (this.delay.d === 0) {
-                    this.position += step;
-                    const r = Math.round(Math.random() * 10);
-                } else {
-//                    console.log(`${this.name} is currently delayed for ${this.delay.d} minutes`);
-                }
-            } else {
-
-                this.position = 100;
-            }
-            return this.position;
-        }
-    }
     updateViewFromTime(o) {
         if (!this.finished) {
-            this.log(`updateViewFromTime (input type: ${typeof(o)})`);
+//            console.log(`updateViewFromTime (input type: ${typeof(o)})`);
             this.log(o)
             this.updatePosition(o);
 //            this.log(`time (${s}) sets pos: ${this.position}`);
@@ -403,19 +402,24 @@ class Climber {
 //            o.profile = this.profile;
         });
     }
-    reset() {
+    reset(cs) {
         this.setPosition(0);
         this.currentTime = 0;
         this.currentStage = 0;
         this.setCurrentSpeed(0);
+        this.currentTimeObject = cs;
+        this.setDelay(0);
         this.finished = false;
-        this.log('reset sets finished to false')
+//        this.log('reset sets finished to false');
         clearInterval(this.bounceInt);
         this.calculateClimbRate();
-        this.updatePosition({sec: 0});
+//        console.log('i bet this is the culprit');
+//        console.log(cs);
+        this.updatePosition(cs);
     }
-    zero() {
-        this.reset();
+    zero(cs) {
+//        console.log('zero');
+        this.reset(cs);
         this.t1 = this.t2 = this.tTotal = null;
         this.type = -1;
         this.option = this.OPTION = null;

@@ -11,7 +11,12 @@ document.addEventListener('DOMContentLoaded', function () {
         const formData = {};
         const inputs = form.querySelectorAll('input, select');
         inputs.forEach(input => {
-            const { name, type, value, checked } = input;
+            const {
+                name,
+                type,
+                value,
+                checked
+            } = input;
             if (type === 'radio') {
                 // Only add the checked radio button
                 if (checked) {
@@ -82,8 +87,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     const res = generateObjectFromForm();
                     console.log(res);
                     console.log(res.name, res.country);
-//                    if (res.name) {}
-//                    socket.emit('writeProfile', res);
+                    //                    if (res.name) {}
+                    //                    socket.emit('writeProfile', res);
                 } else {
                     alert('please complete all inputs');
                 }
@@ -91,37 +96,49 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     };
     const showProfiles = () => {
-//        console.log(profiles);
+        //        console.log(profiles);
         const a = Object.entries(profiles);
-        console.log(profiles)
-        console.log(a)
+        //        console.log(profiles)
+        //        console.log(a)
         renderTemplate('profiles', 'dev.profile.build.profiles', a);
     };
     const getData = () => {
         socket.emit('getData', (s) => {
-//            console.log('got data');
-//            console.log(s);
+            //            console.log('got data');
+            //            console.log(s);
             data = s;
 
         });
     };
     const getProfiles = () => {
-        // fetch all the exisitng profiles & put them in an object
+        // Fetch all the existing profiles & put them in an object
         const pPath = './data/profiles';
         socket.emit('getProfileFiles', pPath, (o) => {
             profiles = o;
+            const tempO = {};
+            Object.entries(o).forEach(c => {
+                const a = Object.values(c[1]).map(p => p.name);
+                const ob = a.reduce((obj, value, index) => {
+                    obj[`p${index}`] = value;
+                    return obj;
+                }, {});
+                tempO[c[0]] = {
+                    profiles: ob
+                };
+            });
+            console.log(tempO);
+            socket.emit('writeJsonFile', 'data', 'tempprofiles', tempO);
         });
     };
 
-
     const init = () => {
-//        console.log('init');
+        //        console.log('init');
         getProfiles();
         getData();
         const i = setInterval(() => {
-            if (data !== null & profiles  !== null) {
-//                console.log(data);
-//                console.log(profiles);
+            if (data !== null & profiles !== null) {
+                //                console.log(data);
+                //                console.log(profiles);
                 initForm();
                 showProfiles();
                 clearInterval(i);

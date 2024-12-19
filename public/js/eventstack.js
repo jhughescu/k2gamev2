@@ -1,11 +1,16 @@
 class EventStack {
     constructor(data) {
+        this.gameData = data;
         this.allEvents = data.events;
+        this.eventSummary = data.session.events;
+        this.triggers = {};
         this.processEvents();
+//        console.log(this.triggers);
+//        console.log(this.eventSummary);
         this.currentEvent;
         this.nextEvent;
-//        this.setCurrentEvent(-1);
         this.events = [];
+        this.cMin = -1;
     }
     initSessionEvents(m) {
         // create a subset of events based on init timing
@@ -28,41 +33,21 @@ class EventStack {
 //        console.log('getNextEvent', ne);
         return ne;
     }
-    setCurrentEvent(n) {
-        console.warn(`call to deprecated method (setCurrentEvent)`);
-        return;
-        this.events.forEach(e => {
-            e.current = false,
-            e.next = false
-        });
-        if (n > -1) {
-            this.events[n].current = true;
-            this.currentEvent = this.events[n];
-        }
-        if (n < this.events.length) {
-            this.events[n + 1].next = true;
-            this.nextEvent = this.events[n + 1];
-        }
-    }
-    setCurrentEventFromTime(m) {
-        console.warn(`call to deprecated method (setCurrentEventFromTime)`);
-        return;
-        for (let i = 0; i < this.events.length; i++) {
-            const e = this.events[i];
-            const ne = this.events[i + 1];
-            if (m > e.time && m < ne.time)  {
-                this.setCurrentEvent(i);
-                break;
-            }
-        }
+    getCurrentEvent() {
+        return this.currentEvent;
     }
     processEvents() {
-        this.allEvents.forEach((e, i) => {
-            e.next = false;
-            e.current = false;
-            e.complete = false;
-            e.n = i;
-        });
+        if (this.allEvents) {
+            this.allEvents.forEach((e, i) => {
+                e.next = false;
+                e.current = false;
+                e.complete = false;
+                e.n = i;
+                this.triggers[`t${e.time}`] = e;
+            });
+        } else {
+            console.warn(`cannot process events; data model incomplete`);
+        }
     }
     useEvent(cb) {
         // Uses the next event in the stack - removes it from the stack
@@ -74,22 +59,40 @@ class EventStack {
         } else {
             console.warn(`useEvent (via updateTime) requires a callback`);
         }
+        return e;
     }
-    updateTime(m, cb) {
+    updateSummary(ev, v) {
+        // called from main game code
+        this.eventSummary[ev.n] = v;
+//        console.log(`eventSummary: ${this.eventSummary}`);
+        return this.eventSummary;
+    }
+    updateTime(o, cb) {
+        // receives a time object
+//        console.log(`updateTime: OK to run? ${Boolean(this.events.length)}`);
         if (this.events.length) {
-            const ne = this.getNextEvent();
-            if (ne) {
-                if (m > this.getNextEvent().time) {
-    //                const e = this.getNextEvent();
-                    this.useEvent(cb);
-    //                cb(this.ne);
-    //                this.setCurrentEvent(this.nextEvent.n);
+            const m = o.gametime.m;
+            let e = false;
+            e = this.triggers[`t${roundNumber(m, 1)}`];
+//            console.log(roundNumber(m, 1), e);
+            if (e) {
+                if (this.eventSummary[e.n] < 2) {
+                    this.currentEvent = e;
+//                    console.log(`####################### event exists and has NOT been completed: ${e.event}`);
+                    if (cb) {
+                        cb(e);
+                    }
+                    return e;
+                } else {
+//                    console.warn(`event ${e.event} has been called previously, cannot call again`);
                 }
-            } else {
-                console.warn('next event not defined')
             }
-        } else {
-//            console.log('no events pending');
+            this.cMin = Math.floor(m);
         }
+    }
+    resetEvents() {
+        this.eventSummary = new Array(this.events.length).fill(0);
+//        console.log(this.eventSummary);
+        return this.eventSummary;
     }
 }
