@@ -132,11 +132,16 @@ p.resource_value {
 .btn {
     cursor: pointer;
 }
-.btn:disabled {
+.k2-modal-btn {
+    border: 0px solid white;
+    cursor: pointer;
+}
+.btn:disabled, .k2-modal-btn:disabled {
     cursor: default;
     opacity: 0.6;
     pointer-events: none;
 }
+
 
 .adjust_btn {
     width: 20px; /* Set width of the buttons */
@@ -194,10 +199,7 @@ p.resource_value {
 #modal_content, .modal {
     pointer-events: all;
 }
-.k2-modal-btn {
-    border: 0px solid white;
-    cursor: pointer;
-}
+
 .dieroll {
     width: 100px; /* Set width of the button */
     height: 100px; /* Set height of the button */

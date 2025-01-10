@@ -21,6 +21,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
     const msgWin = $('#msg');
     const msgs = [];
+    const devLog = [];
     // common words
     const OX = 'oxygen';
     const SUS = 'sustenance';
@@ -192,6 +193,104 @@ document.addEventListener('DOMContentLoaded', function () {
         const o = $('#overlay');
         o.fadeOut();
     };
+    const showAlert = (s) => {
+//        alert(s);
+    };
+
+    // Methods called when event modals are launched
+    // modal-specifics
+    // try to always send in the modal as an arg - makes modal closing easier
+    const injury1Setup = (m) => {
+        const t = $('#treat');
+        const l = $('#leave');
+        const both = $('.treatleave');
+        const die = $('.dieroll');
+        const rollDisplay = $('#rollresult');
+        const ev = eventStack.getCurrentEvent();
+        const threshold = ev.metrics.threshold;
+        let act = null;
+        let results = null;
+        both.off('click').on('click', function () {
+            const die = $(this).parent().find('#die');
+            die.show();
+            both.addClass('disabled');
+            both.prop('disabled', true);
+            act = $(this).attr('id');
+            results = ev.metrics[act];
+        });
+        die.off('click').on('click', () => {
+            die.addClass('disabled');
+            die.prop('disabled', true);
+            const r = dieRoll();
+            const a = results.results.map(e => e[r <= threshold ? 0 : 1]);
+            rollDisplay.html(`you rolled a ${r}`);
+            a.forEach((p, id) => {
+                const prof = session[`profile${id}`];
+                if (prof.currentStage === 1) {
+                    const p1 = window.clone(prof);
+                    prof.adjustProperty(ev.metrics.penalty, p, (r) => {
+//                        console.log(`adjustment complete`, r);
+                    });
+                    prepProfilesForDisplay();
+                    prof.calculateClimbRate();
+                    devShowProfiles();
+                }
+
+            });
+            completeEvent();
+            if (m) {
+                setupModalClose(m, true);
+            }
+        });
+    };
+    // end modal-specifics
+    const closeModal = () => {
+        const m = $('#overlay_modal');
+        const isEventModal = m.find('.modal-event').length > 0;
+        if(isEventModal) {
+            completeEvent();
+            playPauseSession();
+        }
+        m.removeClass('clickable');
+        m.hide();
+    };
+    // note: unify the two methods below & kill one of them
+    const setupCloseModal = (btn) => {
+        // possibly removed -  monitor for time being
+        console.warn('possible deprecated method');
+        $(btn).off('click').on('click', () => {
+            closeModal();
+        })
+    };
+    const setupModalClose = (modal, boo) => {
+//        console.log(`setupModalClose`, boo, modal)
+        const closer = modal.find('.k2-modal-btn');
+        if (!boo) {
+            closer.addClass('disabled');
+        } else {
+            closer.removeClass('disabled');
+        }
+        closer.prop('disabled', !boo);
+        closer.off('click').on('click', closeModal);
+    };
+    const showModalEvent = (ev) => {
+        const m = $('#overlay_modal');
+        m.show();
+        m.addClass('clickable');
+        renderTemplate('overlay_modal', `modal`, {type: 'event'}, () => {
+            renderTemplate('modal_content', `modal/event/${ev.event}`, ev, () => {
+                // event modals cannot be closed by clicking the overlay, they require user input before progression
+                if (devController) {
+                    devController.setupGameTimeSelect();
+                }
+                const hasMethod = ev.hasOwnProperty('method');
+                setupModalClose(m, !hasMethod);
+                if (hasMethod) {
+                    eval(ev.method)(m);
+                }
+            })
+        });
+    };
     const showModal = (id, ob) => {
         const m = $('#overlay_modal');
         const o = ob ? ob : {};
@@ -208,94 +307,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (devController) {
                     devController.setupGameTimeSelect();
                 }
+                setupModalClose(m, true);
             })
         });
-    };
-
-    // methods called when event modals are launched
-    const injury1Setup = () => {
-        const t = $('#treat');
-        const l = $('#leave');
-        const both = $('.treatleave');
-        const die = $('.dieroll');
-        const rollDisplay = $('#rollresult');
-        const ev = eventStack.getCurrentEvent();
-        const threshold = ev.metrics.threshold;
-        let act = null;
-        let results = null;
-        both.off('click').on('click', function () {
-            const die = $(this).parent().find('#die');
-            die.show();
-//            both.addClass('disabled');
-//            both.prop('disabled', true);
-            act = $(this).attr('id');
-            results = ev.metrics[act];
-        });
-        die.off('click').on('click', () => {
-//            die.addClass('disabled');
-//            die.prop('disabled', true);
-            const r = dieRoll();
-            const a = results.results.map(e => e[r <= threshold ? 0 : 1]);
-            rollDisplay.html(`you rolled a ${r}`);
-//            console.log(act, r, a);
-            a.forEach((p, id) => {
-                const prof = session[`profile${id}`];
-                if (prof.currentStage === 1) {
-                    const temp = [prof.currentSpeed];
-//                    const temp = [prof[ev.metrics.penalty]];
-//                    console.log(`update profile ${prof.name}, change ${ev.metrics.penalty} by ${p}`);
-//                    console.log(prof.currentStage === 1);
-//                    console.log(prof.t1);
-//                    console.log(prof);
-
-                    prof[ev.metrics.penalty] += p;
-                    temp.push(prof.currentSpeed);
-//                    temp.push(prof[ev.metrics.penalty]);
-//                    console.log(p, temp);
-                    prof.calculateClimbRate();
-//                    console.log(prof);
-                }
-
-            });
-//            completeEvent();
-        });
-    }
-
-    const showModalEvent = (ev) => {
-        const m = $('#overlay_modal');
-        m.show();
-        m.addClass('clickable');
-        renderTemplate('overlay_modal', `modal`, {type: 'event'}, () => {
-            renderTemplate('modal_content', `modal/event/${ev.event}`, ev, () => {
-                document.querySelector('#overlay_modal').addEventListener('click', () => {
-                    closeModal();
-                });
-                document.querySelector('.modal').addEventListener('click', (event) => {
-                    event.stopPropagation(); // Prevents the click event from bubbling up to the parent
-                });
-                if (devController) {
-                    devController.setupGameTimeSelect();
-                }
-                if (ev.hasOwnProperty('method')) {
-                    eval(ev.method)();
-                }
-            })
-        });
-    };
-    const closeModal = () => {
-        const m = $('#overlay_modal');
-        const isEventModal = m.find('.modal-event').length > 0;
-        if(isEventModal) {
-            completeEvent();
-            playPauseSession();
-        }
-        m.removeClass('clickable');
-        m.hide();
-    };
-    const setupCloseModal = (btn) => {
-        $(btn).off('click').on('click', () => {
-            closeModal();
-        })
     };
 
     const storeLocal = (p, v) => {
@@ -337,12 +351,12 @@ document.addEventListener('DOMContentLoaded', function () {
         session.allProfiles = [];
         for (var i in session) {
             if (i.includes('profile')) {
-                console.log(`looks like we have a profile`);
+//                console.log(`looks like we have a profile`);
                 if (session[i].profile !== null && session[i].hasOwnProperty('summary')) {
-                    console.log(`logic approved`)
+//                    console.log(`logic approved`)
                     const o = {summaryString: session[i].summary};
-                    console.log(o);
-                    console.log(getClimber(o));
+//                    console.log(o);
+//                    console.log(getClimber(o));
                     session[i] = getClimber(o);
                     session.allProfiles.push(session[i]);
                 }
@@ -355,10 +369,10 @@ document.addEventListener('DOMContentLoaded', function () {
         const i = setInterval(() => {
             if (gameData !== null) {
                 session = sesh;
-                console.log(`session set, type: "${type}"`);
+//                console.log(`session set, type: "${type}"`);
 
         //        console.log(JSON.parse(JSON.stringify(sesh)));
-                console.log(1, JSON.parse(JSON.stringify(session)));
+//                console.log(1, JSON.parse(JSON.stringify(session)));
         //        console.log(session);
         //        console.log(getCurrentState());
                 gameflow(`session initialised (${type}) with ID ${session.uniqueID}`);
@@ -366,13 +380,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 gTimer.setTimer(session.time);
                 expandSession();
 
-                console.log(2, JSON.parse(JSON.stringify(session)));
+//                console.log(2, JSON.parse(JSON.stringify(session)));
                 const initO = Object.assign({}, gameData);
                 initO.session = session;
                 eventStack = new EventStack(initO);
                 summariseSession();
 
-                console.log(3, JSON.parse(JSON.stringify(session)));
+//                console.log(3, JSON.parse(JSON.stringify(session)));
                 initRender();
                 updateView();
                 clearInterval(i);
@@ -423,7 +437,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 const i = setInterval(() => {
                     if (gameData !== null) {
                         clearInterval(i);
-                        console.log('gamedata is ready, do stuff');
+//                        console.log('gamedata is ready, do stuff');
                         setTeamMember(0, -1);
                         setTeamMember(1, -1);
                         setTeamMember(2, -1);
@@ -436,7 +450,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 setTimeout(() => {
                     // delay required to allow for async retrieval of gameData
                     if (gameData.isDev) {
-//                        alert(`gameTime set to ${gameData.gameTime} minutes`);
+//                        showAlert(`gameTime set to ${gameData.gameTime} minutes`);
                         showModal('dev.initsetup', gameData);
                     }
                 }, 500);
@@ -613,11 +627,11 @@ document.addEventListener('DOMContentLoaded', function () {
     };
     const getData = () => {
         socket.emit('getGameData', (d) => {
-            console.log(`game data ready`);
+//            console.log(`game data ready`);
 
             gameData = processData(d);
-            console.log(d)
-            console.log(gameData)
+//            console.log(d)
+//            console.log(gameData)
             const qTime = getQueries().gtime;
             const gTime = Boolean(qTime) ? qTime : gameData.gameTime;
             setSessionMax(gTime);
@@ -635,6 +649,14 @@ document.addEventListener('DOMContentLoaded', function () {
         console.log(gameData);
     };
     // teams
+
+    const climberUpdate = (c) => {
+        // event to be called from Climber class
+//        console.log(`climberUpdate`);
+        devShowProfiles();
+//        console.log(c);
+//        showProfiles();
+    };
     const resetClimbers = () => {
 //        console.log(`resetClimbers`);
 //        console.log(getCurrentState());
@@ -671,14 +693,14 @@ document.addEventListener('DOMContentLoaded', function () {
         console.log(kill);
     };
     const getClimber = (o) => {
-        console.log(`getClimber`);
+//        console.log(`getClimber`);
 //        console.log(session);
 //        console.log(session.team);
         // getClimber returns a new Climber instance
         // Requires an object as arg
         // Add the game data to all instances
         if (gameData) {
-            console.log('gameData is OK, we can create the climber');
+//            console.log('gameData is OK, we can create the climber');
             o.gameData = JSON.parse(JSON.stringify(gameData));
             o.team = JSON.parse(JSON.stringify(session.team));
 
@@ -689,26 +711,26 @@ document.addEventListener('DOMContentLoaded', function () {
 //            console.log(Climber.getClimbers().length)
             return c;
         } else {
-            console.log('no gameData, just send back the original');
+//            console.log('no gameData, just send back the original');
             return {summary: o.summaryString};
         }
     };
     const setTeamMember = (profile, type) => {
-        console.log(`setTeamMember, ${profile}, ${type}`);
+//        console.log(`setTeamMember, ${profile}, ${type}`);
         let tm = false;
         if (session[`profile${profile}`]) {
-            console.log('ok to create profile - no profile to overwrite');
+//            console.log('ok to create profile - no profile to overwrite');
 //            if (!session[`profile${profile}`].hasOwnProperty('blank')) {
                 if (session[`profile${profile}`].profile === null || $.isEmptyObject(session[`profile${profile}`].profile)) {
-                    console.log('ok to continue, no empty profile');
+//                    console.log('ok to continue, no empty profile');
                     const gtm = getTeamMember(profile, type);
-                    console.log('gtm', gtm);
+//                    console.log('gtm', gtm);
                     const fullProfile = Object.assign(getTeamMember(profile, type), {profile: profile, type: type});
                     const p = getClimber(fullProfile);
     //                console.log(p);
                     tm = {summary: p.getStorageSummary()};
                     if (Boolean(tm)) {
-                        console.log('ok to store profile')
+//                        console.log('ok to store profile')
                         updateSession(`profile${profile}`, tm, (r) => {
                             if (Climber.getClimbers().length === 3) {
                                 gameflow(`you can now use renderMap`)
@@ -776,7 +798,6 @@ document.addEventListener('DOMContentLoaded', function () {
         const r = Climber.getClimbers().filter(c => c.type === -1).length === 0;
         return r;
     };
-
     // timing
     const formatTime = (ms) => {
         // Calculate hours, minutes, and seconds
@@ -1004,13 +1025,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 ev.preventDefault();
 //                console.log($('#resource_remaining').html().includes('-'));
                 if ($('#resource_remaining').html().includes('-')) {
-                    alert(`${p.name} is ${Math.abs(getWeight(p).remaining)}kg over capacity, please adjust resources`);
+                    showAlert(`${p.name} is ${Math.abs(getWeight(p).remaining)}kg over capacity, please adjust resources`);
                 } else {
                     const inputValues = $('input[type="text"]').map((_, el) => parseInt($(el).val())).get();
                     const zeroValues = inputValues.filter(v => v === 0);
                     if (p.temptype < 0) {
                         // no profile selected
-                        alert('you must pick an Option')
+                        showAlert('you must pick an Option')
                     } else {
                         const r = $('#resource_remaining').find('div').length > 0 ? $('#resource_remaining').find('div').html() : $('#resource_remaining').html();
                         if (zeroValues.length > 1) {
@@ -1202,7 +1223,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 setTimeout(() => {
                     if ($('#resource_remaining').html().includes('-')) {
                         // negative resource remaining
-                        alert(`${p.name} is ${Math.abs(getWeight(p).remaining)}kg over capacity, please adjust the load.`);
+                        showAlert(`${p.name} is ${Math.abs(getWeight(p).remaining)}kg over capacity, please adjust the load.`);
                     }
                 }, 100);
             }
@@ -1242,6 +1263,10 @@ document.addEventListener('DOMContentLoaded', function () {
     };
     const eventTrigger = (ev) => {
         // EventStack calls this method when a new event is to be triggered
+//        console.log(ev);
+        if (!ev.active) {
+            return;
+        }
         pauseSession();
         if (ev.hasOwnProperty('profiles')) {
             // NOTE: the event model CAN send in  any number of profiles, the line below assumes only a single profile, edit if events effect multiple profiles
@@ -1264,15 +1289,66 @@ document.addEventListener('DOMContentLoaded', function () {
             updateSession('events', evSumm);
 //            console.log(evSumm);
         }
-    }
+    };
     const completeEvent = () => {
         const ev = eventStack.getCurrentEvent();
         const evSumm = eventStack.updateSummary(ev, 2);
         updateSession('events', evSumm);
 //        console.log(evSumm);
-    }
+    };
+    const showEvents = () => {
+        eventStack.getEvents().forEach(e => console.log(e));
+        console.log('#######################');
+        session.events.forEach(e => console.log(e));
+    };
 
     //
+    const prepProfilesForDisplay = () => {
+        let p = Object.entries(session).filter(e => e[0].includes('profile')).map(e => e[1]);
+        p.forEach(e => {
+            const cs = e.currentStage;
+            e.isT1 = cs === 1 || cs === 4 ? 'bolded' : '';
+            e.isT2 = cs === 2 || cs === 3 ? 'bolded' : '';
+            e.currentSpeedShort = roundNumber(e.currentSpeed, 5);
+            e.tNow = e[`t${e.currentStage}`];
+        });
+        return p;
+    };
+    const devShowProfiles = () => {
+//        console.log(`devShowProfiles`);
+        const p = prepProfilesForDisplay();
+//        console.log(p);
+//        console.log(session);
+        renderTemplateWithStyle('profilepanel', 'dev.profile.panel', p, () => {
+//                    console.log('profiles rendered');
+        });
+    };
+    const updateDevLog = (s) => {
+        // in dev, add important messages to the dev.log.panel
+        devLog.push(s);
+        const p = {logs: devLog.slice(0)};
+        const profs = Object.entries(session).filter(e => e[0].includes('profile')).map(e => e[1]);
+//        console.log(profs);
+//        console.log(session);
+        p.logs.forEach((m, i) => {
+            const id = m.substr(0, 1).toLowerCase();
+            const P = profs.filter(p => p.option === id);
+//            const P = Object.values(session).filter(p => p.option === id);
+            const o = {msg: m, type: id, img: P.length ? P[0].filename : 'AdrienRomane'};
+            p.logs[i] = o;
+//            console.log(window.clone(profs[0]));
+        });
+        renderTemplateWithStyle('logpanel', 'dev.log.panel', p, () => {
+            const div = document.getElementById('logpanel');
+            const clear = $('#clear');
+            div.scrollTop = div.scrollHeight;
+            clear.off('click').on('click', function () {
+                const logs = $(this).parent().find('.log');
+                logs.remove();
+                devLog.length = 0;
+            });
+        });
+    };
     const renderMap = () => {
         renderNone(() => {
             const rOb = {
@@ -1288,6 +1364,7 @@ document.addEventListener('DOMContentLoaded', function () {
 //                    console.log('timer rendered');
                     devTimer = new DevTimer();
                 });
+                devShowProfiles();
                 Climber.getRouteMap(() => {
                     Climber.setViews($('.map-pointer-container'));
                     Climber.setBounds(0, $('#mapzone').height());
@@ -1312,15 +1389,22 @@ document.addEventListener('DOMContentLoaded', function () {
     const renderNone = (cb) => {
         renderTemplate('theatre', 'blank', {}, () => {
             $('body').removeClass('body-map');
-//            alert('dunne')
+//            showAlert('dunne')
             if (cb) {
                 cb();
             }
         })
     };
+
+    // publically exposed methods - temporary, should be deleted prior to deployment
     window.showSession = showSession;
     window.showData = showData;
     window.showProfiles = showProfiles;
+    window.showEvents = showEvents;
+    // publically exposed methods - keep
+    window.climberUpdate = climberUpdate;
+    window.updateDevLog = updateDevLog;
+
     //
 //    test();
     gTimer.updateDisplay = updateDisplay;
@@ -1377,6 +1461,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     .find(bId)
                     .each((_, descendant) => resOptionSetup(descendant));
                 //
+                /* removed auto-setup for modal close buttons, event modals often require an optional close button
                 bId = '.k2-modal-btn';
                 if ($(node).is(bId)) {
                     setupCloseModal(node);
@@ -1385,6 +1470,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 $(node)
                     .find(bId)
                     .each((_, descendant) => setupCloseModal(descendant));//
+                */
                 bId = '.dieroll';
                 if ($(node).is(bId)) {
                     setupDieRoll(node);
@@ -1412,8 +1498,8 @@ document.addEventListener('DOMContentLoaded', function () {
     window.onbeforeunload = onUnload;
     const initRender = () => {
         // do not run init on DOM load, checkSession must run first
-        console.log(`initRender, do we have a session?`);
-        console.log(session);
+//        console.log(`initRender, do we have a session?`);
+//        console.log(session);
         const cp = getCurrentPage();
 //        console.log(cp);
         switch (cp.page) {

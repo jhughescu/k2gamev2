@@ -1,0 +1,9 @@
+{{#each this}}
+<div><b>{{name}}</b></div>
+
+<div><span class='label'>t1, t2</span><span class='mono'><span class='{{isT1}}'>{{t1}}</span>, <span class='{{isT2}}'>{{t2}}</span></span></div>
+<div><span class='label'>time (this stage)</span><span class='mono'>{{tNow}}</span></div>
+<div><span class='label'>currentStage</span><span class='mono'>{{currentStage}}</span></div>
+<div><span class='label'>currentSpeed (rounded)</span><span class='mono'>{{currentSpeedShort}}..</span></div>
+
+{{/each}}

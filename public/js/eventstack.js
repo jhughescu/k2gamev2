@@ -17,13 +17,18 @@ class EventStack {
         // n is time in ms
         const copy = JSON.parse(JSON.stringify(this.allEvents));
         const out = [];
-        copy.forEach(e => {
+        copy.forEach((e, i)=> {
             if (e.time >= m) {
-                out.push(e)
+                out.push(e);
             }
         });
         this.events = out;
-        console.log(`${this.events.length} event${this.events.length > 1 ? 's' : ''} remaining at ${roundNumber(m, 2)} minute${m > 1 ? 's' : ''}`);
+//        console.log(`${this.events.length} event${this.events.length > 1 ? 's' : ''} remaining at ${roundNumber(m, 2)} minute${m > 1 ? 's' : ''}`);
+//        console.log(this.events);
+        const active = out.filter(e => e.active);
+//        console.log(`${active.length} active event${active.length > 1 ? 's' : ''} remaining at ${roundNumber(m, 2)} minute${m > 1 ? 's' : ''}`);
+//        console.log(active);
+
     }
     getNextEvent() {
         let ne = false;
@@ -39,6 +44,7 @@ class EventStack {
     processEvents() {
         if (this.allEvents) {
             this.allEvents.forEach((e, i) => {
+                e.active = i < 2;
                 e.next = false;
                 e.current = false;
                 e.complete = false;
@@ -84,7 +90,7 @@ class EventStack {
                     }
                     return e;
                 } else {
-//                    console.warn(`event ${e.event} has been called previously, cannot call again`);
+                    console.warn(`event ${e.event} has been called previously, cannot call again`);
                 }
             }
             this.cMin = Math.floor(m);
@@ -94,5 +100,8 @@ class EventStack {
         this.eventSummary = new Array(this.events.length).fill(0);
 //        console.log(this.eventSummary);
         return this.eventSummary;
+    }
+    getEvents() {
+        return this.events;
     }
 }

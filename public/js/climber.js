@@ -126,15 +126,26 @@ class Climber {
         }
     }
 
-    log(s) {
+    prepForLog(n) {
+        // round down any long numerics and display with ellipsis
+        if (roundNumber(n, 5) !== n) {
+            n = `${roundNumber(n, 5)}...`
+        }
+        return n;
+    }
+    log(s, force) {
 //        if (this.profile === 0 || 2 < 8) {
-        return;
-        if (this.profile === 2) {
+//        return;
+//        console.log('loglogogogojh', s, force);
+        const colour = typeof(s) === 'string' ? s.includes('#########') ? 'cyan' : 'yellow' : 'yellow';
+//        if (this.profile === 1 ) {
+        if (this.profile === 1 || force) {
             if (typeof(s) === 'string' || typeof(s) === 'number') {
-                console.log(`%c${this.name} %c${s}`, 'color: white;', 'color: yellow;');
+//                console.log(`%c${this.name} %c${s}`, 'color: white;', `color: ${colour};`);
+                window.updateDevLog(`${this.OPTION} ${s} (${this.name.split(' ')[0]})`);
             } else {
-                console.log(`%c${this.name}:`, 'color: yellow;');
-                console.log(s);
+//                console.log(`%c${this.name}:`, 'color: yellow;');
+//                console.log(s);
             }
         }
     }
@@ -169,6 +180,9 @@ class Climber {
     // sets
     setProperty(p, v, cb) {
         if (typeof(v) === 'number' && v !== NaN) {
+            if (v !== this[p]) {
+                this.log(`set ${p} to ${this.prepForLog(v)}: ${this.prepForLog(this[p])} => ${this.prepForLog(v)}`, true);
+            }
             this[p] = v;
             if (cb) {
                 cb(this);
@@ -176,6 +190,21 @@ class Climber {
         } else {
             const name = `set${p.substr(0, 1).toUpperCase()}${p.substr(1)}`;
             console.warn(`${name} requires a argument of type number`);
+        }
+    }
+    adjustProperty(p, av, cb) {
+        if (this[p]) {
+
+            this.log(`adj ${p} by ${av}: ${this[p]} => ${this[p] + av}`, true);
+            this[p] += av;
+            if (cb) {
+                cb({prop: p, adj: av, res: this[p]});
+            }
+        } else {
+            console.warn(`attempt to adjust property which does not exist (${p})`);
+            if (cb) {
+                cb(false);
+            }
         }
     }
     setType(n, cb) {
@@ -252,25 +281,63 @@ class Climber {
         return oo;
     }
 
+    getStageTime() {
+        // return a object containing the name & value of current stage time to climb
+        const cs = this.currentStage;
+        let t = `t${cs === 1 || cs === 4}`;
+        if (cs === 1 || cs === 4) {
+            t = 't1';
+        } else if (cs === 2 || cs === 3) {
+            t = 't2';
+        } else {
+            t = 't1';
+        }
+        const st = {cs: cs, t: t, val: Boolean(t) ? this[t] : 0};
+        return st;
+    }
+
 
     calculateClimbRate() {
+        const before = window.clone(this);
         const r = this.gameData.route.ratio;
         const s = this.gameData.route.stages;
         const up = this.position <= r[0];
         const cs = this.currentStage;
-        const tm = cs > 0 && cs < 3  ? this.t2 : this.t1; /* time to ascend/descend in minutes */
-//        console.log(`using ${(cs > 0 && cs < 3  ? 't2' : 't1')} t1: ${this.t1} t2: ${this.t2}`);
+        const logic = cs > 1 && cs < 4;
+        const tm = logic ? this.t2 : this.t1; /* time to ascend/descend in minutes */
+//        this.log(` * * * currentStage is ${cs}, hence logic is ${logic}, therefore so we use ${(logic ? 't2' : 't1')};  t1 is ${this.t1}, t2 is ${this.t2}`);
         const ts = tm * 60; /* time to ascend/descend in seconds */
         const stage = s[cs];
-        let rate = (100/4)/ts; /* distance travelled each second */
+        const tempRate = [window.clone(this).currentSpeed];
+        let rate = (100 / 4) / ts; /* distance travelled each second */
+//        this.log(`rate prior to calculation: ${this.currentSpeed}`);
+//        this.log(`calculation: (100 / 4) / (${tm} * 60) = ${rate}`);
+//        this.log(`calculation: (100 / 4) / ${ts} = ${rate}`);
         if (isNaN(rate)) {
             rate = 0;
         }
-//        console.log(`${this.name} calculateClimbRate based on t${cs} at ${tm} before: ${this.currentSpeed}, after: ${rate}`);
+        tempRate.push(rate);
+//        this.log(`${this.currentSpeed}, ${rate}, ${this.currentSpeed === rate}`, true);
+        if (this.currentSpeed !== rate && this.currentSpeed !== 0) {
+//            this.log(`${this.name}`, true);
+//            this.log(`climb rate from ${roundNumber(this.currentSpeed, 4)} to ${roundNumber(rate, 4)}`, true);
+//            this.log(`total time stage ${this.currentStage}: ${this.getStageTime().val} minutes (rate ${roundNumber(this.currentSpeed, 4)} => ${roundNumber(rate, 4)})`, true);
+//            this.log(`obj: ${JSON.stringify(this.getStageTime())}`, true);
+//            console.log('has the climber been updated?', this)
+//            this.log(`calculateClimbRate based on t${cs} at ${tm} before: ${this.currentSpeed}, after: ${rate}`);
+//            this.log(`speed change ${roundNumber(this.currentSpeed, 5)} => ${roundNumber(rate, 5)}`, true);
+        }
+//        this.log(tempRate.toString());
 //        console.log(this.options[this.type]);
         if (!isNaN(rate)) {
             this.setCurrentSpeed(rate);
         }
+//        console.log(`rate change ${logic ? before.t2 : before.t1} => ${logic ? this.t2 : this.t2} (${this.name})`, true);
+//        this.log(`rate change ${logic ? before.t2 : before.t1} => ${logic ? this.t2 : this.t1}`, true);
+
+//        console.log(`calculateClimbRate, rate: ${rate}`);
+//        console.log(before);
+//        console.log(this);
 //        this.currentStage += 1;
     }
     updatePosition(o, cb) {
@@ -285,18 +352,18 @@ class Climber {
             if (this.position > this.gameData.route.stages[this.currentStage]) {
                 // stage has changed; climb rate must be recalculated
                 // Note: change the currentStage here NOT in the calculation method as that can be called at other times.
-//                console.log(`calculateClimbRate, reset times if they have changed: ${this.t1}, ${this.t2}, ${this.currentStage}, ${this.options[this.type].t1}, ${this.options[this.type].t2}`);
                 const adjustID = `t${this.currentStage}`;
                 const adjusting = this[adjustID];
-//                console.log(`adjusting ${adjustID} which is currently ${adjusting}, the updated value is ${this.options[this.type][adjustID]}`);
                 // set the current t value to the predefined value, in case it has been adjusted by an event
-//                this[adjustID] = this.options[this.type][adjustID];
                 // reset all timings - adjusted timings do not persist across stages
-                this.t1 = this.options[this.type].t1;
-                this.t2 = this.options[this.type].t2;
-
-                this.calculateClimbRate();
+                this.setProperty('t1', this.options[this.type].t1);
+                this.setProperty('t2', this.options[this.type].t2);
                 this.currentStage += 1;
+                this.log(`moves from stage ${this.currentStage - 1} to ${this.currentStage}, will complete in ${this.getStageTime().val} minutes`);
+//                this.log(JSON.stringify(this.getStageTime()));
+                this.calculateClimbRate();
+//                console.log(this);
+                window.climberUpdate(this);
                 if (cb) {
                     cb('reset');
                 }
@@ -313,16 +380,12 @@ class Climber {
             } else {
                 this.position = 100;
             }
-            this.log(`position: ${this.position}`);
             return this.position;
         }
     }
     updateViewFromTime(o) {
         if (!this.finished) {
-//            console.log(`updateViewFromTime (input type: ${typeof(o)})`);
-            this.log(o)
             this.updatePosition(o);
-//            this.log(`time (${s}) sets pos: ${this.position}`);
             this.updateView();
         }
     }
@@ -350,31 +413,36 @@ class Climber {
         if (this.view.length && Climber.routeMap) {
             // only run if view has been correctly defined
             const H = Climber.bounds.h;
-                let pos = (H / 50) * this.position;
-                if (this.position > 50) {
-                    pos = H - (pos - H);
-                }
-//                this.log(this.position);
-                if (this.position === 100) {
-                    this.log(`updateView sets finished to true`);
-                    this.showFinished();
-                    this.finished = true;
-                }
-                const scaleFactor = 200;
-                const div = pos === 0 & H === 0 ? 0 : pos / H;
-                const xFactor = Climber.routeMap[roundNumber(div * 100, 2)] * scaleFactor;
-                const xAdj = (-50 + (this.profile * 50)) * (1 - div);
-                const x = `${150 + (xFactor) + xAdj}px`;
-                const y = `${pos}px`;
-                let str = `updateView : ${this.profile} ${this.view.attr('id')} visible? ${this.view.is(':visible')}, set y to ${y} at p=${this.position}`;
-                str += ` ${this.view.is(':visible') ? this.view.position().top : ''}`;
-                if (this.view.length > 0) {
-                    this.view.css({
-                        bottom: y,
-                        left: x
-                    });
-                }
-                this.storeSummary();
+            let pos = (H / 50) * this.position;
+            if (this.position > 50) {
+                pos = H - (pos - H);
+            }
+            if (this.position === 100) {
+                this.showFinished();
+                this.finished = true;
+            }
+            const scaleFactor = 200;
+            const div = pos === 0 & H === 0 ? 0 : pos / H;
+            const xFactor = Climber.routeMap[roundNumber(div * 100, 2)] * scaleFactor;
+            const xAdj = (-50 + (this.profile * 50)) * (1 - div);
+            const x = `${150 + (xFactor) + xAdj}px`;
+            const y = `${pos}px`;
+            let str = `updateView : ${this.profile} ${this.view.attr('id')} visible? ${this.view.is(':visible')}, set y to ${y} at p=${this.position}`;
+            str += ` ${this.view.is(':visible') ? this.view.position().top : ''}`;
+            // dev code: change colour of climbers based on their position on the expedition
+            if (this.gameData.isDev) {
+                const cs = this.currentStage;
+                const cols = ['red', 'orange', 'yellow', 'green', 'blue']
+                this.view.css({'background-color': cols[cs]});
+            }
+            //
+            if (this.view.length > 0) {
+                this.view.css({
+                    bottom: y,
+                    left: x
+                });
+            }
+            this.storeSummary();
     //        }
         } else {
             if (this.view.length === 0) {
@@ -410,7 +478,6 @@ class Climber {
         this.currentTimeObject = cs;
         this.setDelay(0);
         this.finished = false;
-//        this.log('reset sets finished to false');
         clearInterval(this.bounceInt);
         this.calculateClimbRate();
 //        console.log('i bet this is the culprit');

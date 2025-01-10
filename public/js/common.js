@@ -165,6 +165,10 @@ document.addEventListener('DOMContentLoaded', function () {
         const a = s.split('');
         return a[n];
     };
+    const clone = (o) => {
+        // return a discrete copy of the object
+        return JSON.parse(JSON.stringify(o));
+    };
 
     const getTemplate = (temp, ob, cb) => {
         // returns a compiled template, but does not render it
@@ -461,13 +465,8 @@ document.addEventListener('DOMContentLoaded', function () {
     };
     const thisRoundScored = (pl) => {
 
-
-
-
         // NOTE adjust this method to allow for different behaviour between type 1 and 2 teams
         // i.e. type 1 has only 1 active player, so any score counts. With type 2 any player can score so only player-specifc scores should count.
-
-
 
 
 
@@ -1001,6 +1000,7 @@ document.addEventListener('DOMContentLoaded', function () {
     window.loadJS = loadJS;
     window.isValidJSON = isValidJSON;
     window.getAlph = getAlph;
+    window.clone = clone;
     window.toCamelCase = toCamelCase;
     window.removeTemplate = removeTemplate;
     window.renderTemplate = renderTemplate;

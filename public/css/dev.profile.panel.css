@@ -1,34 +1,35 @@
-#timerpanel {
+#profilepanel {
     width: 250px;
-    height: 220px;
+    height: auto;
+    max-height: 320px;
     right: 30px;
-    top: 130px;
+    top: 360px;
     background-color: white;
     box-shadow: -2px 2px 3px rgba(28, 28, 28, 0.85);
     display: flex;
     flex-direction: column; /* Stack child elements vertically */
-    gap: 5px; /* Space between rows */
+    gap: 2px; /* Space between rows */
     margin: 0;
 }
 
-#timerpanel > div {
+#profilepanel > div {
     display: flex; /* Make each child div a flex container */
     align-items: left; /* Align items vertically */
+    font-size: 0.8rem;
 }
 
-#timerpanel .label {
+#profilepanel .label {
     width: 130px;
     width: 160px;
     padding-left: 10px;
 /*    background-color: yellow;*/
 }
-#timerpanel .label.wide {
+#profilepanel .label.wide {
     width: 230px;
 }
-#timerpanel .theader {
+#profilepanel .theader {
     color: grey;
 }
-#timerpanel .bold {
+#profilepanel .isBolded span, #profilepanel span.isBolded, #profilepanel span .isBolded , #profilepanel .isBolded  {
     font-weight: bold;
-    color: #02026a;
 }

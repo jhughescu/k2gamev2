@@ -71,5 +71,6 @@
 .map-pointer-label .rAlign {
     color: #012995;
     position: absolute;
-    right: 40px;
+/*    right: 40px;*/
+    left: 50px;
 }
