@@ -1328,24 +1328,26 @@ document.addEventListener('DOMContentLoaded', function () {
         devLog.push(s);
         const p = {logs: devLog.slice(0)};
         const profs = Object.entries(session).filter(e => e[0].includes('profile')).map(e => e[1]);
-//        console.log(profs);
-//        console.log(session);
         p.logs.forEach((m, i) => {
             const id = m.substr(0, 1).toLowerCase();
             const P = profs.filter(p => p.option === id);
-//            const P = Object.values(session).filter(p => p.option === id);
             const o = {msg: m, type: id, img: P.length ? P[0].filename : 'AdrienRomane'};
             p.logs[i] = o;
-//            console.log(window.clone(profs[0]));
         });
         renderTemplateWithStyle('logpanel', 'dev.log.panel', p, () => {
             const div = document.getElementById('logpanel');
             const clear = $('#clear');
+            const toggle = $('#toggle');
             div.scrollTop = div.scrollHeight;
             clear.off('click').on('click', function () {
                 const logs = $(this).parent().find('.log');
                 logs.remove();
                 devLog.length = 0;
+            });
+            toggle.off('click').on('click', function () {
+//                $(this).parent().addClass('min');
+                const logs = $(this).parent().find('.log');
+                logs.is(':visible') ? logs.hide() : logs.show();
             });
         });
     };
