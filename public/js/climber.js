@@ -4,8 +4,10 @@ class Climber {
             const gd = init.gameData;
             const tm = init.team;
             init = this.unpackStorageSummary(init.summaryString);
+//            console.log(`summary string: ${init.summaryString}`);
             init.gameData = gd;
             init.team = tm;
+//            console.log(init);
         }
         this.gameData = init.gameData;
         this.profile = init.profile;
@@ -26,9 +28,13 @@ class Climber {
         this.t2 = init.t2;
         this.tTotal = (this.t1 * 2) + (this.t2 * 2);
         this.currentSpeed = 0;
-        this.oxygen = init.hasOwnProperty('oxygen') ? init.oxygen : 0;
-        this.sustenance = init.hasOwnProperty('sustenance') ? init.sustenance : 0;
-        this.rope = init.hasOwnProperty('rope') ? init.rope : 0;
+//        this.oxygen = init.hasOwnProperty('oxygen') ? init.oxygen : 0;
+        this.oxygen = stored.hasOwnProperty('oxygen') ? stored.oxygen : 0;
+//        this.sustenance = init.hasOwnProperty('sustenance') ? init.sustenance : 0;
+        this.sustenance = stored.hasOwnProperty('sustenance') ? stored.sustenance : 0;
+//        this.rope = init.hasOwnProperty('rope') ? init.rope : 0;
+        this.rope = stored.hasOwnProperty('rope') ? stored.rope : 0;
+        this.initialSettings = stored.hasOwnProperty('initialSettings') ? stored.initialSettings : '{}';
         this.position = stored.position > 0 ? stored.position : 0;
         // currentTime is a simple integer which can be written/read from the database
         this.currentTime = stored.currentTime > 0 ? stored.currentTime : 0;
@@ -53,6 +59,7 @@ class Climber {
         } else {
             Climber.allClimbers[Climber.allClimbers.findIndex(e => e.profile === this.profile)] = this;
         }
+//        console.log(this);
     }
 
     static resetAll(cs) {
@@ -149,6 +156,12 @@ class Climber {
             }
         }
     }
+    console(s) {
+        if (this.option === 'a') {
+            console.log(s);
+//            localStorage.setItem('timeElapsed', s);
+        }
+    }
 
     // gets
     getSummaryMap() {
@@ -164,11 +177,15 @@ class Climber {
             o: 'oxygen',
             s: 'sustenance',
             r: 'rope',
+            i: 'initialSettings',
             pos: 'position',
             st: 'currentStage',
             de: 'delayExpiry', /* delay is a time in minutes  */
             et: 'eventTime', /* if under the effect of an event, this is the time in minutes when the event occured */
         }
+        Object.entries(m).forEach(v => {
+            m[v[1]] = v[0];
+        })
         return m;
     }
     getOption(n) {
@@ -180,6 +197,8 @@ class Climber {
     // sets
     setProperty(p, v, cb) {
         if (typeof(v) === 'number' && v !== NaN) {
+//            console.log(`initial setting of ${p} to ${v}, which is ${this[p]}`);
+            this.storeInitialSetting(p, v);
             if (v !== this[p]) {
                 this.log(`set ${p} to ${this.prepForLog(v)}: ${this.prepForLog(this[p])} => ${this.prepForLog(v)}`, true);
             }
@@ -192,13 +211,33 @@ class Climber {
             console.warn(`${name} requires a argument of type number`);
         }
     }
+    storeInitialSetting(p, v) {
+        const sm = this.getSummaryMap();
+        const canStore = ['oxygen', 'sustenance', 'rope'];
+        const can = canStore.includes(p);
+        if (can) {
+            let is = JSON.parse(this.initialSettings);
+            if (!is.hasOwnProperty(sm[p])) {
+                is[sm[p]] = v;
+                this.initialSettings = JSON.stringify(is);
+                if (Object.values(is).length === 3) {
+//                    console.log(`complete initial settings for ${this.name}: ${this.initialSettings}`);
+                }
+            }
+        }
+    }
     adjustProperty(p, av, cb) {
         if (this[p]) {
-
-            this.log(`adj ${p} by ${av}: ${this[p]} => ${this[p] + av}`, true);
-            this[p] += av;
-            if (cb) {
-                cb({prop: p, adj: av, res: this[p]});
+//            console.log(`${this.name} ${p} change`, (this[p] + av), (this[p] + av) >= 0);
+            if ((this[p] + av) >= 0) {
+                // Values cannot be made negative:
+    //            this.log(`adj ${p} by ${av}: ${this[p]} => ${this[p] + av}`, true);
+                this[p] += av;
+                if (cb) {
+                    cb({prop: p, adj: av, res: this[p]});
+                }
+            } else {
+//                console.log(`${this.name} ${p} change`, (this[p] + av), (this[p] + av) >= 0, 'no negative values allowed');
             }
         } else {
             console.warn(`attempt to adjust property which does not exist (${p})`);
@@ -223,13 +262,22 @@ class Climber {
         }
     }
     setOxygen(n, cb) {
+//        console.log(`initial setting of oxygen for ${this.name}`);
         this.setProperty('oxygen', n, cb);
     }
+    adjustOxygen(n, cb) {
+        this.adjustProperty('oxygen', n, cb);
+    }
     setRope(n, cb) {
+//        console.log(`initial setting of rope for ${this.name}`);
         this.setProperty('rope', n, cb);
     }
     setSustenance(n, cb) {
+//        console.log(`initial setting of sustenance for ${this.name}`);
         this.setProperty('sustenance', n, cb);
+    }
+    adjustSustenance(n, cb) {
+        this.adjustProperty('sustenance', n, cb);
     }
     setPosition(n) {
         this.setProperty('position', n);
@@ -275,6 +323,10 @@ class Climber {
         s.forEach((v, i) => {
             if (v.length > 0) {
                 v = v.split(':');
+                if (v.length > 2) {
+                    // any JSON strings need to be rejoined:
+                    v[1] = v.slice(1).join(':');
+                }
                 oo[m[v[0]]] = procVal(v[1]);
             }
         });
@@ -341,8 +393,6 @@ class Climber {
 //        this.currentStage += 1;
     }
     updatePosition(o, cb) {
-//        console.log(`updatePosition`);
-//        console.log(o);
         this.currentTimeObject = JSON.parse(JSON.stringify(o));
         const gt = this.currentTimeObject.gametime;
         if (!this.finished) {
@@ -360,9 +410,7 @@ class Climber {
                 this.setProperty('t2', this.options[this.type].t2);
                 this.currentStage += 1;
                 this.log(`moves from stage ${this.currentStage - 1} to ${this.currentStage}, will complete in ${this.getStageTime().val} minutes`);
-//                this.log(JSON.stringify(this.getStageTime()));
                 this.calculateClimbRate();
-//                console.log(this);
                 window.climberUpdate(this);
                 if (cb) {
                     cb('reset');
@@ -383,10 +431,32 @@ class Climber {
             return this.position;
         }
     }
+    updateResources() {
+        const cto = this.currentTimeObject;
+        const con = this.gameData.constants;
+        const s = cto.sec - (this.currentSec ? this.currentSec : cto.sec);
+        // Oxygen: per second depletion
+        const currOxygen = this.oxygen;
+        const depOxygen = 1 / (con.oxygen.unitTime * 60);
+        this.adjustOxygen(-1 * (depOxygen * s));
+        // Sustenance: per second depletion
+        const currSustenance = this.sustenance;
+        const depSustenance = 1 / (con.sustenance.unitTime * 60);
+        this.adjustSustenance(-1 * (depSustenance * s));
+        if (Math.ceil(this.oxygen) !== Math.ceil(currOxygen) && Math.ceil(this.oxygen) >= 0) {
+            window.climberDepletionEvent(Object.assign(this, {resource: 'oxygen'}))
+        }
+        if (Math.ceil(this.sustenance) !== Math.ceil(currSustenance) && Math.ceil(this.sustenance) >= 0) {
+            window.climberDepletionEvent(Object.assign(this, {resource: 'sustenance'}))
+        }
+        // Do this last:
+        this.currentSec = cto.sec;
+    }
     updateViewFromTime(o) {
         if (!this.finished) {
             this.updatePosition(o);
             this.updateView();
+            this.updateResources();
         }
     }
     // finish bounce - may be deleted (check for method calls elsewhere)
@@ -409,6 +479,7 @@ class Climber {
         return zp;
     }
     //
+
     updateView() {
         if (this.view.length && Climber.routeMap) {
             // only run if view has been correctly defined

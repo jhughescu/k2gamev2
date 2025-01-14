@@ -23,11 +23,11 @@ class EventStack {
             }
         });
         this.events = out;
-//        console.log(`${this.events.length} event${this.events.length > 1 ? 's' : ''} remaining at ${roundNumber(m, 2)} minute${m > 1 ? 's' : ''}`);
-//        console.log(this.events);
+        console.log(`${this.events.length} event${this.events.length > 1 ? 's' : ''} remaining at ${roundNumber(m, 2)} minute${m > 1 ? 's' : ''}`);
+        console.log(this.events);
         const active = out.filter(e => e.active);
-//        console.log(`${active.length} active event${active.length > 1 ? 's' : ''} remaining at ${roundNumber(m, 2)} minute${m > 1 ? 's' : ''}`);
-//        console.log(active);
+        console.log(`${active.length} active event${active.length > 1 ? 's' : ''} remaining at ${roundNumber(m, 2)} minute${m > 1 ? 's' : ''}`);
+        console.log(active);
 
     }
     getNextEvent() {

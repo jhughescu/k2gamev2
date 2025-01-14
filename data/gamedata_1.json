@@ -28,7 +28,7 @@
             "id": 1,
             "country": "Czechoslovakia",
             "adjective": "Czech",
-            "active": true,
+            "active": false,
             "profiles": {
                 "p0": "Hana Dvorakova",
                 "p1": "Jan Svoboda",
@@ -105,7 +105,7 @@
             "id": 8,
             "country": "Spain",
             "adjective": "Spanish",
-            "active": true,
+            "active": false,
             "profiles": {
                 "p0": "Alejandro Sánchez",
                 "p1": "Enriqua García",

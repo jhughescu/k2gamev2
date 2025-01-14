@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // programmable event methods
     const confirmStartNew = () => {
         let startNew = false;
-//        startNew = confirm('would you like to start a new game?');
+//        startNew = showConfirm('would you like to start a new game?');
         if (startNew) {
             startNew();
         }
@@ -196,6 +196,11 @@ document.addEventListener('DOMContentLoaded', function () {
     const showAlert = (s) => {
 //        alert(s);
     };
+    const showConfirm = (s) => {
+        let ok = confirm(s);
+        ok = true;
+        return ok;
+    }
 
     // Methods called when event modals are launched
     // modal-specifics
@@ -502,8 +507,12 @@ document.addEventListener('DOMContentLoaded', function () {
     const showSession = () => {
         console.log(session);
     };
-    const showProfiles = () => {
+    const getProfiles = () => {
         const p = Object.entries(session).filter(s => s[0].includes('profile')).map(([_, value]) => value);
+        return p;
+    };
+    const showProfiles = () => {
+        const p = getProfiles();
 //        console.log(p);
         p.forEach(pf => console.log(pf));
     };
@@ -795,7 +804,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
     };
     const climbersReady = () => {
-        const r = Climber.getClimbers().filter(c => c.type === -1).length === 0;
+        const cl = Climber.getClimbers().filter(c => c.type === -1);
+        const r = cl.length === 0;
+//        console.log(Climber.getClimbers().filter(c => c.type === -1));
+        if (!r) {
+            console.log(`Climbers not ready: ${cl.length}`);
+        }
         return r;
     };
     // timing
@@ -896,6 +910,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const bResources = $(`#btn-resources`);
         const all = [bClimb, bTeam, bResources];
         const cReady = climbersReady();
+//        console.log(cReady, `cReady`)
         if (!cReady) {
             bClimb.addClass('disabled');
             bClimb.prop('disabled', true);
@@ -914,6 +929,22 @@ document.addEventListener('DOMContentLoaded', function () {
     };
 
     // controls (page types)
+    const onSubmitResouces = (p, ob) => {
+        const t = p.temptype;
+        const o = ob.o;
+        const s = ob.s;
+        const r = ob.r;
+        p.setOxygen(o, (rp) => {
+            p.setSustenance(s, (rp) => {
+                session[`profile${p.profile}`] = rp;
+                p.setRope(r, (rp) => {
+                    session[`profile${p.profile}`] = rp;
+                    setMemberType(p.profile, t);
+                    setupResources();
+                });
+            });
+        });
+    };
     const submitResources = (p) => {
         const o = isNaN(parseInt($('#oxygen').val())) ? 0 : parseInt($('#oxygen').val());
         const s = isNaN(parseInt($('#sustenance').val())) ? 0 : parseInt($('#sustenance').val());
@@ -922,7 +953,11 @@ document.addEventListener('DOMContentLoaded', function () {
 //        console.log(`submitResources`);
 //        console.log(o, s, r);
 //        console.log(p);
+        const uo = {o: o, s: s, r: r};
+        onSubmitResouces(p, uo);
+        return;
         //
+        /*
         const t = p.temptype;
         p.setOxygen(o, (rp) => {
             p.setSustenance(s, (rp) => {
@@ -934,6 +969,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
             });
         });
+        */
     };
     const calculateLoad = () => {
         const co = gameData.constants.oxygen;
@@ -991,14 +1027,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 const v = i.attr('id');
                 updateProfile(p, v, n);
                 updateResourceView(p);
-//                console.log(`adjust ${v} to ${n}`);
             });
         }
     };
     const setupResources = async () => {
         const sub = $('.form-submit-btn');
         const p = session[sub.data('profile')];
-//        console.log(p);
         setupResourceExtras(false);
         if (p.type > -1) {
             sub.prop('disabled', true);
@@ -1007,14 +1041,11 @@ document.addEventListener('DOMContentLoaded', function () {
             $('.resop').addClass('disabled');
             $('.resop').removeClass('abled');
             $('input').prop('disabled', true);
-//            console.log(`setupResources, profile type already set (${p.type})`);
-//            console.log(p);
             $('#oxygen').val(p.oxygen);
             $('#sustenance').val(p.sustenance);
             $('#rope').val(p.rope);
             updateResImg(p.profile, p.type);
             updateResourceView(p);
-//            resOptionselect(p.profile, p.type);
         } else {
             sub.prop('disabled', false);
             sub.removeClass('disabled');
@@ -1023,7 +1054,7 @@ document.addEventListener('DOMContentLoaded', function () {
             $('.adjust_btn').addClass('disabled');
             sub.off('click').on('click', function (ev) {
                 ev.preventDefault();
-//                console.log($('#resource_remaining').html().includes('-'));
+
                 if ($('#resource_remaining').html().includes('-')) {
                     showAlert(`${p.name} is ${Math.abs(getWeight(p).remaining)}kg over capacity, please adjust resources`);
                 } else {
@@ -1036,14 +1067,14 @@ document.addEventListener('DOMContentLoaded', function () {
                         const r = $('#resource_remaining').find('div').length > 0 ? $('#resource_remaining').find('div').html() : $('#resource_remaining').html();
                         if (zeroValues.length > 1) {
                             if (parseFloat(r) > 0) {
-                                const ok = confirm(`You have ${r}kg of remaining capacity and have not allocated any extra resources, are you sure you want to continue? You will not be able to change your mind later.`);
+                                const ok = showConfirm(`You have ${r}kg of remaining capacity and have not allocated any extra resources, are you sure you want to continue? You will not be able to change your mind later.`);
                                 if (ok) {
                                     submitResources(p);
                                 }
                             }
                         } else if (getWeight(p).remaining > 0) {
                             const m = `${p.name} has ${getWeight(p).remaining}kg unused carrying capacity, are you sure you don't want to use it? You will not be able to change your mind later.`;
-                            const ok = confirm(m);
+                            const ok = showConfirm(m);
                             if (ok) {
                                 submitResources(p);
                             }
@@ -1052,7 +1083,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             const m2 = `${p.name} is carrying fewer resources than necessary for the expedition and will need to resupply later. If you are happy with this, please continue.`;
                             const req = getRequirement(p);
                             const m = p.oxygen < req.oxygen || p.sustenance < req.sustenance ? m2 : m1;
-                            const ok = confirm(m);
+                            const ok = showConfirm(m);
                             if (ok) {
                                 submitResources(p);
                             }
@@ -1114,10 +1145,13 @@ document.addEventListener('DOMContentLoaded', function () {
     const updateProfile = (p, prop, val) => {
         const prof = typeof(p) === 'string' || typeof(p) === 'number' ? session[`profile${p}`] : p;
         prof[prop] = val;
-//        console.log(`updateProfile: ${prof.name} ${prop} set to ${prof[prop]}`);
+
+//        console.log(`updateProfile p ${p}: ${prof.name} ${prop} set to ${prof[prop]}`);
+//        console.log(p);
     };
     // On Option tile click, calculate requisites
     const resOptionselect = (profile, type) => {
+//        console.log(`resOptionselect, ${profile}, ${type}`)
         const c = gameData.constants;
         const p = session[`profile${profile}`];
         const pn = parseInt(profile);
@@ -1138,6 +1172,7 @@ document.addEventListener('DOMContentLoaded', function () {
         updateResourceView(profile);
         setupResourceExtras(true);
         $('.adjust_btn').removeClass('disabled');
+        resOptionOnClick(profile, type);
     };
     // calculate weight (total & remaining) from profile
     const getWeight = (p) => {
@@ -1216,29 +1251,66 @@ document.addEventListener('DOMContentLoaded', function () {
             const id = $(this).attr('id').split('_');
             const p = session[`profile${id[1]}`];
             if (!disabled) {
+
                 resOptionselect(id[1], id[2]);
-                $('.resop').removeClass('selected');
-                $(this).addClass('selected');
-                // use timeout to allow screen to updatre before alert
-                setTimeout(() => {
-                    if ($('#resource_remaining').html().includes('-')) {
-                        // negative resource remaining
-                        showAlert(`${p.name} is ${Math.abs(getWeight(p).remaining)}kg over capacity, please adjust the load.`);
-                    }
-                }, 100);
+//                return;
+//                $('.resop').removeClass('selected');
+//                $(this).addClass('selected');
+//                setTimeout(() => {
+//                    if ($('#resource_remaining').html().includes('-')) {
+//                        // negative resource remaining
+//                        showAlert(`${p.name} is ${Math.abs(getWeight(p).remaining)}kg over capacity, please adjust the load.`);
+//                    }
+//                }, 100);
             }
         })
+    };
+    const resOptionOnClick = (prof, id) => {
+//        console.log(`${prof}, ${id} has been clicked`);
+        const tile = $(`#resop_${prof}_${id}`);
+        const p = session[`profile${prof}`];
+        const many = $(`[id^='resop_${prof}_']`);
+        many.removeClass('selected');
+        tile.addClass('selected');
+//        $('.resop').removeClass('selected');
+        setTimeout(() => {
+            if ($('#resource_remaining').html().includes('-')) {
+                // negative resource remaining
+                showAlert(`${p.name} is ${Math.abs(getWeight(p).remaining)}kg over capacity, please adjust the load.`);
+            }
+        }, 100);
     };
     const renderResources = (n) => {
         renderNone(() => {
             const p = `profile${n === undefined || n === null? 0 : n}`;
             const rOb = session[p];
-            console.log(`renderResources`);
-            console.log(rOb);
+//            console.log(rOb);
             renderTemplate('theatre', 'resources', rOb, () => {
                 updateAddress('resources');
                 $(`#resop_${rOb.profile}_${rOb.type}`).addClass('selected');
                 setupResources();
+                const cheating = true;
+
+                if (cheating) {
+                    const c = gameData.constants;
+                    const ch =[0, 0, 3];
+                    resOptionselect(0, ch[0]);
+                    resOptionselect(1, ch[1]);
+                    resOptionselect(2, ch[2]);
+                    const pf = getProfiles();
+                    pf.forEach((p, i) => {
+                        const total = (p.oxygen * c.oxygen.weight) + (p.sustenance * c.sustenance.weight) + (p.rope * c.rope.weight);
+                        const over = p.options[ch[i]].capacity - total;
+                        if (over < 0) {
+                            const redOx = Math.ceil(Math.abs(over) / c.oxygen.weight);
+                            const newOx = p.oxygen - redOx;
+                            updateProfile(i, 'oxygen', newOx);
+                            updateResourceView(i);
+                        }
+                        const uo = {o: p.oxygen, s: p.sustenance, r: p.rope};
+                        onSubmitResouces(p, uo);
+                    });
+                }
             })
         });
     };
@@ -1246,7 +1318,7 @@ document.addEventListener('DOMContentLoaded', function () {
 //        console.log(`renderTeam`);
         renderNone(() => {
             const rOb = {profiles: Climber.getClimbers()}
-            console.log(rOb);
+//            console.log(rOb);
             renderTemplate('theatre', 'team', rOb, () => {
                 updateAddress('team');
             })
@@ -1301,6 +1373,17 @@ document.addEventListener('DOMContentLoaded', function () {
         console.log('#######################');
         session.events.forEach(e => console.log(e));
     };
+    const climberDepletionEvent = (ob) => {
+//        pauseSession();
+//        alert(`${ob.name} has run out of ${ob.resource}`);
+        const rem = Math.ceil(ob[ob.resource]);
+        console.log(`depletion of ${ob.resource} for ${ob.name}, remaining: ${rem}`);
+        devShowProfiles();
+        if (rem === 0) {
+            gTimer.pauseTimer();
+            alert(`${ob.name} has run out of ${ob.resource}`)
+        }
+    };
 
     //
     const prepProfilesForDisplay = () => {
@@ -1311,6 +1394,8 @@ document.addEventListener('DOMContentLoaded', function () {
             e.isT2 = cs === 2 || cs === 3 ? 'bolded' : '';
             e.currentSpeedShort = roundNumber(e.currentSpeed, 5);
             e.tNow = e[`t${e.currentStage}`];
+            e.quantumOxygen = Math.ceil(e.oxygen);
+            e.quantumSustenance = Math.ceil(e.sustenance);
         });
         return p;
     };
@@ -1406,7 +1491,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // publically exposed methods - keep
     window.climberUpdate = climberUpdate;
     window.updateDevLog = updateDevLog;
-
+    window.climberDepletionEvent = climberDepletionEvent;
     //
 //    test();
     gTimer.updateDisplay = updateDisplay;

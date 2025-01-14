@@ -77,6 +77,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
     const procVal = (v) => {
+//        console.log(`procval receives ${v}`);
         // process values into numbers, booleans etc
         const ipMatch = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
         if (ipMatch.test(v)) {
@@ -89,6 +90,7 @@ document.addEventListener('DOMContentLoaded', function () {
         } else if (v === 'false') {
             v = false;
         }
+//        console.log(`procval returns ${v}`);
         return v;
     }
     const toCamelCase = (str) => {
