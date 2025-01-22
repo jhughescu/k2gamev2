@@ -471,7 +471,7 @@ background-color: none		}
 }
 
 .climber-response::before{
-	content: url("../assets/icons/Icons_Quote.png")
+/*	content: url("../../assets/icons/Icons_Quote.png");*/
 }
 
 .dice-app-container{

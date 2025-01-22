@@ -51,6 +51,10 @@
     background-size: 18px;
     background-position: 0px;
 }
+
+#logpanel .hidden {
+    display: none;
+}
 #logpanel .typea {
     color: rgb(25, 48, 124);
 }

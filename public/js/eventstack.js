@@ -6,11 +6,19 @@ class EventStack {
         this.triggers = {};
         this.processEvents();
 //        console.log(this.triggers);
-//        console.log(this.eventSummary);
+//        console.log('eventStack init:');
+//        console.log(window.clone(this.gameData));
+//        console.log(window.clone(this.eventSummary));
         this.currentEvent;
         this.nextEvent;
         this.events = [];
         this.cMin = -1;
+    }
+    setEventSummary(es) {
+        // called from main code when eventSummary is ready (can also occur at init)
+        this.eventSummary = es;
+        this.processEvents();
+        this.initSessionEvents(0);
     }
     initSessionEvents(m) {
         // create a subset of events based on init timing
@@ -23,11 +31,11 @@ class EventStack {
             }
         });
         this.events = out;
-        console.log(`${this.events.length} event${this.events.length > 1 ? 's' : ''} remaining at ${roundNumber(m, 2)} minute${m > 1 ? 's' : ''}`);
-        console.log(this.events);
+//        console.log(`${this.events.length} event${this.events.length > 1 ? 's' : ''} remaining at ${roundNumber(m, 2)} minute${m > 1 ? 's' : ''}`);
+//        console.log(this.events);
         const active = out.filter(e => e.active);
-        console.log(`${active.length} active event${active.length > 1 ? 's' : ''} remaining at ${roundNumber(m, 2)} minute${m > 1 ? 's' : ''}`);
-        console.log(active);
+//        console.log(`${active.length} active event${active.length > 1 ? 's' : ''} remaining at ${roundNumber(m, 2)} minute${m > 1 ? 's' : ''}`);
+//        console.log(active);
 
     }
     getNextEvent() {
@@ -59,7 +67,7 @@ class EventStack {
         // Uses the next event in the stack - removes it from the stack
         // Requires a callback, which sends the event to the calling object
         const e = this.events.shift();
-        console.log(`event "${e.event}" used, ${this.events.length} events remaining`);
+//        console.log(`event "${e.event}" used, ${this.events.length} events remaining`);
         if (cb) {
             cb(e);
         } else {
@@ -69,6 +77,7 @@ class EventStack {
     }
     updateSummary(ev, v) {
         // called from main game code
+//        console.log(`updateSummary`, ev, v);
         this.eventSummary[ev.n] = v;
 //        console.log(`eventSummary: ${this.eventSummary}`);
         return this.eventSummary;
@@ -80,11 +89,9 @@ class EventStack {
             const m = o.gametime.m;
             let e = false;
             e = this.triggers[`t${roundNumber(m, 1)}`];
-//            console.log(roundNumber(m, 1), e);
             if (e) {
                 if (this.eventSummary[e.n] < 2) {
                     this.currentEvent = e;
-//                    console.log(`####################### event exists and has NOT been completed: ${e.event}`);
                     if (cb) {
                         cb(e);
                     }

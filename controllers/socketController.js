@@ -108,7 +108,10 @@ function initSocket(server) {
                 socket.on('test', o => {
                     console.log('the test:');
                     console.log(o);
-                })
+                });
+                socket.on('writeJsonFile', (dir, f, o) => {
+                    logController.writeBeautifiedJson(dir, f, o);
+                });
             }
             // end game clients
             // admin clients

@@ -171,6 +171,13 @@ document.addEventListener('DOMContentLoaded', function () {
         // return a discrete copy of the object
         return JSON.parse(JSON.stringify(o));
     };
+    const localStorageSet = (id, o) => {
+        // unify all setting of localStorage
+        if (typeof(o) === 'object') {
+            o = JSON.stringify(o);
+        }
+        localStorage.setItem(id, o);
+    }
 
     const getTemplate = (temp, ob, cb) => {
         // returns a compiled template, but does not render it
@@ -239,11 +246,11 @@ document.addEventListener('DOMContentLoaded', function () {
         if (targ.indexOf('#', 0) === 0) {
             targ = targ.replace('#', '');
         }
-        console.log(`targ: ${targ}, temp: ${temp}`);
+//        console.log(`targ: ${targ}, temp: ${temp}`);
         $(`#${targ}`).css({opacity: 0});
         const part = Handlebars.partials[temp];
-        console.log('renderPartial');
-        console.log(part);
+//        console.log('renderPartial');
+//        console.log(part);
 //        console.log(part(ob));
         if (document.getElementById(targ)) {
                 document.getElementById(targ).innerHTML = part(ob);

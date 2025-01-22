@@ -35,6 +35,7 @@ class Climber {
 //        this.rope = init.hasOwnProperty('rope') ? init.rope : 0;
         this.rope = stored.hasOwnProperty('rope') ? stored.rope : 0;
         this.initialSettings = stored.hasOwnProperty('initialSettings') ? stored.initialSettings : '{}';
+        this.resupplies = stored.hasOwnProperty('resupplies') ? stored.resupplies : '';
         this.position = stored.position > 0 ? stored.position : 0;
         // currentTime is a simple integer which can be written/read from the database
         this.currentTime = stored.currentTime > 0 ? stored.currentTime : 0;
@@ -42,6 +43,7 @@ class Climber {
         this.currentTimeObject = {};
         // delay in minutes
         this.delayExpiry = stored.delayExpiry > 0 ? stored.delayExpiry : 0;
+        this.delayRemaining = null;
         this.eventTime = stored.eventTime > 0 ? stored.eventTime : 0;
         this.currentStage = 0;
         this.finished = false;
@@ -91,6 +93,12 @@ class Climber {
         const active = Climber.getClimbers().filter(c => !c.finished);
         active.forEach(c => {
             c.updateViewFromTime(o);
+        });
+    }
+    static storeSummaries() {
+        const active = Climber.getClimbers().filter(c => !c.finished);
+        active.forEach(c => {
+            c.storeSummary();
         });
     }
     static test() {
@@ -149,7 +157,8 @@ class Climber {
         if (this.profile === 1 || force) {
             if (typeof(s) === 'string' || typeof(s) === 'number') {
 //                console.log(`%c${this.name} %c${s}`, 'color: white;', `color: ${colour};`);
-                window.updateDevLog(`${this.OPTION} ${s} (${this.name.split(' ')[0]})`);
+//                window.updateDevLog(`${this.OPTION} ${s} (${this.name.split(' ')[0]})`);
+                window.updateDevLog(`${s} (${this.name.split(' ')[0]})`);
             } else {
 //                console.log(`%c${this.name}:`, 'color: yellow;');
 //                console.log(s);
@@ -159,7 +168,6 @@ class Climber {
     console(s) {
         if (this.option === 'a') {
             console.log(s);
-//            localStorage.setItem('timeElapsed', s);
         }
     }
 
@@ -177,6 +185,7 @@ class Climber {
             o: 'oxygen',
             s: 'sustenance',
             r: 'rope',
+            rs: 'resupplies',
             i: 'initialSettings',
             pos: 'position',
             st: 'currentStage',
@@ -196,6 +205,10 @@ class Climber {
 
     // sets
     setProperty(p, v, cb) {
+//        console.log(`setProperty: ${p}`);
+        if (p === undefined) {
+            return;
+        }
         if (typeof(v) === 'number' && v !== NaN) {
 //            console.log(`initial setting of ${p} to ${v}, which is ${this[p]}`);
             this.storeInitialSetting(p, v);
@@ -210,6 +223,30 @@ class Climber {
             const name = `set${p.substr(0, 1).toUpperCase()}${p.substr(1)}`;
             console.warn(`${name} requires a argument of type number`);
         }
+    }
+    resetProperty(p) {
+        // if a property exists in the initialSettings object it can be reset here
+//        console.log(`resetProperty ${p} (${this.name})`);
+        const sm = this.getSummaryMap();
+        const is = JSON.parse(this.initialSettings);
+//        console.log(is);
+        if (p.length > 1) {
+            p = sm[p];
+        }
+        if (is.hasOwnProperty(p)) {
+//            console.log('set', sm[p], is[p]);
+            this.setProperty(sm[p], is[p]);
+        }
+        window.climberUpdate(this);
+    }
+    resetAllInitial() {
+        const sm = this.getSummaryMap();
+        const is = JSON.parse(this.initialSettings);
+        Object.entries(is).forEach(e => {
+//            console.log(e);
+            this.setProperty(sm[e[0]], e[1]);
+        });
+        window.climberUpdate(this);
     }
     storeInitialSetting(p, v) {
         const sm = this.getSummaryMap();
@@ -227,18 +264,18 @@ class Climber {
         }
     }
     adjustProperty(p, av, cb) {
-        if (this[p]) {
-//            console.log(`${this.name} ${p} change`, (this[p] + av), (this[p] + av) >= 0);
-            if ((this[p] + av) >= 0) {
-                // Values cannot be made negative:
-    //            this.log(`adj ${p} by ${av}: ${this[p]} => ${this[p] + av}`, true);
-                this[p] += av;
-                if (cb) {
-                    cb({prop: p, adj: av, res: this[p]});
-                }
-            } else {
-//                console.log(`${this.name} ${p} change`, (this[p] + av), (this[p] + av) >= 0, 'no negative values allowed');
+//        console.log(`adjusting ${p}, ${window.clone(this)[p]}, ${this[p]}`)
+        if (this.hasOwnProperty(p)) {
+            let np = this[p] + av;
+            if (np < 0) {
+                // cannot be negative
+                np = 0;
             }
+            this[p] = np;
+            if (cb) {
+                cb({prop: p, adj: av, res: this[p]});
+            }
+
         } else {
             console.warn(`attempt to adjust property which does not exist (${p})`);
             if (cb) {
@@ -262,22 +299,39 @@ class Climber {
         }
     }
     setOxygen(n, cb) {
-//        console.log(`initial setting of oxygen for ${this.name}`);
         this.setProperty('oxygen', n, cb);
     }
     adjustOxygen(n, cb) {
         this.adjustProperty('oxygen', n, cb);
     }
     setRope(n, cb) {
-//        console.log(`initial setting of rope for ${this.name}`);
         this.setProperty('rope', n, cb);
+//        console.log('set rope', n, cb);
+    }
+    adjustRope(n, cb) {
+        this.adjustProperty('rope', n, cb);
+//        console.log('adj rope', n, cb);
     }
     setSustenance(n, cb) {
-//        console.log(`initial setting of sustenance for ${this.name}`);
         this.setProperty('sustenance', n, cb);
     }
     adjustSustenance(n, cb) {
         this.adjustProperty('sustenance', n, cb);
+    }
+    addResupply(s) {
+        // add an item to the resupplies string if it doesn't already contain it (use initials only)
+        const sm = this.getSummaryMap();
+        if (s.length > 1) {
+            s = sm[s]
+        }
+        if (this.resupplies === '') {
+            this.resupplies = s;
+        } else {
+            if (!this.resupplies.includes(s)) {
+                this.resupplies += s;
+            }
+        }
+        console.log(`${this.name} resupplies = ${this.resupplies}`);
     }
     setPosition(n) {
         this.setProperty('position', n);
@@ -289,7 +343,13 @@ class Climber {
         // a game event has sent a delay to this climber. Prevent updates until the delay (in minutes) has expired
         if (this.currentTimeObject) {
             if (this.currentTimeObject.gametime) {
-                this.delayExpiry = this.currentTimeObject.gametime.m + n;
+                if (isNaN(this.delayExpiry) || this.delayExpiry === 0) {
+                    this.delayExpiry = this.currentTimeObject.gametime.m + n;
+                    this.log(`${n} minute delay`, true);
+                } else {
+                    // delays accrue:
+                    this.delayExpiry += n;
+                }
             } else {
                 console.warn('cannot set delay; currentTimeObject not yet defined');
             }
@@ -392,6 +452,25 @@ class Climber {
 //        console.log(this);
 //        this.currentStage += 1;
     }
+    resupply() {
+        if (this.resupplies !== '') {
+            console.log(`${this.name} resupply:`);
+            // apply any pending resupplies
+            const sm = this.getSummaryMap();
+            this.resupplies.split('').map(s => sm[s]).forEach(r => {
+                console.log(` - ${r}`);
+                this.resetProperty(r);
+            });
+            this.resupplies = '';
+        }
+    }
+    onDelayExpiry() {
+        // use explicit zeroing of delayExpiry to avoid logging
+        // pending resource resupplies to be applied now.
+        this.resupply();
+        this.delayExpiry = 0;
+        this.delayRemaining = 0;
+    }
     updatePosition(o, cb) {
         this.currentTimeObject = JSON.parse(JSON.stringify(o));
         const gt = this.currentTimeObject.gametime;
@@ -421,9 +500,10 @@ class Climber {
                 if (this.delayExpiry > 0 && gt.m < this.delayExpiry) {
 //                    console.log(`${this.name} is delayed here for ${this.delayExpiry - gt.m} minutes`);
                     // climber is delayed
+                    this.delayRemaining = this.delayExpiry - gt.m;
                 } else {
+                    this.onDelayExpiry();
                     this.position += step;
-
                 }
             } else {
                 this.position = 100;
@@ -439,16 +519,29 @@ class Climber {
         const currOxygen = this.oxygen;
         const depOxygen = 1 / (con.oxygen.unitTime * 60);
         this.adjustOxygen(-1 * (depOxygen * s));
+        if (Math.ceil(this.oxygen) !== Math.ceil(currOxygen) && Math.ceil(this.oxygen) >= 0) {
+            window.climberDepletionEvent(Object.assign(this, {resource: 'oxygen'}));
+            this.log(`oxygen reduced to ${Math.ceil(this.oxygen)}`, true);
+        }
         // Sustenance: per second depletion
         const currSustenance = this.sustenance;
         const depSustenance = 1 / (con.sustenance.unitTime * 60);
         this.adjustSustenance(-1 * (depSustenance * s));
-        if (Math.ceil(this.oxygen) !== Math.ceil(currOxygen) && Math.ceil(this.oxygen) >= 0) {
-            window.climberDepletionEvent(Object.assign(this, {resource: 'oxygen'}))
-        }
         if (Math.ceil(this.sustenance) !== Math.ceil(currSustenance) && Math.ceil(this.sustenance) >= 0) {
-            window.climberDepletionEvent(Object.assign(this, {resource: 'sustenance'}))
+            window.climberDepletionEvent(Object.assign(this, {resource: 'sustenance'}));
+            this.log(`sustenance reduced to ${Math.ceil(this.sustenance)}`, true);
         }
+        // Rope: per second depletion - NO
+        /*
+        const currRope = this.rope;
+        const depRope = 1 / (con.rope.unitLength * 60);
+        this.adjustRope(-1 * (depRope * s));
+        if (Math.ceil(this.rope) !== Math.ceil(currRope) && Math.ceil(this.rope) >= 0) {
+            window.climberDepletionEvent(Object.assign(this, {resource: 'rope'}));
+            this.log(`rope reduced to ${Math.ceil(this.rope)}`, true);
+        }
+        */
+        window.climberUpdate(this);
         // Do this last:
         this.currentSec = cto.sec;
     }
@@ -503,8 +596,12 @@ class Climber {
             // dev code: change colour of climbers based on their position on the expedition
             if (this.gameData.isDev) {
                 const cs = this.currentStage;
-                const cols = ['red', 'orange', 'yellow', 'green', 'blue']
+//                const cols = ['red', 'orange', 'yellow', 'green', 'blue'];
+                const cols = ['red', '#ff5800', '#ff9300', '#ffe200', '#baff00'];
                 this.view.css({'background-color': cols[cs]});
+                if (this.finished) {
+                    this.view.css({'background-color': 'green'});
+                }
             }
             //
             if (this.view.length > 0) {
@@ -513,7 +610,7 @@ class Climber {
                     left: x
                 });
             }
-            this.storeSummary();
+//            this.storeSummary();
     //        }
         } else {
             if (this.view.length === 0) {
@@ -548,11 +645,15 @@ class Climber {
         this.setCurrentSpeed(0);
         this.currentTimeObject = cs;
         this.setDelay(0);
+        this.delayExpiry = 0;
+        this.resupplies = '';
         this.finished = false;
         clearInterval(this.bounceInt);
         this.calculateClimbRate();
+        this.resetAllInitial();
 //        console.log('i bet this is the culprit');
 //        console.log(cs);
+//        console.log(this);
         this.updatePosition(cs);
     }
     zero(cs) {

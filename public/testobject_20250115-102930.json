@@ -1,0 +1,285 @@
+{
+  "gameData": {
+    "gameTime": 10,
+    "countries": [
+      "Canada",
+      "Czechoslovakia",
+      "Finland",
+      "France",
+      "Germany",
+      "Italy",
+      "Netherlands",
+      "Norway",
+      "Spain",
+      "USA"
+    ],
+    "teams": [
+      {
+        "id": 0,
+        "country": "Canada",
+        "adjective": "Canadian",
+        "active": true,
+        "profiles": { "p0": "Frederic Harris", "p1": "Gabela Bouchard", "p2": "Jacques Ouellet" }
+      },
+      {
+        "id": 1,
+        "country": "Czechoslovakia",
+        "adjective": "Czech",
+        "active": false,
+        "profiles": { "p0": "Hana Dvorakova", "p1": "Jan Svoboda", "p2": "Petr Novak" }
+      },
+      {
+        "id": 2,
+        "country": "Finland",
+        "adjective": "Finnish",
+        "active": true,
+        "profiles": { "p0": "Luukas Aalto", "p1": "Juhani Karppinen", "p2": "Oona Takala" }
+      },
+      {
+        "id": 3,
+        "country": "France",
+        "adjective": "French",
+        "active": true,
+        "profiles": { "p0": "Sébastien Martin", "p1": "Adrien Romane", "p2": "Camille Duval" }
+      },
+      {
+        "id": 4,
+        "country": "Germany",
+        "adjective": "German",
+        "active": true,
+        "profiles": { "p0": "Heinz Mascher", "p1": "Irene Koller", "p2": "Peter Schmidt" }
+      },
+      {
+        "id": 5,
+        "country": "Italy",
+        "adjective": "Italian",
+        "active": true,
+        "profiles": { "p0": "Andrea D’Angelo", "p1": "Celia Serra", "p2": "Tommaso Lombardi" }
+      },
+      {
+        "id": 6,
+        "country": "Netherlands",
+        "adjective": "Dutch",
+        "active": true,
+        "profiles": { "p0": "Karel de Bakker", "p1": "Lotte Brouwer", "p2": "Ronald van Coevorden" }
+      },
+      {
+        "id": 7,
+        "country": "Norway",
+        "adjective": "Norwegian",
+        "active": true,
+        "profiles": { "p0": "Edvard Jenssen", "p1": "Frida Nilsen", "p2": "Roald Bakke" }
+      },
+      {
+        "id": 8,
+        "country": "Spain",
+        "adjective": "Spanish",
+        "active": false,
+        "profiles": { "p0": "Alejandro Sánchez", "p1": "Enriqua García", "p2": "Hermosa Martín" }
+      },
+      {
+        "id": 9,
+        "country": "USA",
+        "adjective": "American",
+        "active": true,
+        "profiles": { "p0": "John Steele", "p1": "Michael Smith", "p2": "Susan Trump" }
+      }
+    ],
+    "profiles": {
+      "profile_0": {
+        "type_0": { "capacity": 30, "t1": 18, "t2": 24 },
+        "type_1": { "capacity": 60, "t1": 22, "t2": 30 }
+      },
+      "profile_1": {
+        "type_0": { "capacity": 70, "t1": 8, "t2": 7, "n": 0, "option": "A" },
+        "type_1": { "capacity": 80, "t1": 10, "t2": 10, "n": 1, "option": "B" },
+        "type_2": { "capacity": 100, "t1": 12, "t2": 13, "n": 2, "option": "C" }
+      },
+      "profile_2": {
+        "type_0": { "capacity": 30, "t1": 16, "t2": 16 },
+        "type_1": { "capacity": 40, "t1": 20, "t2": 22 },
+        "type_2": { "capacity": 50, "t1": 24, "t2": 28 },
+        "type_3": { "capacity": 70, "t1": 28, "t2": 34 },
+        "type_4": { "capacity": 80, "t1": 32, "t2": 40 }
+      }
+    },
+    "constants": {
+      "oxygen": { "weight": 5, "unitTime": 10 },
+      "sustenance": { "weight": 2.5, "unitTime": 20 },
+      "rope": { "weight": 5, "unitLength": 5 }
+    },
+    "route": { "ratio": [ 50, 50 ], "stages": [ 0, 25, 50, 75, 100 ] },
+    "events": [
+      { "time": 0.5, "event": "equipment", "profiles": [ 2 ], "delay": 7 },
+      {
+        "time": 5,
+        "event": "injury1",
+        "profiles": [ 0 ],
+        "method": "injury1Setup",
+        "metrics": {
+          "threshold": 3,
+          "penalty": "t1",
+          "treat": { "results": [ [ 7, 5 ], [ 7, 5 ], [ 5, 3 ] ] },
+          "leave": { "results": [ [ 0, 7 ], [ 0, 7 ], [ 0, 5 ] ] }
+        }
+      },
+      { "time": 10, "event": "crampons" },
+      { "time": 15, "event": "icefall1" },
+      { "time": 20, "event": "photo1" },
+      { "time": 25, "event": "icefall2" },
+      { "time": 30, "event": "slip" },
+      { "time": 35, "event": "ai1" },
+      { "time": 40, "event": "photo_storm" },
+      { "time": 45, "event": "injury2" },
+      { "time": 50, "event": "foundoxygen" },
+      { "time": 55, "event": "snowblindness" },
+      { "time": 60, "event": "ai2" },
+      { "time": 62, "event": "announcestorm" },
+      { "time": 65, "event": "collision" },
+      { "time": 70, "event": "killerstorm" }
+    ],
+    "activeTeams": [
+      {
+        "id": 0,
+        "country": "Canada",
+        "adjective": "Canadian",
+        "active": true,
+        "profiles": { "p0": "Frederic Harris", "p1": "Gabela Bouchard", "p2": "Jacques Ouellet" }
+      },
+      {
+        "id": 2,
+        "country": "Finland",
+        "adjective": "Finnish",
+        "active": true,
+        "profiles": { "p0": "Luukas Aalto", "p1": "Juhani Karppinen", "p2": "Oona Takala" }
+      },
+      {
+        "id": 3,
+        "country": "France",
+        "adjective": "French",
+        "active": true,
+        "profiles": { "p0": "Sébastien Martin", "p1": "Adrien Romane", "p2": "Camille Duval" }
+      },
+      {
+        "id": 4,
+        "country": "Germany",
+        "adjective": "German",
+        "active": true,
+        "profiles": { "p0": "Heinz Mascher", "p1": "Irene Koller", "p2": "Peter Schmidt" }
+      },
+      {
+        "id": 5,
+        "country": "Italy",
+        "adjective": "Italian",
+        "active": true,
+        "profiles": { "p0": "Andrea D’Angelo", "p1": "Celia Serra", "p2": "Tommaso Lombardi" }
+      },
+      {
+        "id": 6,
+        "country": "Netherlands",
+        "adjective": "Dutch",
+        "active": true,
+        "profiles": { "p0": "Karel de Bakker", "p1": "Lotte Brouwer", "p2": "Ronald van Coevorden" }
+      },
+      {
+        "id": 7,
+        "country": "Norway",
+        "adjective": "Norwegian",
+        "active": true,
+        "profiles": { "p0": "Edvard Jenssen", "p1": "Frida Nilsen", "p2": "Roald Bakke" }
+      },
+      {
+        "id": 9,
+        "country": "USA",
+        "adjective": "American",
+        "active": true,
+        "profiles": { "p0": "John Steele", "p1": "Michael Smith", "p2": "Susan Trump" }
+      }
+    ],
+    "isDev": true,
+    "storeID": "cuk2gamev1-id",
+    "timer": {
+      "startTime": null,
+      "elapsedTime": 42968,
+      "interval": null,
+      "isRunning": false,
+      "hasStarted": false,
+      "hour": 3600000,
+      "minute": 60000,
+      "int": 50
+    },
+    "timings": {
+      "startTime": "05:00:00",
+      "endTime": "12:00:00",
+      "runTime": 25200000,
+      "hours": 7,
+      "minutes": 420
+    }
+  },
+  "profile": 1,
+  "option": "b",
+  "OPTION": "B",
+  "options": [
+    { "capacity": 70, "t1": 8, "t2": 7, "n": 0, "option": "A" },
+    { "capacity": 80, "t1": 10, "t2": 10, "n": 1, "option": "B" },
+    { "capacity": 100, "t1": 12, "t2": 13, "n": 2, "option": "C" }
+  ],
+  "name": "Lotte Brouwer",
+  "filename": "LotteBrouwer",
+  "type": 0,
+  "capacity": 70,
+  "t1": 8,
+  "t2": 7,
+  "tTotal": 30,
+  "currentSpeed": 0.05952380952380952,
+  "oxygen": 0,
+  "sustenance": 0.5000750000000086,
+  "rope": "NaNNaNNaN",
+  "initialSettings": "{\"o\":3,\"s\":2,\"r\":0}",
+  "position": 91.99545138888905,
+  "currentTime": 1807.01,
+  "currentTimeObject": {
+    "sec": 1807.01,
+    "min": 30.12,
+    "realtime": { "ms": 43024, "s": 43.024, "m": 0.7170666666666666 },
+    "sessiontime": { "m": 5.019466666666666, "s": 301.168 },
+    "gametime": { "s": 1807.01, "m": 30.12 },
+    "gametimeDisplay": "05:30:07"
+  },
+  "delayExpiry": 0,
+  "eventTime": 0,
+  "currentStage": 2,
+  "finished": false,
+  "view": {
+    "0": {
+      "jQuery370087872910472374241": {
+        "events": { "click": [ { "type": "click", "origType": "click", "guid": 14, "namespace": "" } ] }
+      }
+    },
+    "length": 1
+  },
+  "icon": {
+    "length": 0,
+    "prevObject": {
+      "0": {
+        "jQuery370087872910472374241": {
+          "events": { "click": [ { "type": "click", "origType": "click", "guid": 14, "namespace": "" } ] }
+        }
+      },
+      "length": 1
+    }
+  },
+  "b": 0,
+  "bounceFac": 12.138972954903757,
+  "bounceInc": 7.15830270569227,
+  "iconX": 100,
+  "isT1": "",
+  "isT2": "bolded",
+  "currentSpeedShort": 0.05952,
+  "tNow": 7,
+  "quantumOxygen": 0,
+  "quantumSustenance": 1,
+  "currentSec": 1804.66,
+  "resource": "oxygen",
+  "event": "resource_gone"
+}

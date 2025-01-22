@@ -1,0 +1,46 @@
+.modal p {
+    font-size: 0.9em;
+}
+.modal div {
+/*    background-color: yellow;*/
+/*    border: 1px dashed blue;*/
+}
+.modal h4 {
+    margin : 5px;
+}
+.climber-response{
+	display: grid;
+	grid-template-columns: 10% 80% 10%;
+}
+
+.climber-response p{
+	text-align: center;
+	margin: 0px 0px;
+/*    background-color: red;*/
+    width: 100%;
+}
+
+.climber-response img{
+	width: 20px;
+}
+
+.climber-response img:first-of-type{
+	justify-self: end;
+}
+.resupply {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    margin: 0px auto;
+/*    background-color: purple;*/
+    width: 80%;
+}
+.resupply img {
+    width: 70px;
+    margin: 0 auto;
+}
+.resupply div {
+    display: grid;
+    grid-template-rows: auto auto;
+    grid-template-columns: auto;
+    justify-content: center;
+}
