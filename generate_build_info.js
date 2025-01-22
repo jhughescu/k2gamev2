@@ -8,3 +8,5 @@ const buildInfo = {
     branch: execSync('git rev-parse --abbrev-ref HEAD').toString().trim(),
 };
 fs.writeFileSync('build-info.json', JSON.stringify(buildInfo, null, 2));
+fs.writeFileSync('public/data/build-info.json', JSON.stringify(buildInfo, null, 2));
+console.log('build info created');

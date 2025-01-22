@@ -19,6 +19,7 @@ const PORT = process.env.PORT || 3000;
 const HOST = process.env.HOST || 'localhost';
 
 const databaseController = require('./controllers/databaseController');
+const versionController = require('./controllers/versionController');
 
 const padNum = (n) => {
     if (n < 10) {
