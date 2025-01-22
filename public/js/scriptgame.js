@@ -32,6 +32,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const SUS = 'sustenance';
     const RP = 'rope';
 
+    const versionControl = new VersionControl();
+
     const sessionPlayPause = $('#b_playpause');
     const sessionReset = $('#b_reset');
     let timeDisplay = $('#time_display');
@@ -451,7 +453,16 @@ document.addEventListener('DOMContentLoaded', function () {
 //                console.log('now create the eventStack');
                 eventStack = new EventStack(initO);
                 summariseSession();
-
+//                console.log(`current? ${versionControl.isCurrentVersion(session.uniqueID)}`);
+                if (!versionControl.isCurrentVersion(session.uniqueID)) {
+                    const rs = confirm(`There is a newer version of the software available, would you like to start a new session? You may experience unexpected results if you continue your current session.`);
+                    if (rs) {
+                        versionControl.updateVersion(session.uniqueID);
+//                        debugger;
+                        startNew();
+                        return;
+                    }
+                }
 //                console.log(3, JSON.parse(JSON.stringify(session)));
                 initRender();
                 updateView();
@@ -569,6 +580,12 @@ document.addEventListener('DOMContentLoaded', function () {
     const showSession = () => {
         console.log(session);
     };
+    const getSession = () => {
+        return session;
+    }
+    const getSessionID = () => {
+        return session ? session.uniqueID : null;
+    }
     const getProfiles = () => {
         const p = Object.entries(session).filter(s => s[0].includes('profile')).map(([_, value]) => value);
         return p;
@@ -723,7 +740,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const climberUpdate = (c) => {
         // event to be called from Climber class
-        console.log(`climberUpdate`);
+//        console.log(`climberUpdate`);
         devShowProfiles();
 //        console.log(c);
 //        showProfiles();
@@ -1601,6 +1618,7 @@ document.addEventListener('DOMContentLoaded', function () {
     window.showProfiles = showProfiles;
     window.showEvents = showEvents;
     // publically exposed methods - keep
+    window.getSessionID = getSessionID;
     window.climberUpdate = climberUpdate;
     window.updateDevLog = updateDevLog;
     window.climberDepletionEvent = climberDepletionEvent;
@@ -1701,6 +1719,7 @@ document.addEventListener('DOMContentLoaded', function () {
         // do not run init on DOM load, checkSession must run first
 //        console.log(`initRender, do we have a session?`);
 //        console.log(session);
+
         const cp = getCurrentPage();
 //        console.log(cp);
         switch (cp.page) {
