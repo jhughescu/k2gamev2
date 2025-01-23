@@ -16,7 +16,12 @@ const developData = (d) => {
 const developSession = (s) => {
     // converts & expands the raw session model
     const sn = s.toObject();
-    sn.team = persistentData.activeTeams[sn.teamRef];
+    const act = persistentData.activeTeams;
+    sn.team = act[sn.teamRef];
+    sn.supportTeam = act[sn.supportTeamRef];
+//    const rem = act.filter(t => t.id !== sn.teamRef);
+//    const st = rem[Math.round(rem.length * Math.random())];
+//    sn.supportTeam = st.id;
     return sn;
 };
 const processData = async () => {
@@ -50,14 +55,25 @@ const newSession = async (cb) => {
     const data = await processData();
     const sN = sessions.length + 1;
     const sID = `k2session_${sN}`;
-    const cc = Math.floor(persistentData.activeTeams.length * Math.random());
-    console.log(`choose from ${persistentData.activeTeams.length} countries, choosing ${cc}`);
+    const at = persistentData.activeTeams;
+    const cc = Math.floor(at.length * Math.random());
+    let st;
+    do {
+        st = Math.floor(at.length * Math.random());
+    } while (st === cc);
+    console.log(`newSession, cc: ${cc}, st: ${st}`);
+//    const ot = at.filter(t => t.id !== at[cc].id);
+//    const st = ot[Math.floor(ot.length * Math.random())].id;
+//    console.log(`newSession, ot.length: ${ot.length}, st: ${st}`);
+//    console.log('newSession', cc, at.length, ot.length);
+//    console.log(`choose from ${persistentData.activeTeams.length} countries, choosing ${cc}`);
     const s = new Session({
         uniqueID: `1${tools.padNum(sN, 100000)}${1000 + Math.round(Math.random() * 1000)}`,
         name: sID,
         dateID: 0,
         type: 1,
         teamRef: cc,
+        supportTeamRef: st,
         state: 'new',
         time: 0,
         profile0: {blank: true},
@@ -65,6 +81,7 @@ const newSession = async (cb) => {
         profile2: {blank: true}
     });
     s.save();
+    console.log(s);
     cb(developSession(s));
 };
 const restoreSession = async (sOb, cb) => {
@@ -126,8 +143,8 @@ const updateSessionV2 = async (sOb, cb) => {
 };
 const updateSession = async (sOb, cb) => {
     try {
-        console.log(`updateSession:`);
-        console.log(sOb);
+//        console.log(`updateSession:`);
+//        console.log(sOb);
         const filter = { uniqueID: sOb.uniqueID };
         const update = {};
         for (const [key, value] of Object.entries(sOb)) {

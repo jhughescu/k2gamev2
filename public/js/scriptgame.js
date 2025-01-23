@@ -268,7 +268,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     prof.addResupply($(c).attr('id'));
                 }
             });
-            prof.setDelay(20);
+            prof.setDelay(gameData.constants.resupplyDelay);
 
             closeModal({noevent: true});
         });
@@ -436,21 +436,12 @@ document.addEventListener('DOMContentLoaded', function () {
         const i = setInterval(() => {
             if (gameData !== null) {
                 session = sesh;
-//                console.log(`session set, type: "${type}"`);
-
-        //        console.log(JSON.parse(JSON.stringify(sesh)));
-//                console.log(1, JSON.parse(JSON.stringify(session)));
-        //        console.log(session);
-        //        console.log(getCurrentState());
                 gameflow(`session initialised (${type}) with ID ${session.uniqueID}`);
                 theState = new State(socket, session);
                 gTimer.setTimer(session.time);
                 expandSession();
-
-//                console.log(2, JSON.parse(JSON.stringify(session)));
                 const initO = Object.assign({}, gameData);
                 initO.session = session;
-//                console.log('now create the eventStack');
                 eventStack = new EventStack(initO);
                 summariseSession();
 //                console.log(`current? ${versionControl.isCurrentVersion(session.uniqueID)}`);
