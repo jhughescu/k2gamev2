@@ -738,12 +738,22 @@ document.addEventListener('DOMContentLoaded', function () {
     };
     // teams
 
-    const climberUpdate = (c) => {
+    const checkCompletion = () => {
+        const c = Climber.getClimbers();
+        const cf = Climber.getClimbers().filter(p => p.finished);
+        const cu = Climber.getClimbers().filter(p => !p.finished);
+        const co = {finished: cf, notFinished: cu, allFinished: c.length === cf.length};
+        return co;
+    };
+    const climberUpdate = (c, temp) => {
         // event to be called from Climber class
-//        console.log(`climberUpdate`);
         devShowProfiles();
-//        console.log(c);
-//        showProfiles();
+        if (c.finished) {
+            const allFinished = checkCompletion().allFinished;
+            if (allFinished) {
+                gTimer.pauseTimer();
+            }
+        }
     };
     const resetClimbers = () => {
 //        console.log(`resetClimbers`);
@@ -955,6 +965,12 @@ document.addEventListener('DOMContentLoaded', function () {
             gameflow(`time's up`);
 //            console.log(`time's up`);
             theState.storeTime(endTime);
+            const cs = checkCompletion();
+            if (!cs.allFinished) {
+                const dead = cs.notFinished.map(c => c.name);
+                console.log(`dead climbers: ${dead}`);
+                Climber.onTimeout();
+            }
         } else {
 //            storeLocal('time', gTimer.elapsedTime);
 //            console.log('poo');

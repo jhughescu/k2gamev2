@@ -127,6 +127,12 @@ class Climber {
     static getClimbers() {
         return this.allClimbers;
     }
+    static onTimeout() {
+        const C = this.getClimbers().filter(c => !c.finished);
+        C.forEach(c => {
+            c.showDead();
+        });
+    }
     static async getRouteMap(cb) {
         const response = await fetch('data/routemap.json');
         const data = await response.json();
@@ -572,7 +578,18 @@ class Climber {
         return zp;
     }
     //
-
+    toggleInfo() {
+        // dev method, toggles climber detail display on/off
+        const d = $(this.view.find('.map-pointer-label')[0]);
+        if (d.is(':visible')) {
+            d.hide();
+        } else {
+            d.show();
+        }
+    }
+    showDead() {
+        this.view.css({'background-color': 'black'});
+    }
     updateView() {
         if (this.view.length && Climber.routeMap) {
             // only run if view has been correctly defined
@@ -584,6 +601,9 @@ class Climber {
             if (this.position === 100) {
                 this.showFinished();
                 this.finished = true;
+                console.log(`${this.name} has finished`);
+                console.log(this);
+                window.climberUpdate(this, true);
             }
             const scaleFactor = 200;
             const div = pos === 0 & H === 0 ? 0 : pos / H;
@@ -595,13 +615,14 @@ class Climber {
             str += ` ${this.view.is(':visible') ? this.view.position().top : ''}`;
             // dev code: change colour of climbers based on their position on the expedition
             if (this.gameData.isDev) {
+                ///*
                 const cs = this.currentStage;
-//                const cols = ['red', 'orange', 'yellow', 'green', 'blue'];
                 const cols = ['red', '#ff5800', '#ff9300', '#ffe200', '#baff00'];
                 this.view.css({'background-color': cols[cs]});
                 if (this.finished) {
                     this.view.css({'background-color': 'green'});
                 }
+                //*/
             }
             //
             if (this.view.length > 0) {
@@ -626,10 +647,29 @@ class Climber {
         this.view.show();
         this.view.find('.type').html(this.type);
         this.updateView();
-        this.view.off('click').on('click', function () {
-            jq.css({'z-index': 1})
-            $(this).css({'z-index': 10});
+        this.view.off('click').on('click', () => {
+//            jq.css({'z-index': 1});
+//            this.view.css({'z-index': 10});
+            this.toggleInfo();
         });
+        let timer;
+        const timeout = 1000
+        this.view
+            .on('mousedown touchstart', () => {
+                timer = setTimeout(() => {
+                    $('#output').text('Long-press action triggered!');
+                    jq.css({'z-index': 1});
+                    this.view.css({'z-index': 10});
+                }, timeout);
+            })
+            .on('mouseup touchend mouseleave', function () {
+                clearTimeout(timer); // Cancel the action if released early
+            });
+//        this.view.off('click').on('click', function () {
+//            jq.css({'z-index': 1})
+//            $(this).css({'z-index': 10});
+//            this.toggleInfo();
+//        });
     }
     expandOptions() {
         this.options.forEach((o, n) => {
