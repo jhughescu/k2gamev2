@@ -5,34 +5,32 @@ class VersionControl {
         this.storeID = `k2-dev-version`;
         this.initialize();
     }
-
     initialize() {
-        this.checkVersion();
+        this.getVersion();
     }
     updateVersion(sessionID) {
         localStorage.setItem(this.storeID, this.versionInfo.timestamp);
-//        debugger;
     }
-    isCurrentVersion(sessionID) {
-        const storedTimestamp = localStorage.getItem(this.storeID) || moment.utc(0).format();
+    isCurrentVersion() {
+        const storedTimestamp = localStorage.getItem(this.storeID);
+        // If no timestamp is found in localStorage, assume the version is current
+        if (!storedTimestamp) {
+//            console.log(`No stored timestamp found. Assuming the current version is up to date.`);
+            this.updateVersion();
+            return true;
+        }
+        // Compare timestamps if a stored value exists
         const timestampStored = moment(storedTimestamp);
         const timestampBuild = moment(this.versionInfo.timestamp);
-//        console.log('compare');
-//        console.log('stored', timestampStored);
-//        console.log('from build', timestampBuild);
-        return !timestampBuild.isAfter(timestampStored);
+        const isCurrent = !timestampBuild.isAfter(timestampStored);
+//        console.log(`Stored Timestamp: ${storedTimestamp}`);
+//        console.log(`Build Timestamp: ${this.versionInfo.timestamp}`);
+//        console.log(`Is current version? ${isCurrent}`);
+        return isCurrent;
     }
-    async checkVersion() {
+    async getVersion() {
         try {
             this.versionInfo = await this.loadVersionInfo();
-            const storedTimestamp = localStorage.getItem(this.storeID) || moment.utc(0).format();
-            const timestampStored = moment(storedTimestamp);
-            const timestampBuild = moment(this.versionInfo.timestamp);
-            if (timestampBuild.isAfter(timestampStored)) {
-
-            } else {
-//                console.log('current version');
-            }
         } catch (err) {
             console.error('Failed to load version info:', err);
         }

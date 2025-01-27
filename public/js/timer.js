@@ -41,7 +41,7 @@ class GameTimer {
             r.test = r.test / 1.01;
             if (r.test < (r.int - r.step)) {
                 // at an integer restart the interval with reduced value
-                console.warn(`try to speed up the interval, change to ${Math.round(r.test)}`);
+//                console.warn(`try to speed up the interval, change to ${Math.round(r.test)}`);
                 r.int = Math.round(r.test);
                 this.startIntervals();
             }
@@ -62,7 +62,7 @@ class GameTimer {
         r.diffAv = r.diffHis.reduce((s, v) => s + v, 0) / r.diffHis.length;
         if (r.diffAv > r.int * 2) {
             r.int = r.test = Math.round(r.int + r.step);
-            console.warn(`average rate has dropped to ${r.diffAv}, adjust it by ${r.step} to ${r.int}`);
+//            console.warn(`average rate has dropped to ${r.diffAv}, adjust it by ${r.step} to ${r.int}`);
             r.diffHis.length = 0;
             this.startIntervals();
 //            clearInterval(this.interval);
@@ -87,7 +87,7 @@ class GameTimer {
         this.interval = setInterval(() => {
             this.intervalMethod();
         }, this.rate.int);
-        console.log(`start the intervals with int ${this.rate.int}`);
+//        console.log(`start the intervals with int ${this.rate.int}`);
         // write the report on a slower interval (& remove later, only required for dev)
         clearInterval(this.assessor.funk);
         this.assessor.funk = setInterval(() => {

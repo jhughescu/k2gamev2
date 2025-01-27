@@ -19,9 +19,6 @@ const developSession = (s) => {
     const act = persistentData.activeTeams;
     sn.team = act[sn.teamRef];
     sn.supportTeam = act[sn.supportTeamRef];
-//    const rem = act.filter(t => t.id !== sn.teamRef);
-//    const st = rem[Math.round(rem.length * Math.random())];
-//    sn.supportTeam = st.id;
     return sn;
 };
 const processData = async () => {

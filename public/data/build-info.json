@@ -1,6 +1,6 @@
 {
-  "timestamp": "2025-01-23T20:15:07Z",
-  "commitHash": "be9ae43691dbba99513dac8478e27004cd6b013c",
-  "commitMessage": "Basic endings set up - mark climbers as dead if still on the mountain at timeout, stop timer if all climbers get down in time.",
+  "timestamp": "2025-01-27T15:32:34Z",
+  "commitHash": "c2ba88d79956218b259ecbdf115c94719c1e7918",
+  "commitMessage": "new sessions now have a supportTeam object (used to connect with other teams in game)",
   "branch": "master"
 }

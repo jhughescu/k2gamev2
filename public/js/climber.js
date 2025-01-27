@@ -1,13 +1,17 @@
 class Climber {
     constructor(init) {
+//        console.log('create new climber');
+//        console.log(`create new climber`, init);
         if (init.hasOwnProperty('summaryString')) {
-            const gd = init.gameData;
-            const tm = init.team;
-            init = this.unpackStorageSummary(init.summaryString);
-//            console.log(`summary string: ${init.summaryString}`);
-            init.gameData = gd;
-            init.team = tm;
-//            console.log(init);
+            if (init.summaryString !== undefined && init.summaryString !== 'undefined') {
+                const gd = init.gameData;
+                const tm = init.team;
+//                console.log(`restored climber, summary string: ${init.summaryString}`);
+                init = this.unpackStorageSummary(init.summaryString);
+                init.gameData = gd;
+                init.team = tm;
+//                console.log(`init from summaryString`, init);
+            }
         }
         this.gameData = init.gameData;
         this.profile = init.profile;
@@ -22,21 +26,24 @@ class Climber {
         this.name = init.team.profiles[`p${init.profile}`];
         this.filename = this.name.replace(' ', '').replace(/[^a-zA-Z0-9]/g, '');
         const stored = Object.assign({position: init.position, currentTime: 0, delayExpiry: 0}, this.unpackStorageSummary(this.getStoredSummary()));
+//        console.log(`new Climber`);
+//        console.log(this.getStoredSummary());
+//        console.log(stored);
         this.type = init.type;
         this.capacity = init.capacity;
         this.t1 = init.t1;
         this.t2 = init.t2;
         this.tTotal = (this.t1 * 2) + (this.t2 * 2);
         this.currentSpeed = 0;
-//        this.oxygen = init.hasOwnProperty('oxygen') ? init.oxygen : 0;
+
         this.oxygen = stored.hasOwnProperty('oxygen') ? stored.oxygen : 0;
-//        this.sustenance = init.hasOwnProperty('sustenance') ? init.sustenance : 0;
         this.sustenance = stored.hasOwnProperty('sustenance') ? stored.sustenance : 0;
-//        this.rope = init.hasOwnProperty('rope') ? init.rope : 0;
         this.rope = stored.hasOwnProperty('rope') ? stored.rope : 0;
+        this.teamID = stored.hasOwnProperty('teamID') ? stored.teamID : (init.hasOwnProperty('teamID') ? init.teamID : -1);
         this.initialSettings = stored.hasOwnProperty('initialSettings') ? stored.initialSettings : '{}';
         this.resupplies = stored.hasOwnProperty('resupplies') ? stored.resupplies : '';
         this.position = stored.position > 0 ? stored.position : 0;
+
         // currentTime is a simple integer which can be written/read from the database
         this.currentTime = stored.currentTime > 0 ? stored.currentTime : 0;
         // currentTimeObject is a read-only object sent in by the game code (see updatePosition)
@@ -56,12 +63,15 @@ class Climber {
         this.bounceInc = 5 + (Math.random() * 10);
         this.iconX = 100 + (this.profile * 0);
         this.calculateClimbRate();
-        if (Climber.allClimbers.filter(c => c.profile === this.profile).length === 0) {
-            Climber.allClimbers.push(this);
-        } else {
-            Climber.allClimbers[Climber.allClimbers.findIndex(e => e.profile === this.profile)] = this;
+        if (this.isRealClimber()) {
+            if (Climber.allClimbers.filter(c => c.profile === this.profile).length === 0) {
+                Climber.allClimbers.push(this);
+            } else {
+                Climber.allClimbers[Climber.allClimbers.findIndex(e => e.profile === this.profile)] = this;
+            }
         }
-//        console.log(this);
+        this.storeSummary();
+//        console.log('new climber:', window.clone(this));
     }
 
     static resetAll(cs) {
@@ -89,6 +99,7 @@ class Climber {
     static updateViews(o) {
         if (o === undefined) {
             console.warn(`no 'o' value supplied, updates will fail`);
+            return;
         }
         const active = Climber.getClimbers().filter(c => !c.finished);
         active.forEach(c => {
@@ -177,12 +188,18 @@ class Climber {
         }
     }
 
+    isRealClimber() {
+        // diff. between an actual playable climber and a support team climber (these have type = -9999)
+        return this.type > -100;
+    }
+
     // gets
     getSummaryMap() {
         // mapped values to be stored in DB (store strings and numbers only, no objects etc)
         const m = {
             p: 'profile',
-            t: 'type',
+            ty: 'type',
+            tm: 'teamID',
             c: 'capacity',
             t1: 't1',
             t2: 't2',
@@ -362,16 +379,31 @@ class Climber {
         }
     }
     // storage/summarising
+    getStorageID() {
+        // generate a unique ID to use for getting/setting localStorage summaries
+        const sid = `${this.gameData.storeID}-c${this.profile}-${this.filename}`;
+        return sid;
+    }
     storeSummary() {
-        const ss = this.getStorageSummary();
-        localStorage.setItem(`${this.gameData.storeID}-c${this.profile}`, ss);
+        if (this.teamID > -1 && this.team !== -1 && this.type > -100) {
+            // don't store any temporary climbers, or support team climbers (these have type = -9999)
+            const sid = this.getStorageID();
+            const ss = this.getStorageSummary();
+    //        const sid = `${this.gameData.storeID}-c${this.profile}-${this.filename}`;
+    //        console.log(`storing climber with ID ${sid} - use filename? ${this.filename}`);
+            localStorage.setItem(sid, ss);
+        }
     }
     unstoreSummary() {
         localStorage.removeItem(`${this.gameData.storeID}-c${this.profile}`);
     }
     getStoredSummary() {
-        const s = `${this.gameData.storeID}-c${this.profile}`;
-        const ss = localStorage.getItem(s) ? localStorage.getItem(s) : '';
+//        const s = `${this.gameData.storeID}-c${this.profile}`;
+//        const s = `${this.gameData.storeID}-c${this.profile}-${this.filename}`;
+        const sid = this.getStorageID();
+        const ss = localStorage.getItem(sid) ? localStorage.getItem(sid) : '';
+//        console.log(`getting storage called ${sid}:`);
+//        console.log(ss);
         return ss;
     }
     getStorageSummary() {
@@ -423,7 +455,7 @@ class Climber {
         const cs = this.currentStage;
         const logic = cs > 1 && cs < 4;
         const tm = logic ? this.t2 : this.t1; /* time to ascend/descend in minutes */
-//        this.log(` * * * currentStage is ${cs}, hence logic is ${logic}, therefore so we use ${(logic ? 't2' : 't1')};  t1 is ${this.t1}, t2 is ${this.t2}`);
+//        console.log(` * * * currentStage is ${cs}, hence logic is ${logic}, therefore so we use ${(logic ? 't2' : 't1')};  t1 is ${this.t1}, t2 is ${this.t2}`);
         const ts = tm * 60; /* time to ascend/descend in seconds */
         const stage = s[cs];
         const tempRate = [window.clone(this).currentSpeed];
@@ -431,6 +463,7 @@ class Climber {
 //        this.log(`rate prior to calculation: ${this.currentSpeed}`);
 //        this.log(`calculation: (100 / 4) / (${tm} * 60) = ${rate}`);
 //        this.log(`calculation: (100 / 4) / ${ts} = ${rate}`);
+//        console.log(`calculate CR: ${rate}`)
         if (isNaN(rate)) {
             rate = 0;
         }
@@ -447,6 +480,7 @@ class Climber {
         }
 //        this.log(tempRate.toString());
 //        console.log(this.options[this.type]);
+
         if (!isNaN(rate)) {
             this.setCurrentSpeed(rate);
         }
@@ -478,11 +512,16 @@ class Climber {
         this.delayRemaining = 0;
     }
     updatePosition(o, cb) {
+//        console.log(`updatePosition:`);
+//        console.log(o);
+//        console.log(this);
         this.currentTimeObject = JSON.parse(JSON.stringify(o));
         const gt = this.currentTimeObject.gametime;
         if (!this.finished) {
             const d = o.sec - this.currentTime;
             const step = d * this.currentSpeed;
+//            console.log(`step: ${step}`);
+//            console.log(`this.currentSpeed: ${this.currentSpeed}`);
             this.currentTime = o.sec;
             if (this.position > this.gameData.route.stages[this.currentStage]) {
                 // stage has changed; climb rate must be recalculated
@@ -491,6 +530,7 @@ class Climber {
                 const adjusting = this[adjustID];
                 // set the current t value to the predefined value, in case it has been adjusted by an event
                 // reset all timings - adjusted timings do not persist across stages
+//                console.log(this);
                 this.setProperty('t1', this.options[this.type].t1);
                 this.setProperty('t2', this.options[this.type].t2);
                 this.currentStage += 1;
@@ -514,6 +554,7 @@ class Climber {
             } else {
                 this.position = 100;
             }
+//            console.log(this.position);
             return this.position;
         }
     }

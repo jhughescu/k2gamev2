@@ -385,6 +385,7 @@ document.addEventListener('DOMContentLoaded', function () {
     };
     const getLocal = (p) => {
         const id = `${getStoreID()}-${p}`;
+//        console.log(`getLocal: ${id}`);
         return localStorage.getItem(id);
     };
     const snapshot = () => {
@@ -414,22 +415,21 @@ document.addEventListener('DOMContentLoaded', function () {
     };
     const expandSession = () => {
         // on init, takes a session and expands various items
-//        console.log(`expandSession`);
-        session.allProfiles = [];
-        for (var i in session) {
-            if (i.includes('profile')) {
-//                console.log(`looks like we have a profile`);
-                if (session[i].profile !== null && session[i].hasOwnProperty('summary')) {
-//                    console.log(`logic approved`)
-                    const o = {summaryString: session[i].summary};
-//                    console.log(o);
-//                    console.log(getClimber(o));
-                    session[i] = getClimber(o);
-                    session.allProfiles.push(session[i]);
+//        console.log(`expandSession: profile2 type: ${session.pr
+//        if (session.profile2.constructor.name !== 'Climber') {
+//            only run if profile2 not yet defined
+            session.allProfiles = [];
+            for (var i in session) {
+                if (i.includes('profile')) {
+                    if (session[i].profile !== null && session[i].hasOwnProperty('summary')) {
+                        const o = {summaryString: session[i].summary};
+                        session[i] = getClimber(o);
+                        session.allProfiles.push(session[i]);
+                    }
                 }
             }
-        }
-
+            buildSupportTeam();
+//        }
     };
     const setSession = (sesh, type) => {
         // unified method for setting the session
@@ -439,6 +439,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 gameflow(`session initialised (${type}) with ID ${session.uniqueID}`);
                 theState = new State(socket, session);
                 gTimer.setTimer(session.time);
+//                console.log(`setSession`);
                 expandSession();
                 const initO = Object.assign({}, gameData);
                 initO.session = session;
@@ -467,6 +468,29 @@ document.addEventListener('DOMContentLoaded', function () {
                 console.log('waiting for data...')
             }
         }, 100);
+    };
+    const buildSupportTeam = () => {
+        // sets up a support team for interations
+        // support team is currently stored in the session object
+        // the support team members need only be simple climber objects - no view required etc. And they need not be stored in locaslStorage/DB. Only supportTeamRef is stored
+
+        if (!session.supportTeam.hasOwnProperty('climbers')) {
+//            console.log('build support team', session.supportTeam);
+//            console.log(session.supportTeam);
+            session.supportTeam.climbers = {};
+            const P = session.supportTeam.profiles;
+            Object.keys(P).forEach(p => {
+                const ob = {
+                    profile: window.justNumber(p),
+                    type: -9999,
+                    team: session.supportTeam,
+                    teamID: session.supportTeam.id,
+                    gameData: gameData
+                };
+//                console.log(ob);
+                session.supportTeam.climbers[p] = new Climber(ob);
+            });
+        }
     };
     // Main init method:
     const checkSession = () => {
@@ -498,14 +522,13 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         } else {
             gameflow('no game in progress, start new game');
-//            console.log('starting');
             socket.emit('newSession', sesh => {
                 setSession(sesh, 'new');
-//                console.log('new session creates blank players');
                 const i = setInterval(() => {
                     if (gameData !== null) {
                         clearInterval(i);
-//                        console.log('gamedata is ready, do stuff');
+                        console.log('creating three blank team members');
+//                        debugger;
                         setTeamMember(0, -1);
                         setTeamMember(1, -1);
                         setTeamMember(2, -1);
@@ -518,8 +541,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 setTimeout(() => {
                     // delay required to allow for async retrieval of gameData
                     if (gameData.isDev) {
-//                        showAlert(`gameTime set to ${gameData.gameTime} minutes`);
-                        showModal('dev.initsetup', gameData);
+                        // show a modal allowing a new game time to be set
+//                        showModal('dev.initsetup', gameData);
                     }
                 }, 500);
             });
@@ -538,6 +561,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (boo) {
 
                     localStorage.removeItem(sId);
+                    localStorage.clear();
                     window.location.hash = 'home';
                     delete session.profile0;
                     delete session.profile1;
@@ -782,25 +806,18 @@ document.addEventListener('DOMContentLoaded', function () {
         console.log(kill);
     };
     const getClimber = (o) => {
-//        console.log(`getClimber`);
-//        console.log(session);
-//        console.log(session.team);
         // getClimber returns a new Climber instance
         // Requires an object as arg
         // Add the game data to all instances
         if (gameData) {
-//            console.log('gameData is OK, we can create the climber');
             o.gameData = JSON.parse(JSON.stringify(gameData));
             o.team = JSON.parse(JSON.stringify(session.team));
-
+            o.teamID = o.team.id;
+//            console.log(`create Climber from object`);
             const c = new Climber(o);
-//            c.setView($('.climber'));
             c.setView($('.map-pointer-container'));
-//            console.log(c);
-//            console.log(Climber.getClimbers().length)
             return c;
         } else {
-//            console.log('no gameData, just send back the original');
             return {summary: o.summaryString};
         }
     };
@@ -808,18 +825,12 @@ document.addEventListener('DOMContentLoaded', function () {
 //        console.log(`setTeamMember, ${profile}, ${type}`);
         let tm = false;
         if (session[`profile${profile}`]) {
-//            console.log('ok to create profile - no profile to overwrite');
-//            if (!session[`profile${profile}`].hasOwnProperty('blank')) {
                 if (session[`profile${profile}`].profile === null || $.isEmptyObject(session[`profile${profile}`].profile)) {
-//                    console.log('ok to continue, no empty profile');
                     const gtm = getTeamMember(profile, type);
-//                    console.log('gtm', gtm);
                     const fullProfile = Object.assign(getTeamMember(profile, type), {profile: profile, type: type});
                     const p = getClimber(fullProfile);
-    //                console.log(p);
                     tm = {summary: p.getStorageSummary()};
                     if (Boolean(tm)) {
-//                        console.log('ok to store profile')
                         updateSession(`profile${profile}`, tm, (r) => {
                             if (Climber.getClimbers().length === 3) {
                                 gameflow(`you can now use renderMap`)
@@ -888,7 +899,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const r = cl.length === 0;
 //        console.log(Climber.getClimbers().filter(c => c.type === -1));
         if (!r) {
-            console.log(`Climbers not ready: ${cl.length}`);
+//            console.log(`Climbers not ready: ${cl.length}`);
         }
         return r;
     };
@@ -1635,6 +1646,7 @@ document.addEventListener('DOMContentLoaded', function () {
     gTimer.updateDisplay = updateDisplay;
     gTimer.storageUpdater = storageUpdater;
     const toggleTimer = () => {
+        Climber.storeSummaries();
         if (gTimer.hasStarted) {
             if (gTimer.isRunning) {
                 gTimer.pauseTimer();
