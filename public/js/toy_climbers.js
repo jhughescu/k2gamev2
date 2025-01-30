@@ -55,7 +55,7 @@ class ToyClimbers {
     }
     getViewY(n) {
         const p = this.toys[n].p;
-        const y = p < 50 ? (p * 2) : 100 - ((p - 50) * 2
+        const y = p < 50 ? (p * 2) : 100 - ((p - 50) * 2);
         return Math.max(y, 0);
     }
     getViewX(y) {
