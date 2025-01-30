@@ -8,7 +8,7 @@ class ToyClimbers {
         this.storeID = `${this.gameData.storeID}-toys`;
         this.updateInterval = {funk: null, int: 50};
         // delayInterval is all about setting delays for the various toys, doesn't need to be as fast at the updateInterval
-        this.delayInterval = {funk: null, int: 1000};
+        this.delayInterval = {funk: null, int: 1000, c: 0};
         this.toys = [];
         this.delays = [];
         this.init();
@@ -69,10 +69,12 @@ class ToyClimbers {
         this.updateInterval.funk = setInterval(this.toysUpdate.bind(this), this.updateInterval.int);
         clearInterval(this.delayInterval.funk);
         this.delayInterval.funk = setInterval(this.delayUpdate.bind(this), this.delayInterval.int);
+        this.store();
     }
     intervalStop() {
         clearInterval(this.updateInterval.funk);
         clearInterval(this.delayInterval.funk);
+        this.store();
     }
     getRate() {
 //        return 0.001 + window.roundNumber(Math.random() / 20, 3);
@@ -123,6 +125,7 @@ class ToyClimbers {
             toys: this.packToys(),
             delays: this.delays.join(',')
         };
+//        console.log('storing')
         localStorage.setItem(this.storeID, JSON.stringify(o));
     }
     unstore() {
@@ -212,7 +215,7 @@ class ToyClimbers {
                         }
                         this.updateView(i, this.delays[i] === 0);
                     });
-                    this.store();
+//                    this.store();
                 }
                 this.currentTime = gt.s;
             }
@@ -232,6 +235,10 @@ class ToyClimbers {
             }
         }
         this.delays = d.map(n => Math.max(n - 1, 0));
+        // update storage on this interval rather than the faster update interval
+        if ((this.delayInterval.c++)%3 === 0) {
+            this.store();
+        }
 //        console.log(`${d.filter(n => n > 0).length} delay(s) set`);
     }
     update(o) {
