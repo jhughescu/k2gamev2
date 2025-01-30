@@ -75,3 +75,17 @@
 /*    right: 40px;*/
     left: 50px;
 }
+.climberDevIndicator {
+/*    dev only; indicates which stage each climber is at (see climber.js updateView method */
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    z-index: 100;
+/*    background-color: red;*/
+}
+.toyClimber.delayed {
+    background-color: rgba(230, 3, 3, 0.65);
+}

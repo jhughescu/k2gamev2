@@ -10,6 +10,7 @@ class VersionControl {
     }
     updateVersion(sessionID) {
         localStorage.setItem(this.storeID, this.versionInfo.timestamp);
+        return `version set to ${this.versionInfo.timestamp}`;
     }
     isCurrentVersion() {
         const storedTimestamp = localStorage.getItem(this.storeID);

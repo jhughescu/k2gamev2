@@ -3,6 +3,7 @@ class EventStack {
         this.gameData = data;
         this.allEvents = data.events;
         this.eventSummary = data.session.events;
+
         this.triggers = {};
         this.processEvents();
 //        console.log(this.triggers);
@@ -50,9 +51,11 @@ class EventStack {
         return this.currentEvent;
     }
     processEvents() {
+        const r = this.gameData.activeEventRange;
         if (this.allEvents) {
             this.allEvents.forEach((e, i) => {
-                e.active = i < 2;
+//                e.active = i < 2;
+                e.active = i >= r[0] && i <= r[1];
                 e.next = false;
                 e.current = false;
                 e.complete = false;

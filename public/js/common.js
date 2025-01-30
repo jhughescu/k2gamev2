@@ -286,10 +286,12 @@ document.addEventListener('DOMContentLoaded', function () {
 //        console.log(`targ: ${targ}`);
         $(`#${targ}`).css({opacity: 0});
         if (templateStore.hasOwnProperty(temp)) {
+//            console.log('new temp');
             // if this template has already been requested we can just serve it from the store
             const compiledTemplate = Handlebars.compile(templateStore[temp]);
             if (document.getElementById(targ)) {
                 document.getElementById(targ).innerHTML = compiledTemplate(ob);
+//                console.log(compiledTemplate(ob))
             } else {
 //                console.warn(`target HTML not found: ${targ}`);
             }
@@ -299,6 +301,7 @@ document.addEventListener('DOMContentLoaded', function () {
             $(`#${targ}`).css({opacity: 1});
         } else {
             // If this template is being requested for the first time we will have to fetch it from the server
+//            console.log('reload temp')
             fetch(`/getTemplate?template=${temp}`, {
                     method: 'POST',
                     headers: {
@@ -308,13 +311,15 @@ document.addEventListener('DOMContentLoaded', function () {
                 })
                 .then(response => response.text())
                 .then(uncompiledTemplate => {
+//                    console.log(';;;;;')
                     const template = uncompiledTemplate;
                     templateStore[temp] = uncompiledTemplate;
                     const compiledTemplate = Handlebars.compile(template);
                     if (document.getElementById(targ)) {
                         document.getElementById(targ).innerHTML = compiledTemplate(ob);
+//                        console.log(compiledTemplate(ob))
                     } else {
-//                        console.warn(`target HTML not found: ${targ}`);
+                        console.warn(`target HTML not found: ${targ}`);
                     }
                     if (cb) {
                         cb();

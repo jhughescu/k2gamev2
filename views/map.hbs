@@ -3,11 +3,13 @@
 
     <div id='climbzone'><div id='climby'><div id='climbx'></div></div></div>
     <div id='mapzone'>
+
         {{#each climbers}}
         <div class='devClimberSummary' id='devClimberSummary{{profile}}'>
         {{> map_climber_icon this}}
         </div>
         {{/each}}
+        <div id='toyClimbers'></div>
     </div>
 </div>
 <!-- Page Header -->

@@ -81,6 +81,7 @@
 #climbzone {
     display: none;
     position: absolute;
+    z-index: 5;
     width: 100%;
     height: 100%;
     background-color: rgba(255, 192, 203, 0.69);
@@ -104,4 +105,19 @@
     width: 350px;
     height: 50%; /* Based on the climbable area of the mountain */
     height: 500px;
+}
+#toyClimbers {
+    width: 100%;
+    height: 100%;
+/*    background-color: red;*/
+}
+.toyClimber {
+    position: absolute;
+    width: 16px;
+    height: 22px;
+    z-index: -1; /* negative value keeps the toys behind the real climbers */
+/*    background-color: orange;*/
+    background-image: url(../../assets/icons/Icons_Pointer.png);
+    background-size: contain;
+    background-repeat: no-repeat;
 }

@@ -34,6 +34,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const versionControl = new VersionControl();
 
+
     const sessionPlayPause = $('#b_playpause');
     const sessionReset = $('#b_reset');
     let timeDisplay = $('#time_display');
@@ -69,6 +70,7 @@ document.addEventListener('DOMContentLoaded', function () {
     let devController = null;
     let devTimer = null;
     let mArray = [];
+    let toyClimbers = null;
 
     // bg gradient change
     const gradientStops = [
@@ -290,6 +292,26 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
     };
+    const profileEvent = (m, ev) => {
+        // generic method for support team climber selection, can use dice
+        console.log(`set up the profile event`);
+//        console.log(m);
+        console.log(ev);
+        const b = m.find('button');
+        const c = m.find('.k2-modal-btn');
+        c.prop('disabled', false);
+        b.off('click').on('click', function () {
+            if ($(this).attr('class').includes('k2-modal-btn')) {
+                // close button cannot run this code
+                closeModal();
+            } else {
+                const id = $(this).attr('id');
+                const res = ev.metrics.results[id];
+                console.log(`click on ${window.justNumber(id)}, ${res.text}`);
+                console.log(res);
+            }
+        })
+    };
     // end modal-specifics
     const closeModal = (ob) => {
         const m = $('#overlay_modal');
@@ -331,7 +353,7 @@ document.addEventListener('DOMContentLoaded', function () {
         closer.off('click').on('click', closeModal);
     };
     const showModalEvent = (ev) => {
-//        console.log(`showModalEvent`);
+//        console.log(`showModalEvent`, ev);
 //        console.log(ev);
         const m = $('#overlay_modal');
         m.show();
@@ -415,7 +437,7 @@ document.addEventListener('DOMContentLoaded', function () {
     };
     const expandSession = () => {
         // on init, takes a session and expands various items
-//        console.log(`expandSession: profile2 type: ${session.pr
+//        console.log(`expandSession`);
 //        if (session.profile2.constructor.name !== 'Climber') {
 //            only run if profile2 not yet defined
             session.allProfiles = [];
@@ -429,6 +451,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             }
             buildSupportTeam();
+//            console.log('attempt to init');
+//            console.log(toyClimbers);
+            if (toyClimbers === null) {
+                toyClimbers = new ToyClimbers({gameData: gameData});
+            }
 //        }
     };
     const setSession = (sesh, type) => {
@@ -488,7 +515,10 @@ document.addEventListener('DOMContentLoaded', function () {
                     gameData: gameData
                 };
 //                console.log(ob);
-                session.supportTeam.climbers[p] = new Climber(ob);
+                const c = new Climber(ob);
+                // remove gameData from all support climbers - can cause circularity later
+                delete c.gameData;
+                session.supportTeam.climbers[p] = c;
             });
         }
     };
@@ -776,6 +806,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const cs = getCurrentState();
         Climber.resetAll(cs);
         updateClimbers(cs);
+        toyClimbers.reset();
     };
     const updateClimbers = (cs) => {
         Climber.updateViews(cs);
@@ -990,6 +1021,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const updateDisplay = () => {
         const cs = getCurrentState();
         updateClimbers(cs);
+        toyClimbers.update(cs);
         updateEventStack(cs);
         if (devTimer) {
             devTimer.updateTime(cs);
@@ -1436,6 +1468,10 @@ document.addEventListener('DOMContentLoaded', function () {
             })
         });
     };
+
+
+
+
     // Events
     const setNewEventArray = () => {
 //        console.log(`setNewEventArray called`);
@@ -1452,7 +1488,7 @@ document.addEventListener('DOMContentLoaded', function () {
     };
     const eventTrigger = (ev) => {
         // EventStack calls this method when a new event is to be triggered
-//        console.log(ev);
+        console.log(`eventTrigger`);
         if (!ev.active) {
             return;
         }
@@ -1461,7 +1497,8 @@ document.addEventListener('DOMContentLoaded', function () {
             // NOTE: the event model CAN send in  any number of profiles, the line below assumes only a single profile, edit if events effect multiple profiles
             ev.theProfile = session[`profile${ev.profiles[0]}`];
         }
-//        console.log(`event`, ev);
+        ev.supportTeam = session.supportTeam.climbers;
+        console.log(`event`, ev);
         if (ev.hasOwnProperty('delay')) {
             ev.profiles.forEach(p => {
 //                console.log(p, session[`profile${p}`])
@@ -1515,6 +1552,10 @@ document.addEventListener('DOMContentLoaded', function () {
 //    setTimeout(testDep, 2000);
 
     //
+
+
+
+
     const prepProfilesForDisplay = () => {
         let p = Object.entries(session).filter(e => e[0].includes('profile')).map(e => e[1]);
         p.forEach(e => {
@@ -1606,6 +1647,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     eventStack.initSessionEvents(getCurrentState().sessiontime.m);
                     updateDisplay();
 //                    console.log(`renderMap`);
+                    toyClimbers.renderView();
                 });
             })
         });
@@ -1635,11 +1677,16 @@ document.addEventListener('DOMContentLoaded', function () {
     window.showData = showData;
     window.showProfiles = showProfiles;
     window.showEvents = showEvents;
+    window.updateVersion = () => {
+        return versionControl.updateVersion();
+    }
+
     // publically exposed methods - keep
     window.getSessionID = getSessionID;
     window.climberUpdate = climberUpdate;
     window.updateDevLog = updateDevLog;
     window.climberDepletionEvent = climberDepletionEvent;
+
     //
 //    test();
     // hook into timer methods

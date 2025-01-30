@@ -198,6 +198,7 @@
         "resupplyDelay": 20
     },
     "route": {"ratio": [50, 50]},
+    "activeEventRange": [-1, -1],
     "events": [
         {
             "time": 0.5,
@@ -208,6 +209,7 @@
         {
             "time": 5,
             "event": "injury1",
+            "type": "section",
             "profiles": [0],
             "stage": 1,
             "method": "injury1Setup",
@@ -224,36 +226,57 @@
         {
             "time": 10,
             "event": "crampons",
+            "type": "p1",
+            "method": "profileEvent",
             "profiles": [0],
             "stage": 2,
             "metrics": {
                 "threshold": 3,
                 "results": [
-                    {"oxygen": [0, 0]},
-                    {"oxygen": [0, 2], "sustenance": [0, 1]},
-                    {"sustenance": [0, 3]}
-                ],
-                "free_climb": {
-                    "results": [
-                        {"rope": 2, "t2": [3, 6]},
-                        {"rope": 2, "t2": [3, 6]},
-                        {"rope": 2, "oxygen": [2, 3]}
-                    ]
-                }
+                    {
+                        "text": "Can't help",
+                        "dice": false,
+                        "oxygen": [0, 0]
+                    },
+                    {
+                        "text": ["No loss", "lose 2 oxygen & 1 sustenance"],
+                        "dice": true,
+                        "oxygen": [0, 2],
+                        "sustenance": [0, 1]
+                    },
+                    {
+                        "text": ["no loss", "lose 3 sustenance"],
+                        "dice": true,
+                        "sustenance": [0, 3]
+                    }
+                ]
             }
         },
         {
             "time": 15,
             "event": "icefall1",
+            "type": "section",
             "profiles": [0],
             "stage": 2,
             "metrics": {
                 "threshold": 3,
                 "reattach": {
                     "results": [
-                        {"oxygen": [0, 0]},
-                        {"oxygen": [0, 2], "sustenance": [0, 1]},
-                        {"sustenance": [0, 3]}
+                        {
+                            "text": "",
+                            "dice": false,
+                            "oxygen": [0, 0]
+                        },
+                        {
+                            "text": ["", ""],
+                            "dice": true,
+                            "oxygen": [0, 2],
+                            "sustenance": [0, 1]
+                        },
+                        {
+                            "text": ["", ""],
+                            "dice": true,
+                            "sustenance": [0, 3]}
                     ]
                 },
                 "free_climb": {

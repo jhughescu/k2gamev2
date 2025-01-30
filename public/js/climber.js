@@ -115,7 +115,7 @@ class Climber {
     static test() {
         //
     }
-    static getX(y) {
+    static getX(y, test) {
         const output = this.routeMap;
         let comp = [];
         let rtn = null;
@@ -133,6 +133,7 @@ class Climber {
                 }
             }
         }
+//        console.log(`climber getX y; ${y}, rtn: ${rtn}`);
         return rtn;
     }
     static getClimbers() {
@@ -149,10 +150,13 @@ class Climber {
         const data = await response.json();
         const bigData = {};
         this.routeMap = data;
+//        console.log(`getRouteMap`)
         for (var i = 0; i < 100; i += 0.01) {
-            bigData[roundNumber(i, 2)] = this.getX(i);
+            bigData[roundNumber(i, 2)] = this.getX(i, 'no');
         }
         this.routeMap = bigData;
+//        console.log(window.clone(this.routeMap));
+//        console.log(`i am a climber, is the map an array? ${$.isArray(this.routeMap)}`);
         if (cb) {
             cb();
         }
@@ -658,10 +662,11 @@ class Climber {
             if (this.gameData.isDev) {
                 ///*
                 const cs = this.currentStage;
+                const devInd = this.view.find('.climberDevIndicator');
                 const cols = ['red', '#ff5800', '#ff9300', '#ffe200', '#baff00'];
-                this.view.css({'background-color': cols[cs]});
+                devInd.css({'background-color': cols[cs]});
                 if (this.finished) {
-                    this.view.css({'background-color': 'green'});
+                    devInd.css({'background-color': 'green'});
                 }
                 //*/
             }
@@ -694,7 +699,8 @@ class Climber {
             this.toggleInfo();
         });
         let timer;
-        const timeout = 1000
+        const timeout = 1000;
+        this.view.append(`<div class='climberDevIndicator'></div>`);
         this.view
             .on('mousedown touchstart', () => {
                 timer = setTimeout(() => {
