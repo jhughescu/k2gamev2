@@ -208,6 +208,7 @@ p.resource_value {
     background-size: cover; /* Ensure the image covers the button */
     background-repeat: no-repeat;
     background-position: center;
+    background-color: transparent;
     border: none; /* Optional: remove default button border */
     cursor: pointer; /* Makes it clear it's clickable */
 
@@ -217,4 +218,7 @@ p.resource_value {
     white-space: nowrap; /* Prevent wrapping */
     padding: 0; /* Remove padding to ensure proper alignment */
     margin: 10px;
+}
+.dieroll.dead {
+/*    background-color: red;*/
 }

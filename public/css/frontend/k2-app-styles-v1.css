@@ -215,6 +215,12 @@ p{
 	.set-up-btn:hover, .set-up-btn:focus{
 		background-color: rgba(212,212,212,1.00);
 	}
+.set-up-btn.disabled:hover, .set-up-btn.disabled:focus {
+    background-color: rgba(242,242,242,1.00);
+    transition: 0s;
+/*    background-color: red;*/
+/*    pointer-events: none;*/
+}
 
 	.set-up-btn img{
 		width: 25px;

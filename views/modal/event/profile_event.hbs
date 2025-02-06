@@ -4,7 +4,7 @@
     <!--<p>Profile {{theProfile.OPTION}}</p>-->
 
 
-    <h3>Crampons event</h3>
+    <h3>{{event}} event</h3>
     Choose a support climber to help:
     <br>
     {{#each supportTeam}}
@@ -30,6 +30,11 @@
     <div class='choice_option_content'>
         {{text}}
     </div>
-    {{#if dice}}{{> diceroll}}{{/if}}
+    {{#if dice}}
+    {{> die profile}}
+
+<!--    <div class="dice" id="dice{{profile.profile}}">🎲</div>-->
+    {{/if}}
+    <div class='choice_back'>back</div>
 </div>
 {{/each}}

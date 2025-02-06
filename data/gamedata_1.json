@@ -198,7 +198,7 @@
         "resupplyDelay": 20
     },
     "route": {"ratio": [50, 50]},
-    "activeEventRange": [-1, -1],
+    "activeEventRange": [0, 18],
     "events": [
         {
             "time": 0.5,
@@ -234,18 +234,18 @@
                 "threshold": 3,
                 "results": [
                     {
-                        "text": "Can't help",
+                        "text": "Sorry, I can't help",
                         "dice": false,
                         "oxygen": [0, 0]
                     },
                     {
-                        "text": ["No loss", "lose 2 oxygen & 1 sustenance"],
+                        "text": "Yes, I will help",
                         "dice": true,
                         "oxygen": [0, 2],
                         "sustenance": [0, 1]
                     },
                     {
-                        "text": ["no loss", "lose 3 sustenance"],
+                        "text": "I will share resources with you",
                         "dice": true,
                         "sustenance": [0, 3]
                     }
@@ -319,7 +319,30 @@
         },
         {
             "time": 30,
-            "event": "slip"
+            "event": "slip",
+            "type": "p2",
+            "method": "profileEvent",
+            "profiles": [1],
+            "metrics": {
+                "threshold": 3,
+                "results": [
+                    {
+                        "text": "Sorry, I can't help",
+                        "dice": false,
+                        "oxygen": [0, 0]
+                    },
+                    {
+                        "text": "Yes, I will help",
+                        "dice": true,
+                        "oxygen": [0, 4]
+                    },
+                    {
+                        "text": "I will share resources with you",
+                        "dice": true,
+                        "oxygen": [0, 4]
+                    }
+                ]
+            }
         },
         {
             "time": 35,

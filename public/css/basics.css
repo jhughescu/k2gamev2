@@ -53,6 +53,9 @@ a.disabled, .link.disabled {
 a.disabled:hover, .link.disabled:hover {
     text-decoration: none;
 }
+a.disabled img {
+    opacity: 0.5;
+}
 .link {
     cursor: pointer;
 /*    display: inline-block;*/

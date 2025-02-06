@@ -37,6 +37,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const sessionPlayPause = $('#b_playpause');
     const sessionReset = $('#b_reset');
+    const toggleDebug = $('#b_toggle');
     let timeDisplay = $('#time_display');
 
     // programmable event methods
@@ -209,7 +210,15 @@ document.addEventListener('DOMContentLoaded', function () {
         let ok = confirm(s);
         ok = true;
         return ok;
-    }
+    };
+    const enableButton = (b, a) => {
+        const btn = b instanceof jQuery ? b : $(`#${b}`); // Use directly if jQuery, otherwise select it
+        btn.prop('disabled', !a);
+        a ? btn.removeClass('disabled') : btn.addClass('disabled');
+//        console.log(`enableButton`, a, b)
+//        console.log(b.html())
+    };
+
 
     // Methods called when event modals are launched
     // modal-specifics
@@ -294,12 +303,11 @@ document.addEventListener('DOMContentLoaded', function () {
     };
     const profileEvent = (m, ev) => {
         // generic method for support team climber selection, can use dice
-        console.log(`set up the profile event`);
-//        console.log(m);
-        console.log(ev);
-        const b = m.find('button');
+        const b = m.find('.teamSelectButton');
+//        console.log(ev);
         const c = m.find('.k2-modal-btn');
-        c.prop('disabled', false);
+        const back = m.find('.choice_back');
+        enableButton(c, false);
         b.off('click').on('click', function () {
             if ($(this).attr('class').includes('k2-modal-btn')) {
                 // close button cannot run this code
@@ -307,13 +315,45 @@ document.addEventListener('DOMContentLoaded', function () {
             } else {
                 const id = $(this).attr('id');
                 const res = ev.metrics.results[id];
-                console.log(`click on ${window.justNumber(id)}, ${res.text}`);
-                console.log(res);
+                const die = $('.dieroll');
+                const allDice = $('.dice');
+                allDice.each((i, d) => {
+                    const diceId = $(d).attr('id');
+                    const diceN = justNumber(diceId);
+                    new Dice(diceId, (result) => {
+//                        console.log(`rolled a ${result}`);
+                        const boo = result > ev.metrics.threshold;
+                        const pen = ev.metrics.results[diceN].penalties;
+                        const prof = ev.theProfile;
+                        Object.entries(pen).forEach(p => {
+                            const red = parseInt(p[1][Number(boo)]) * -1;
+                            if (red !== 0) {
+                                prof.adjustProperty(p[0], red, (r) => {
+                                    console.log(`adjustment complete`, r);
+                                });
+                                prepProfilesForDisplay();
+                                prof.calculateClimbRate();
+                                devShowProfiles();
+                            } else {
+                                console.log(`no reduction in ${p[0]}`);
+                            }
+                        });
+                        completeEvent();
+                        enableButton(c, true);
+                    });
+                });
+                $(`.choice_options`).hide();
+                $(`#choice_option${id}`).show(0, () => {});
             }
+        });
+        back.off('click').on('click', () => {
+            $(`.choice_options`).show();
+            $(`.choice_option`).hide();
         })
     };
     // end modal-specifics
     const closeModal = (ob) => {
+//        console.log('close the mof=dla')
         const m = $('#overlay_modal');
         let isEventModal = m.find('.modal-event').length > 0;
 
@@ -354,18 +394,17 @@ document.addEventListener('DOMContentLoaded', function () {
     };
     const showModalEvent = (ev) => {
 //        console.log(`showModalEvent`, ev);
-//        console.log(ev);
         const m = $('#overlay_modal');
         m.show();
         m.addClass('clickable');
         renderTemplate('overlay_modal', `modal`, {type: 'event'}, () => {
-            renderTemplate('modal_content', `modal/event/${ev.event}`, ev, () => {
+            const template = ev.template || ev.event;
+            renderTemplate('modal_content', `modal/event/${template}`, ev, () => {
 //                console.log('render complete');
                 if (devController) {
                     devController.setupGameTimeSelect();
                 }
                 const hasMethod = ev.hasOwnProperty('method');
-//                console.log(`hasMethod: ${hasMethod}`);
                 // event modals cannot be closed by clicking the overlay, they require user input before progression
                 setupModalClose(m, !hasMethod);
                 if (hasMethod) {
@@ -466,31 +505,22 @@ document.addEventListener('DOMContentLoaded', function () {
                 gameflow(`session initialised (${type}) with ID ${session.uniqueID}`);
                 theState = new State(socket, session);
                 gTimer.setTimer(session.time);
-//                console.log(`setSession`);
                 expandSession();
                 const initO = Object.assign({}, gameData);
                 initO.session = session;
                 eventStack = new EventStack(initO);
                 summariseSession();
-//                console.log(`current? ${versionControl.isCurrentVersion(session.uniqueID)}`);
                 if (!versionControl.isCurrentVersion(session.uniqueID)) {
                     const rs = confirm(`There is a newer version of the software available, would you like to start a new session? You may experience unexpected results if you continue your current session.`);
                     if (rs) {
                         versionControl.updateVersion(session.uniqueID);
-//                        debugger;
                         startNew();
                         return;
                     }
                 }
-//                console.log(3, JSON.parse(JSON.stringify(session)));
                 initRender();
                 updateView();
                 clearInterval(i);
-        //        console.log(`let's go: ${session.time}`);
-        //        console.log('eventStack', eventStack);
-
-        //        console.log(gameData);
-        //        console.log(session);
             } else {
                 console.log('waiting for data...')
             }
@@ -564,6 +594,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         setTeamMember(2, -1);
                         setNewEventArray();
                         localStorage.setItem(gid, session.uniqueID);
+//                        enableButton('btn-resources', true);
                     }
                 }, 2000);
 
@@ -732,6 +763,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const setupDieRoll = (btn) => {
         return;
         const b = $(btn);
+        const r = b.parent().find('.dieres');
+        console.log(r);
         b.off('click').on('click', () => {
             console.log(dieRoll());
         });
@@ -925,10 +958,15 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
     };
+    const climbersCreated = () => {
+
+        const cl = Climber.getClimbers();
+        const cc = cl.length === 3;
+        return cc;
+    };
     const climbersReady = () => {
         const cl = Climber.getClimbers().filter(c => c.type === -1);
         const r = cl.length === 0;
-//        console.log(Climber.getClimbers().filter(c => c.type === -1));
         if (!r) {
 //            console.log(`Climbers not ready: ${cl.length}`);
         }
@@ -1048,13 +1086,70 @@ document.addEventListener('DOMContentLoaded', function () {
     };
 
     // key page setup
+
     const setupHome = () => {
+        const bClimb = $(`#btn-start`);
+        const bTeam = $(`#btn-team`);
+        const bMap = $(`#btn-map`);
+        const bResources = $(`#btn-resources`);
+        const all = [bClimb, bTeam, bResources];
+        bTeam.off('click').on('click', function () {
+            if (!$(this).hasClass('disabled')) {
+                renderTeam();
+            }
+        });
+        bMap.off('click').on('click', function () {
+            if (!$(this).hasClass('disabled')) {
+
+            }
+        });
+        bResources.off('click').on('click', function () {
+            if (!$(this).hasClass('disabled')) {
+                renderResources();
+            }
+        });
+        bClimb.off('click').on('click', function () {
+            if (!$(this).hasClass('disabled')) {
+                renderMap();
+            }
+        });
+        enableButton(bResources, false);
+        enableButton(bTeam, false);
+        enableButton(bMap, false);
+        enableButton(bClimb, false);
+        const checkInt = setInterval(() => {
+            const cReady = climbersReady();
+            const cCreated = climbersCreated();
+            const allReady = cReady && cCreated;
+            enableButton(bResources, cCreated);
+            enableButton(bTeam, cCreated);
+            enableButton(bClimb, allReady);
+//            console.log(cCreated, cReady, allReady);
+            if (allReady) {
+                clearInterval(checkInt);
+            }
+        }, 500);
+
+//        if (!cReady) {
+//            bClimb.addClass('disabled');
+//            bClimb.prop('disabled', true);
+//        }
+
+    };
+    const setupHomeV1 = () => {
         const bClimb = $(`#btn-start`);
         const bTeam = $(`#btn-team`);
         const bResources = $(`#btn-resources`);
         const all = [bClimb, bTeam, bResources];
         const cReady = climbersReady();
-//        console.log(cReady, `cReady`)
+        const cCreated = climbersCreated();
+        console.log(`setupHome, cReady: ${cReady}`);
+
+        const checkInt = setInterval(() => {
+            const cReady = climbersReady();
+            const cCreated = climbersCreated();
+        }, 100)
+        enableButton('btn-resources', cReady);
         if (!cReady) {
             bClimb.addClass('disabled');
             bClimb.prop('disabled', true);
@@ -1064,12 +1159,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 renderMap();
             });
         }
-        bTeam.off('click').on('click', () => {
-            renderTeam();
-        });
-        bResources.off('click').on('click', () => {
-            renderResources();
-        });
+
     };
 
     // controls (page types)
@@ -1488,7 +1578,7 @@ document.addEventListener('DOMContentLoaded', function () {
     };
     const eventTrigger = (ev) => {
         // EventStack calls this method when a new event is to be triggered
-        console.log(`eventTrigger`);
+//        console.log(`eventTrigger`);
         if (!ev.active) {
             return;
         }
@@ -1498,7 +1588,20 @@ document.addEventListener('DOMContentLoaded', function () {
             ev.theProfile = session[`profile${ev.profiles[0]}`];
         }
         ev.supportTeam = session.supportTeam.climbers;
-        console.log(`event`, ev);
+        if (ev.hasOwnProperty('metrics')) {
+            if (ev.metrics.hasOwnProperty('results')) {
+//                console.log('have metrics');
+                if (ev.supportTeam) {
+//                    console.log('have team');
+                    ev.metrics.results.forEach((r, i) => {
+//                        console.log(i, r);
+                        r.profile = Object.values(ev.supportTeam)[i]
+                    });
+                }
+            }
+        }
+
+//        console.log(`event`, ev);
         if (ev.hasOwnProperty('delay')) {
             ev.profiles.forEach(p => {
 //                console.log(p, session[`profile${p}`])
@@ -1513,7 +1616,8 @@ document.addEventListener('DOMContentLoaded', function () {
         if (ev) {
             const evSumm = eventStack.updateSummary(ev, 1);
             updateSession('events', evSumm);
-//            console.log(evSumm);
+//            console.log(`event summary updated ${evSumm}, ev:`);
+//            console.log(ev);
         }
     };
     const completeEvent = () => {
@@ -1521,6 +1625,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const evSumm = eventStack.updateSummary(ev, 2);
         updateSession('events', evSumm);
 //        console.log(evSumm);
+//        console.log(`completeEvent:`, window.clone(session).events);
     };
     const showEvents = () => {
         eventStack.getEvents().forEach(e => console.log(e));
@@ -1623,6 +1728,15 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
     };
+    const toggleDebugPanels = () => {
+        const p = $('.debugPanel');
+//        console.log(p);
+        if (p.is(':visible')) {
+            p.hide();
+        } else {
+            p.show();
+        }
+    };
     const renderMap = () => {
         renderNone(() => {
             const rOb = {
@@ -1649,6 +1763,12 @@ document.addEventListener('DOMContentLoaded', function () {
 //                    console.log(`renderMap`);
                     toyClimbers.renderView();
                 });
+
+
+
+
+
+
             })
         });
     };
@@ -1776,6 +1896,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     sessionReset.on('click', resetSession);
     sessionPlayPause.on('click', playPauseSession);
+    toggleDebug.on('click', toggleDebugPanels);
     const onUnload = () => {
         snapshot();
         theState.storeTime(gTimer.elapsedTime);

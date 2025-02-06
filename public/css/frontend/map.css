@@ -36,6 +36,23 @@
 /*     jh */
     margin: 10%;
 }
+
+
+.map-pointer-container svg {
+    position: absolute;
+    z-index: 10;
+    top: 5px;
+    left: 5px;
+}
+
+
+
+
+
+
+
+
+
 /*
 .map-pointer-label {
     display: none;
@@ -121,3 +138,4 @@
     background-size: contain;
     background-repeat: no-repeat;
 }
+

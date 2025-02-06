@@ -56,7 +56,7 @@
 /*    display: none;*/
     position: absolute;
     bottom: 90px;
-    width: 100px;
+    width: 130px;
 /*    height: 50px;*/
     height: 79px;
     background-color: rgba(255, 255, 255, 0.71);
@@ -87,5 +87,5 @@
 /*    background-color: red;*/
 }
 .toyClimber.delayed {
-    background-color: rgba(230, 3, 3, 0.65);
+/*    background-color: rgba(230, 3, 3, 0.65);*/
 }

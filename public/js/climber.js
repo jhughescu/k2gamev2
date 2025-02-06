@@ -40,8 +40,10 @@ class Climber {
         this.sustenance = stored.hasOwnProperty('sustenance') ? stored.sustenance : 0;
         this.rope = stored.hasOwnProperty('rope') ? stored.rope : 0;
         this.teamID = stored.hasOwnProperty('teamID') ? stored.teamID : (init.hasOwnProperty('teamID') ? init.teamID : -1);
+        this.team = this.getBasicTeam(this.teamID);
         this.initialSettings = stored.hasOwnProperty('initialSettings') ? stored.initialSettings : '{}';
         this.resupplies = stored.hasOwnProperty('resupplies') ? stored.resupplies : '';
+        this.allDelays = stored.hasOwnProperty('allDelays') ? stored.allDelays : '';
         this.position = stored.position > 0 ? stored.position : 0;
 
         // currentTime is a simple integer which can be written/read from the database
@@ -70,6 +72,7 @@ class Climber {
                 Climber.allClimbers[Climber.allClimbers.findIndex(e => e.profile === this.profile)] = this;
             }
         }
+
         this.storeSummary();
 //        console.log('new climber:', window.clone(this));
     }
@@ -217,6 +220,7 @@ class Climber {
             pos: 'position',
             st: 'currentStage',
             de: 'delayExpiry', /* delay is a time in minutes  */
+            ad: 'allDelays', /* allDelays stores all delays as separate integers in a per-stage array*/
             et: 'eventTime', /* if under the effect of an event, this is the time in minutes when the event occured */
         }
         Object.entries(m).forEach(v => {
@@ -228,6 +232,12 @@ class Climber {
         const s = 'abcdef';
         const a = s.split('');
         return a[n];
+    }
+    getBasicTeam(id) {
+        const o = window.clone(this.gameData.teams[id]);
+//        console.log(this.gameData.teams[id]);
+        delete o.profiles;
+        return o;
     }
 
     // sets
@@ -367,6 +377,7 @@ class Climber {
         this.setProperty('currentSpeed', n);
     }
     setDelay(n) {
+//        console.log(`setDelay ${n}`);
         // a game event has sent a delay to this climber. Prevent updates until the delay (in minutes) has expired
         if (this.currentTimeObject) {
             if (this.currentTimeObject.gametime) {
@@ -377,10 +388,22 @@ class Climber {
                     // delays accrue:
                     this.delayExpiry += n;
                 }
+                this.showPie(true);
             } else {
                 console.warn('cannot set delay; currentTimeObject not yet defined');
             }
         }
+
+        if (!$.isArray(this.allDelays)) {
+            this.allDelays = this.allDelays.split('|');
+        }
+        if (this.allDelays[this.currentStage] === undefined) {
+            this.allDelays[this.currentStage] = n;
+        } else {
+            this.allDelays[this.currentStage] += `,${n}`;
+        }
+        this.allDelays = this.allDelays.join('|');
+//        console.log(`${this.name} setDelay of ${n} minutes at stage ${this.currentStage}, allDelays: ${this.allDelays}`);
     }
     // storage/summarising
     getStorageID() {
@@ -434,6 +457,39 @@ class Climber {
         });
         return oo;
     }
+
+    // delay countdown chart
+    showPie(boo) {
+        const pie = this.view.find(`#countpie_${this.profile}`);
+//        console.log(`shoePie`, boo, pie);
+        boo ? pie.show() : pie.hide();
+    };
+    describeArc(x, y, radius, startAngle, endAngle) {
+        const start = this.polarToCartesian(x, y, radius, endAngle);
+        const end = this.polarToCartesian(x, y, radius, startAngle);
+        const largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
+
+        return [
+            "M", x, y,
+            "L", start.x, start.y,
+            "A", radius, radius, 0, largeArcFlag, 0, end.x, end.y,
+            "Z"
+        ].join(" ");
+    }
+    polarToCartesian(centerX, centerY, radius, angleInDegrees) {
+        const angleInRadians = (angleInDegrees - 90) * Math.PI / 180;
+        return {
+            x: centerX + (radius * Math.cos(angleInRadians)),
+            y: centerY + (radius * Math.sin(angleInRadians))
+        };
+    }
+    updateCountdownPie(value) {
+        const maxValue = 20;
+        const endAngle = (value / maxValue) * 360;
+        document.getElementById(`countdownPie${this.profile}`).setAttribute("d", this.describeArc(18, 18, 16, 0, endAngle));
+    }
+    // end delay countdown chart
+
 
     getStageTime() {
         // return a object containing the name & value of current stage time to climb
@@ -514,6 +570,7 @@ class Climber {
         this.resupply();
         this.delayExpiry = 0;
         this.delayRemaining = 0;
+        this.showPie(false);
     }
     updatePosition(o, cb) {
 //        console.log(`updatePosition:`);
@@ -546,13 +603,22 @@ class Climber {
                 }
             }
             if (this.position + step < 100) {
-//                console.log(this.delayExpiry)
-                if (this.delayExpiry > 0 && gt.m < this.delayExpiry) {
-//                    console.log(`${this.name} is delayed here for ${this.delayExpiry - gt.m} minutes`);
-                    // climber is delayed
-                    this.delayRemaining = this.delayExpiry - gt.m;
-                } else {
+                const minUnderExpiry = gt.m <= this.delayExpiry;
+                const expiryZero = this.delayExpiry === 0;
+                if (!minUnderExpiry && !expiryZero) {
+//                    console.log(`${this.name} DELAY ENDS`);
                     this.onDelayExpiry();
+                }
+                if (this.delayExpiry > 0 && gt.m < this.delayExpiry) {
+                    // climber is delayed
+                    const dr = this.delayRemaining;
+                    const de = this.delayExpiry;
+                    const step = (de - gt.m) - (dr - (de - gt.m));
+                    this.delayRemaining = this.delayExpiry - gt.m;
+                    this.showPie(this.delayRemaining > 0);
+                    this.updateCountdownPie(this.delayRemaining);
+                } else {
+//                    this.onDelayExpiry();
                     this.position += step;
                 }
             } else {
@@ -646,8 +712,8 @@ class Climber {
             if (this.position === 100) {
                 this.showFinished();
                 this.finished = true;
-                console.log(`${this.name} has finished`);
-                console.log(this);
+//                console.log(`${this.name} has finished`);
+//                console.log(this);
                 window.climberUpdate(this, true);
             }
             const scaleFactor = 200;
@@ -712,11 +778,6 @@ class Climber {
             .on('mouseup touchend mouseleave', function () {
                 clearTimeout(timer); // Cancel the action if released early
             });
-//        this.view.off('click').on('click', function () {
-//            jq.css({'z-index': 1})
-//            $(this).css({'z-index': 10});
-//            this.toggleInfo();
-//        });
     }
     expandOptions() {
         this.options.forEach((o, n) => {
@@ -734,6 +795,7 @@ class Climber {
         this.setDelay(0);
         this.delayExpiry = 0;
         this.resupplies = '';
+        this.allDelays = '';
         this.finished = false;
         clearInterval(this.bounceInt);
         this.calculateClimbRate();

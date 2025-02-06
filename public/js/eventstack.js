@@ -50,16 +50,37 @@ class EventStack {
     getCurrentEvent() {
         return this.currentEvent;
     }
+    processMetrics(m) {
+        if (m.hasOwnProperty('results')) {
+            m.results.forEach(r => {
+//                console.log(r)
+                Object.entries(r).forEach(p => {
+                    if ($.isArray(p[1])) {
+//                        console.log(r.penalties);
+                        !r.penalties ? r.penalties = {} : '';
+                        r.penalties[p[0]] = p[1];
+                    }
+                });
+            });
+        }
+        if (m.hasOwnProperty('results')) {
+//            console.log(m);
+        }
+        return m;
+    }
     processEvents() {
         const r = this.gameData.activeEventRange;
         if (this.allEvents) {
             this.allEvents.forEach((e, i) => {
-//                e.active = i < 2;
                 e.active = i >= r[0] && i <= r[1];
                 e.next = false;
                 e.current = false;
                 e.complete = false;
+                e.template = e.method === 'profileEvent' ? 'profile_event' : null;
                 e.n = i;
+                if (e.hasOwnProperty('metrics')) {
+                    e.metrics = this.processMetrics(e.metrics)
+                }
                 this.triggers[`t${e.time}`] = e;
             });
         } else {

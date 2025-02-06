@@ -26,3 +26,11 @@ body {
 /*    padding: 30px;*/
 /*    display: none;*/
 }
+.set-up-btn {
+		transition: 0s;
+	}
+.set-up-btn:hover, .set-up-btn:focus {
+    background-color: rgba(212,212,212,1.00);
+
+		background-color: rgba(242,242,242,1.00);
+}

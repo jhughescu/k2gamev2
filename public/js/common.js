@@ -98,6 +98,14 @@ document.addEventListener('DOMContentLoaded', function () {
             return index !== 0 ? word.toLowerCase() : word.toUpperCase();
         }).replace(/\s+/g, '');
     };
+    const logBoolean = (boo) => {
+        if (!typeof(boo)) {
+            return;
+        }
+        const str = `%c${boo ? 'true' : 'false'}`;
+        const css = `color: ${boo ? 'green' : 'red'}`
+        console.log(str, css);
+    };
     const justNumber = (i) => {
         if (i !== undefined && i !== null) {
 //            console.log(`converting ${i}`);
@@ -1016,6 +1024,7 @@ document.addEventListener('DOMContentLoaded', function () {
     window.getAlph = getAlph;
     window.clone = clone;
     window.toCamelCase = toCamelCase;
+    window.logBoolean = logBoolean;
     window.removeTemplate = removeTemplate;
     window.renderTemplate = renderTemplate;
     window.renderTemplateWithStyle = renderTemplateWithStyle;

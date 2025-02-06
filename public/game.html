@@ -15,6 +15,7 @@
     <script src='js/timer.js'></script>
     <script src='js/state.js'></script>
     <script src='js/climber.js'></script>
+    <script src='js/die.js'></script>
     <script src='js/toy_climbers.js'></script>
     <script src='js/eventstack.js'></script>
     <script src='js/dev/timer.js'></script>
@@ -44,13 +45,14 @@
         <div id='msg'></div>
         <button id='b_playpause'>play/pause</button>
         <button id='b_reset'>reset time</button>
+        <button id='b_toggle'>toggle debug</button>
 <!--        <button id='b_test_2'>update</button>-->
     </div>
     <div id='overlay_modal' class='fullscreen'></div>
     <div id='overlay'><div id='close' class='overlayclose'>x</div><div id='msg'></div><button></button></div>
-    <div class='fullscreen' id='timerpanel'></div>
-    <div class='fullscreen' id='profilepanel'></div>
-    <div class='fullscreen' id='logpanel'></div>
+    <div class='fullscreen debugPanel' id='timerpanel' style='display: none;'></div>
+    <div class='fullscreen debugPanel' id='profilepanel' style='display: none;'></div>
+    <div class='fullscreen debugPanel' id='logpanel' style='display: none;'></div>
 </body>
 
 </html>

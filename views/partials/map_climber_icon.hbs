@@ -1,14 +1,17 @@
-<div class="map-pointer-container" id="pointer_{{profile}}">
+<div class='map-pointer-container' id='pointer_{{profile}}'>
+
+
+    <svg id='countpie_{{profile}}' width='15' height='15' viewBox='0 0 36 36' style='display: none;'>
+        <!-- Background Circle -->
+        <circle cx='18' cy='18' r='16' fill='rgba(111, 111, 111, 0.22)'></circle>
+
+        <!-- Dynamic Filled Pie (Initially Full) -->
+        <path id='countdownPie{{profile}}' fill='#007bff'></path>
+    </svg>
+
     <div class='map-pointer-label' id='map-pointer-label_{{profile}}' style='display: none;'>
        {{> dev_climber_summary this}}
-<!--
-        <p>climber: <span class='rAlign'>{{OPTION}} ({{profile}})</span></p>
-        <p>t1, t2: <span class='rAlign'>{{t1}}, {{t2}}</span></p>
-        <p>total: <span class='rAlign'>{{tTotal}}</span></p>
-        <p>delay: <span class='rAlign'>{{delayRemaining}}</span></p>
--->
-
     </div>
-    <img class="map-pointer-profile" src="assets/profiles/ProfileImages_{{filename}}.png" />
-    <img class="map-pointer" src="assets/icons/Icons_Pointer.png" />
+    <img class='map-pointer-profile' src='assets/profiles/ProfileImages_{{filename}}.png' />
+    <img class='map-pointer' src='assets/icons/Icons_Pointer.png' />
 </div>
