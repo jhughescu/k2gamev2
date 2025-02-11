@@ -436,7 +436,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (!hasH && !hasBut && !hasImg) {
 //                    console.log('looks like an empty modal');
                     mc.append(`<br><br><br><br><p><b>This is a blank modal and will be auto-closed shortly...</b></p>`);
-                    setTimeout(() => closeModal(), 4000);
+                    setTimeout(() => closeModal(), 2000);
                 }
                 if (devController) {
                     devController.setupGameTimeSelect();
@@ -1705,27 +1705,17 @@ document.addEventListener('DOMContentLoaded', function () {
         devShowProfiles();
         if (rem === 0) {
             gTimer.pauseTimer();
-//            alert(`${ob.name} has run out of ${ob.resource}`);
             const o = Object.assign(ob, {event: 'resource_gone', method: 'resourcesGoneSetup'});
-//            console.log(o);
-//            socket.emit('writeJsonFile', '', 'testobject', o);
             showModalEvent(o);
         }
     };
+    /*
     const testDep = () => {
         const data = Object.assign(Climber.getClimbers()[0], {oxygen: 0, resource: 'oxygen', event: 'resource_gone', method: 'resourcesGoneSetup'});
         climberDepletionEvent(data);
-//        return;
-//        $.getJSON('testobject_20250115-102930.json', function(data) {
-//            climberDepletionEvent(data);
-//        })
     };
     window.testDep = testDep;
-//    setTimeout(testDep, 2000);
-
-    //
-
-
+    */
 
 
     const prepProfilesForDisplay = () => {

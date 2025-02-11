@@ -178,7 +178,12 @@ class Climber {
 //        console.log('loglogogogojh', s, force);
         const colour = typeof(s) === 'string' ? s.includes('#########') ? 'cyan' : 'yellow' : 'yellow';
 //        if (this.profile === 1 ) {
-        if (this.profile === 1 || force) {
+        if (this.profile === 0) {
+            if (typeof(s) === 'string' || typeof(s) === 'number') {
+                console.log(`%c${this.name} %c${s}`, 'color: white;', `color: ${colour};`);
+            }
+        }
+        if (this.profile === 0 || force) {
             if (typeof(s) === 'string' || typeof(s) === 'number') {
 //                console.log(`%c${this.name} %c${s}`, 'color: white;', `color: ${colour};`);
 //                window.updateDevLog(`${this.OPTION} ${s} (${this.name.split(' ')[0]})`);
@@ -573,17 +578,12 @@ class Climber {
         this.showPie(false);
     }
     updatePosition(o, cb) {
-//        console.log(`updatePosition:`);
-//        console.log(o);
-//        console.log(this);
         const toLog = 0;
         this.currentTimeObject = JSON.parse(JSON.stringify(o));
         const gt = this.currentTimeObject.gametime;
         if (!this.finished) {
             const d = o.sec - this.currentTime;
             const step = d * this.currentSpeed;
-//            console.log(`step: ${step}`);
-//            console.log(`this.currentSpeed: ${this.currentSpeed}`);
             this.currentTime = o.sec;
             if (this.position > this.gameData.route.stages[this.currentStage]) {
                 // stage has changed; climb rate must be recalculated
@@ -592,7 +592,6 @@ class Climber {
                 const adjusting = this[adjustID];
                 // set the current t value to the predefined value, in case it has been adjusted by an event
                 // reset all timings - adjusted timings do not persist across stages
-//                console.log(this);
                 this.setProperty('t1', this.options[this.type].t1);
                 this.setProperty('t2', this.options[this.type].t2);
                 this.currentStage += 1;
@@ -608,15 +607,11 @@ class Climber {
                 const expiryZero = this.delayExpiry === 0;
                 let toExpire = false;
                 if (!minUnderExpiry && !expiryZero) {
-//                    console.log(`${this.name} DELAY ENDS`);
                     this.onDelayExpiry();
                     toExpire = true;
                 }
                 if (this.delayExpiry > 0 && gt.m < this.delayExpiry) {
                     // climber is delayed
-                    if (this.profile === toLog) {
-//                        console.log(`delayed`);
-                    }
                     const dr = this.delayRemaining;
                     const de = this.delayExpiry;
                     const step = (de - gt.m) - (dr - (de - gt.m));
@@ -624,21 +619,15 @@ class Climber {
                     this.showPie(this.delayRemaining > 0);
                     this.updateCountdownPie(this.delayRemaining);
                 } else {
-//                    this.onDelayExpiry();
-
                     if (toExpire) {
                         this.onDelayExpiry();
                         toExpire = false;
                     }
                     this.position += step;
-                    if (this.profile === toLog) {
-//                        console.log(`NOT delayed`, step, this.position);
-                    }
                 }
             } else {
                 this.position = 100;
             }
-//            console.log(this.position);
             return this.position;
         }
     }
@@ -650,17 +639,30 @@ class Climber {
         const currOxygen = this.oxygen;
         const depOxygen = 1 / (con.oxygen.unitTime * 60);
         this.adjustOxygen(-1 * (depOxygen * s));
-        if (Math.ceil(this.oxygen) !== Math.ceil(currOxygen) && Math.ceil(this.oxygen) >= 0) {
-            window.climberDepletionEvent(Object.assign(this, {resource: 'oxygen'}));
-            this.log(`oxygen reduced to ${Math.ceil(this.oxygen)}`, true);
+//        if (Math.ceil(this.oxygen) !== Math.ceil(currOxygen) && Math.ceil(this.oxygen) >= 0) {
+//            window.climberDepletionEvent(Object.assign(this, {resource: 'oxygen'}));
+//            this.log(`oxygen reduced to ${Math.ceil(this.oxygen)}`, true);
+//        }
+        if (Math.ceil(this.oxygen) !== Math.ceil(currOxygen) || Math.ceil(this.oxygen) === 0 && this.delayRemaining === 0) {
+            // cond.1: ox change, cond.2 no delay, ox to zero
+            if (Math.ceil(this.oxygen) >= 0) {
+                window.climberDepletionEvent(Object.assign(this, {resource: 'oxygen'}));
+                this.log(`oxygen reduced to ${Math.ceil(this.oxygen)}`, true);
+            }
+        }
+        if (Math.ceil(this.oxygen) === 0 && this.delayRemaining === 0) {
+            this.log('no ox!!');
         }
         // Sustenance: per second depletion
         const currSustenance = this.sustenance;
         const depSustenance = 1 / (con.sustenance.unitTime * 60);
         this.adjustSustenance(-1 * (depSustenance * s));
-        if (Math.ceil(this.sustenance) !== Math.ceil(currSustenance) && Math.ceil(this.sustenance) >= 0) {
-            window.climberDepletionEvent(Object.assign(this, {resource: 'sustenance'}));
-            this.log(`sustenance reduced to ${Math.ceil(this.sustenance)}`, true);
+        if (Math.ceil(this.sustenance) !== Math.ceil(currSustenance) || Math.ceil(this.sustenance) === 0 && this.delayRemaining === 0) {
+            // cond.1: sus change, cond.2 no delay, sus to zero
+            if (Math.ceil(this.sustenance) >= 0) {
+                window.climberDepletionEvent(Object.assign(this, {resource: 'sustenance'}));
+                this.log(`sustenance reduced to ${Math.ceil(this.sustenance)}`, true);
+            }
         }
         // Rope: per second depletion - NO
         /*
