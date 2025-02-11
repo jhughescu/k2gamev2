@@ -271,7 +271,11 @@ document.addEventListener('DOMContentLoaded', function () {
             $(`#${targ}`).css({opacity: 1});
     };
     const removeTemplate = (targ, cb) => {
+        if (!targ.includes('#')) {
+            targ = `#${targ}`;
+        }
         $(targ).html('');
+//        console.log(targ, $(targ));
         if (cb) {
             cb();
         } else {

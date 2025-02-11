@@ -266,16 +266,30 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     };
+    const getResourcesToReplenish = (ob) => {
+        // CREATE A NEW METHOD HERE WHICH RUNS THROUGH THE RESOURCES MOCALE, GETS THE VALUES AND SETS THEM AS RESUPPLIES
+        // THIS METHOD WILL THEN BE PASSED TO setupModalClose via resourceGoneSetup
+        const d = $('.resupply');
+        console.log(`getResourcesToReplenish`, ob)
+        const prof = session[`profile${ob.ev.profile}`];
+        d.find('input[type="checkbox"]').each((i, c) => {
+//                out[$(c).attr('id')] = $(c).prop('checked');
+            if ($(c).prop('checked')) {
+//                    prof.resetProperty($(c).attr('id'));
+                prof.addResupply($(c).attr('id'));
+            }
+        });
+        prof.setDelay(gameData.constants.resupplyDelay);
+    };
     const resourcesGoneSetup = (m, ev) => {
         const d = $('.resupply');
         const b = $('.k2-modal-btn');
         const out = {};
         const prof = session[`profile${ev.profile}`];
+        ///*
         b.off('click').on('click', () => {
             d.find('input[type="checkbox"]').each((i, c) => {
-//                out[$(c).attr('id')] = $(c).prop('checked');
                 if ($(c).prop('checked')) {
-//                    prof.resetProperty($(c).attr('id'));
                     prof.addResupply($(c).attr('id'));
                 }
             });
@@ -283,30 +297,25 @@ document.addEventListener('DOMContentLoaded', function () {
 
             closeModal({noevent: true});
         });
+        //*/
         d.find('input[type="checkbox"]').on('change', function () {
             let any = false;
-//            console.log(`Checkbox ${this.id} checked: ${$(this).prop('checked')}`);
             d.find('input[type="checkbox"]').each((i, c) => {
                 if ($(c).prop('checked')) {
                     any = true;
                 }
             });
-            if (any) {
-                b.prop('disabled', false);
-                b.removeClass('disabled');
-            } else {
-                b.prop('disabled', true);
-                b.addClass('disabled');
-            }
+            setupModalClose(m, any, {methodPre: getResourcesToReplenish, ev: ev});
+            enableButton(b, any);
         });
 
     };
     const profileEvent = (m, ev) => {
         // generic method for support team climber selection, can use dice
         const b = m.find('.teamSelectButton');
-//        console.log(ev);
         const c = m.find('.k2-modal-btn');
         const back = m.find('.choice_back');
+//        console.log(m);
         enableButton(c, false);
         b.off('click').on('click', function () {
             if ($(this).attr('class').includes('k2-modal-btn')) {
@@ -339,8 +348,12 @@ document.addEventListener('DOMContentLoaded', function () {
                             }
                         });
                         completeEvent();
-                        enableButton(c, true);
+                        setupModalClose(m, true);
+//                        enableButton(c, true);
                     });
+                });
+                setupModalBackButton(() => {
+
                 });
                 $(`.choice_options`).hide();
                 $(`#choice_option${id}`).show(0, () => {});
@@ -353,18 +366,21 @@ document.addEventListener('DOMContentLoaded', function () {
     };
     // end modal-specifics
     const closeModal = (ob) => {
-//        console.log('close the mof=dla')
         const m = $('#overlay_modal');
         let isEventModal = m.find('.modal-event').length > 0;
-
+//        console.log(`close the modal, isEventModal? ${isEventModal}`);
         if (isEventModal) {
             if (ob) {
                 if (ob.hasOwnProperty('noevent')) {
     //                isEventModal = !ob.noevent;
-
+//                    console.log('CANNOT complete');
                 } else {
+//                    console.log('can complete');
                     completeEvent();
                 }
+            } else {
+                console.log('no ob in arg, we can complete the event BUT check for issues with other calls');
+                completeEvent();
             }
 
             playPauseSession();
@@ -381,16 +397,26 @@ document.addEventListener('DOMContentLoaded', function () {
             closeModal();
         })
     };
-    const setupModalClose = (modal, boo) => {
-//        console.log(`setupModalClose`, boo, modal);
-        const closer = modal.find('.k2-modal-btn');
-        if (!boo) {
-            closer.addClass('disabled');
-        } else {
-            closer.removeClass('disabled');
-        }
-        closer.prop('disabled', !boo);
-        closer.off('click').on('click', closeModal);
+    const setupModalClose = (modal, boo, ob) => {
+        setupModalFooter('close', () => {
+            const closer = modal.find('.k2-modal-btn');
+//            console.log(`setupModalClose`, boo, closer);
+            if (!boo) {
+                closer.addClass('disabled');
+            } else {
+                closer.removeClass('disabled');
+            }
+            closer.prop('disabled', !boo);
+            closer.off('click').on('click', () => {
+                if (ob) {
+                    if (ob.hasOwnProperty('methodPre')) {
+                        const ev = ob.ev || {};
+                        ob.methodPre(ob);
+                    }
+                }
+                closeModal();
+            });
+        })
     };
     const showModalEvent = (ev) => {
 //        console.log(`showModalEvent`, ev);
@@ -400,15 +426,28 @@ document.addEventListener('DOMContentLoaded', function () {
         renderTemplate('overlay_modal', `modal`, {type: 'event'}, () => {
             const template = ev.template || ev.event;
             renderTemplate('modal_content', `modal/event/${template}`, ev, () => {
-//                console.log('render complete');
+//                console.log('showModalEvent render complete', ev);
+//                console.log(m.find('div'));
+                const mc = m.find('#modal_content');
+                const hasH = mc.find('h1, h2, h3, h4').length > 0;
+                const hasBut = mc.find('button').length > 0;
+                const hasImg = mc.find('img').length > 0;
+//                console.log(`showModalEvent rendered, buttons: ${hasBut}, h: ${hasH}, img: ${hasImg}`);
+                if (!hasH && !hasBut && !hasImg) {
+//                    console.log('looks like an empty modal');
+                    mc.append(`<br><br><br><br><p><b>This is a blank modal and will be auto-closed shortly...</b></p>`);
+                    setTimeout(() => closeModal(), 4000);
+                }
                 if (devController) {
                     devController.setupGameTimeSelect();
                 }
                 const hasMethod = ev.hasOwnProperty('method');
                 // event modals cannot be closed by clicking the overlay, they require user input before progression
-                setupModalClose(m, !hasMethod);
+
                 if (hasMethod) {
                     eval(ev.method)(m, ev);
+                } else {
+                    setupModalClose(m, !hasMethod);
                 }
             })
         });
@@ -434,8 +473,32 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (devController) {
                     devController.setupGameTimeSelect();
                 }
-                setupModalClose(m, true);
+                setupModalClose(m, !hasMethod);
             })
+        });
+    };
+    const setupModalFooter = (str, cb) => {
+//        console.log('modal_footer', 'modal.footer.button', {});
+        const ob = {display: 'Close'};
+        window.renderTemplate('modal_footer', 'modal.footer.button', ob, () => {
+            if (cb) {
+                cb();
+            }
+        });
+    };
+    const setupModalBackButton = (str, cb) => {
+        const ob = {display: 'Back'};
+        window.renderTemplate('modal_footer', 'modal.footer.button', ob, () => {
+            const bb = $('.k2-modal-btn');
+            bb.off('click').on('click', () => {
+                $(`.choice_options`).show();
+                $(`.choice_option`).hide();
+//                enableButton(bb, false);
+                window.removeTemplate('modal_footer', () => console.log('over and out'))
+            })
+            if (cb) {
+                cb();
+            }
         });
     };
 
@@ -1622,8 +1685,12 @@ document.addEventListener('DOMContentLoaded', function () {
     };
     const completeEvent = () => {
         const ev = eventStack.getCurrentEvent();
-        const evSumm = eventStack.updateSummary(ev, 2);
-        updateSession('events', evSumm);
+//        console.log('comp ev');
+//        console.log(ev);
+        if (ev) {
+            const evSumm = eventStack.updateSummary(ev, 2);
+            updateSession('events', evSumm);
+        }
 //        console.log(evSumm);
 //        console.log(`completeEvent:`, window.clone(session).events);
     };

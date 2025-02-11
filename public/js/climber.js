@@ -377,7 +377,7 @@ class Climber {
         this.setProperty('currentSpeed', n);
     }
     setDelay(n) {
-//        console.log(`setDelay ${n}`);
+        console.log(`setDelay ${n}`);
         // a game event has sent a delay to this climber. Prevent updates until the delay (in minutes) has expired
         if (this.currentTimeObject) {
             if (this.currentTimeObject.gametime) {
@@ -576,6 +576,7 @@ class Climber {
 //        console.log(`updatePosition:`);
 //        console.log(o);
 //        console.log(this);
+        const toLog = 0;
         this.currentTimeObject = JSON.parse(JSON.stringify(o));
         const gt = this.currentTimeObject.gametime;
         if (!this.finished) {
@@ -605,12 +606,17 @@ class Climber {
             if (this.position + step < 100) {
                 const minUnderExpiry = gt.m <= this.delayExpiry;
                 const expiryZero = this.delayExpiry === 0;
+                let toExpire = false;
                 if (!minUnderExpiry && !expiryZero) {
 //                    console.log(`${this.name} DELAY ENDS`);
                     this.onDelayExpiry();
+                    toExpire = true;
                 }
                 if (this.delayExpiry > 0 && gt.m < this.delayExpiry) {
                     // climber is delayed
+                    if (this.profile === toLog) {
+//                        console.log(`delayed`);
+                    }
                     const dr = this.delayRemaining;
                     const de = this.delayExpiry;
                     const step = (de - gt.m) - (dr - (de - gt.m));
@@ -619,7 +625,15 @@ class Climber {
                     this.updateCountdownPie(this.delayRemaining);
                 } else {
 //                    this.onDelayExpiry();
+
+                    if (toExpire) {
+                        this.onDelayExpiry();
+                        toExpire = false;
+                    }
                     this.position += step;
+                    if (this.profile === toLog) {
+//                        console.log(`NOT delayed`, step, this.position);
+                    }
                 }
             } else {
                 this.position = 100;
@@ -804,6 +818,7 @@ class Climber {
 //        console.log(cs);
 //        console.log(this);
         this.updatePosition(cs);
+        this.showPie(false);
     }
     zero(cs) {
 //        console.log('zero');

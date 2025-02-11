@@ -119,9 +119,11 @@ class EventStack {
                     if (cb) {
                         cb(e);
                     }
+//                    console.log(`event ${e.event} CAN be called`);
+//                    console.log(e);
                     return e;
                 } else {
-                    console.warn(`event ${e.event} has been called previously, cannot call again`);
+//                    console.warn(`event ${e.event} has been called previously, cannot call again`);
                 }
             }
             this.cMin = Math.floor(m);
