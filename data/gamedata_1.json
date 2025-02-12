@@ -198,7 +198,7 @@
         "resupplyDelay": 20
     },
     "route": {"ratio": [50, 50]},
-    "activeEventRange": [0, 18],
+    "activeEventRange": [9, 9],
     "events": [
         {
             "time": 0.5,
@@ -297,7 +297,7 @@
         {
             "time": 25,
             "event": "icefall2",
-            "profiles": [0],
+            "profiles": [1],
             "stage": 2,
             "metrics": {
                 "threshold": 3,
@@ -354,7 +354,32 @@
         },
         {
             "time": 45,
-            "event": "injury2"
+            "event": "injury2",
+            "type": "p1",
+            "method": "profileEvent",
+            "profiles": [1],
+            "stage": 2,
+            "metrics": {
+                "threshold": 3,
+                "results": [
+                    {
+                        "text": "Sorry, I can't help",
+                        "dice": false,
+                        "oxygen": [0, 0]
+                    },
+                    {
+                        "text": "Yes, I will help",
+                        "dice": true,
+                        "oxygen": [0, 2],
+                        "sustenance": [0, 1]
+                    },
+                    {
+                        "text": "I will share resources with you",
+                        "dice": true,
+                        "sustenance": [0, 3]
+                    }
+                ]
+            }
         },
         {
             "time": 50,

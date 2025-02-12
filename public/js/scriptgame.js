@@ -419,7 +419,13 @@ document.addEventListener('DOMContentLoaded', function () {
         })
     };
     const showModalEvent = (ev) => {
-//        console.log(`showModalEvent`, ev);
+        if (ev.hasOwnProperty('supportTeam')) {
+            // duplicate the support team to break linkage with origin, randomise the list for display
+            ev.supportTeam = window.clone(ev.supportTeam);
+            // to array, sort (*3), back to object:
+            ev.supportTeam = Object.fromEntries(Object.entries(ev.supportTeam).sort(() => Math.random() - 0.5).sort(() => Math.random() - 0.5).sort(() => Math.random() - 0.5));
+        }
+//        console.log(`showModalEvent`, window.clone(ev).supportTeam);
         const m = $('#overlay_modal');
         m.show();
         m.addClass('clickable');
@@ -618,7 +624,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // Main init method:
     const checkSession = () => {
 //        console.log(`checkSession, newconnect? ${newconnect}`);
-        showOverlay(`Would you like to start a new game?`, {button: 'yes', action: startNew});
+        showOverlay(`Start new game?`, {button: 'yes', action: startNew});
         const gid = getStoreID();
         const lid = localStorage.getItem(gid);
         if (Boolean(lid)) {
@@ -626,7 +632,7 @@ document.addEventListener('DOMContentLoaded', function () {
             gameflow(`newconnect? ${newconnect}`)
             if (newconnect) {
                 gameflow(`You can choose to start a new game [confirm1]`);
-                showOverlay(`Would you like to start a new game?`, {button: 'yes', action: startNew});
+                showOverlay(`Start new game?`, {button: 'yes', action: startNew});
                 let reset = false;
                 if (reset) {
                     clearSession();
