@@ -1,6 +1,6 @@
 {
-  "timestamp": "2025-02-12T10:15:52Z",
-  "commitHash": "5bca813ae9e7d94b38b986beb2c68a38df62daf4",
-  "commitMessage": "Failure to correctly resupply now results in resupply modal reappearing as soon as the delay expires",
+  "timestamp": "2025-02-12T12:30:53Z",
+  "commitHash": "84a1ced55622fef58eff2b6eff40a22076d18020",
+  "commitMessage": "Second injury event initialised. Support teams are now randomised in the profile event modal.",
   "branch": "master"
 }

@@ -174,7 +174,7 @@ class Climber {
     }
     log(s, force) {
 //        if (this.profile === 0 || 2 < 8) {
-        return;
+//        return;
 //        console.log('loglogogogojh', s, force);
         const colour = typeof(s) === 'string' ? s.includes('#########') ? 'cyan' : 'yellow' : 'yellow';
 //        if (this.profile === 1 ) {

@@ -215,7 +215,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const btn = b instanceof jQuery ? b : $(`#${b}`); // Use directly if jQuery, otherwise select it
         btn.prop('disabled', !a);
         a ? btn.removeClass('disabled') : btn.addClass('disabled');
-//        console.log(`enableButton`, a, b)
+        console.log(`enableButton`, a, b);
 //        console.log(b.html())
     };
 
@@ -432,13 +432,10 @@ document.addEventListener('DOMContentLoaded', function () {
         renderTemplate('overlay_modal', `modal`, {type: 'event'}, () => {
             const template = ev.template || ev.event;
             renderTemplate('modal_content', `modal/event/${template}`, ev, () => {
-//                console.log('showModalEvent render complete', ev);
-//                console.log(m.find('div'));
                 const mc = m.find('#modal_content');
                 const hasH = mc.find('h1, h2, h3, h4').length > 0;
                 const hasBut = mc.find('button').length > 0;
                 const hasImg = mc.find('img').length > 0;
-//                console.log(`showModalEvent rendered, buttons: ${hasBut}, h: ${hasH}, img: ${hasImg}`);
                 if (!hasH && !hasBut && !hasImg) {
 //                    console.log('looks like an empty modal');
                     mc.append(`<br><br><br><br><p><b>This is a blank modal and will be auto-closed shortly...</b></p>`);
@@ -449,13 +446,25 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
                 const hasMethod = ev.hasOwnProperty('method');
                 // event modals cannot be closed by clicking the overlay, they require user input before progression
-
                 if (hasMethod) {
                     eval(ev.method)(m, ev);
                 } else {
                     setupModalClose(m, !hasMethod);
                 }
             })
+        });
+    };
+    const showModalSelfie = (ev) => {
+        console.log('render it', ev);
+        const C = Climber.getClimbers();
+        const c = C[Math.floor(C.length * Math.random())];
+        renderTemplate('overlay_modal', `modal`, {type: 'selfie'}, () => {
+//            console.log('base rendered');
+            renderTemplate('modal_content', `modal/event/selfie`, c, () => {
+//                console.log('content rendered');
+                setupModalClose($('#overlay_modal'), true);
+//                enableButton($($('.k2-modal-btn')[0]), true);
+            });
         });
     };
     const removeFullscreenModalClick = () => {
@@ -580,6 +589,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 eventStack = new EventStack(initO);
                 summariseSession();
                 if (!versionControl.isCurrentVersion(session.uniqueID)) {
+
+                    versionControl.updateVersion(session.uniqueID);
+                    console.warn('version control limited in dev; version number will update automatically')
+                    return;
+
                     const rs = confirm(`There is a newer version of the software available, would you like to start a new session? You may experience unexpected results if you continue your current session.`);
                     if (rs) {
                         versionControl.updateVersion(session.uniqueID);
@@ -1647,11 +1661,17 @@ document.addEventListener('DOMContentLoaded', function () {
     };
     const eventTrigger = (ev) => {
         // EventStack calls this method when a new event is to be triggered
-//        console.log(`eventTrigger`);
+//        console.log(`eventTrigger`, ev);
+
         if (!ev.active) {
             return;
         }
         pauseSession();
+        if (ev.event.includes('photo')) {
+            showModalSelfie(ev);
+//            console.log('photo (selfie) event');
+            return;
+        }
         if (ev.hasOwnProperty('profiles')) {
             // NOTE: the event model CAN send in  any number of profiles, the line below assumes only a single profile, edit if events effect multiple profiles
             ev.theProfile = session[`profile${ev.profiles[0]}`];

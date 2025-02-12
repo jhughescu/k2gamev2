@@ -186,3 +186,34 @@
 .dice {
 /*    font-size: 5rem;*/
 }
+
+.modal-photo-header {
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
+}
+.selfie-photo {
+    height: 225px;
+/*    background-color: red;*/
+}
+.selfie-photo-background {
+/*    opacity: 0.5;*/
+/*    border: dotted 1px black;*/
+}
+.selfie-climber {
+    top: 0px;
+    left: 0px;
+    width: 100%;
+/*    transform: rotate(8deg);*/
+    overflow: hidden;
+/*    background-color: rgba(0, 0, 255, 0.57);*/
+}
+.selfie-climber img {
+/*    top: 30px;*/
+    position: absolute;
+    top: 18px;
+    left: 30px;
+    width: 250px;
+    transform: rotate(8deg);
+/*    overflow: hidden;*/
+/*    background-color: rgba(245, 255, 0, 0.57);*/
+}
