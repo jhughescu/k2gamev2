@@ -1,0 +1,143 @@
+<html>
+    <head>
+        <script src='https://cdn.socket.io/4.5.4/socket.io.min.js'></script>
+    </head>
+    <script>
+        const getSessionID = () => {
+            return window.parent.location.hash.replace('#', '');
+        };
+        const socket = io('', {
+            query: {
+                role: 'videoPlayer',
+                id: getSessionID()
+            }
+        });
+        // Code to load the IFrame player API code asynchronously
+        const tag = document.createElement('script');
+
+//        tag.src = "https://developers.panopto.com/scripts/embedapi.min.js";
+        tag.src = "js/libs/panopto.embedapi.js";
+        var firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+         // The following function creates an <iframe> and Panopto player
+        let embedApi = null;
+        const getVidID = () => {
+//            return '4d35e81e-85e8-4fd3-8394-b0a100e3fbf8';
+
+//            <iframe src="https://cranfield.cloud.panopto.eu/Panopto/Pages/Embed.aspx?id=bc54f268-68c0-4fe4-ac80-b20200a14135&autoplay=false&offerviewer=true&showtitle=true&showbrand=true&captions=false&interactivity=all" height="405" width="720" style="border: 1px solid #464646;" allowfullscreen allow="autoplay" aria-label="Panopto Embedded Video Player" aria-description="StartAnim_mobile" ></iframe>
+            const vid = window.parent.getVidID();
+//            console.log(`getVidID: ${vid}`);
+//            console.log(vid);
+
+            return vid;
+        };
+        function onPanoptoEmbedApiReady() {
+//            console.log('found the api');
+            window.parent.setupCinema();
+            embedApi = new EmbedApi("player", {
+                width: "100%",
+                height: "100%",
+                //This is the URL of your Panopto site
+                serverName: 'cranfield.cloud.panopto.eu',
+                sessionId: getVidID(),
+                videoParams: { // Optional parameters
+                //interactivity parameter controls if the user sees table of contents, discussions, notes, & in-video search
+                    "interactivity": "none",
+                    "showtitle": "false"
+                },
+                events: {
+                    "onIframeReady": onPanoptoIframeReady,
+                    "onReady": onPanoptoVideoReady,
+                    "onStateChange": onPanoptoStateUpdate
+                }
+            });
+        }
+
+          //The API will call this function when the iframe is ready
+        function onPanoptoIframeReady() {
+            // The iframe is ready and the video is not yet loaded (on the splash screen)
+            // Load video will begin playback
+            embedApi.loadVideo();
+        }
+        let checkInt = null;
+        function videoInt () {
+//            console.log('chips');
+//            console.log(embedApi.getCurrentTime());
+            window.parent.videoPosition({total: embedApi.getDuration(), now: embedApi.getCurrentTime()});
+        }
+        function onVideoStart() {
+//            console.log('GO');
+            checkInt = setInterval(videoInt, 1000);
+        };
+        function onVideoEnd() {
+            clearInterval(checkInt);
+        };
+
+          //The API will call this function when the video player is ready
+        function onPanoptoVideoReady() {
+            // The video has successfully been loaded by onPanoptoIframeReady
+
+            // Seek to 100s
+            embedApi.seekTo(0);
+            embedApi.setVolume(1);
+            embedApi.unmuteVideo();
+            embedApi.playVideo();
+//            console.log('ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo video starts');
+            onVideoStart();
+        }
+
+        //The API calls this function when a player state change happens
+         function onPanoptoStateUpdate(state) {
+            if (state === PlayerState.Playing) {
+//                embedApi.setVolume(1);
+//                embedApi.unmuteVideo();
+//                embedApi.setPlaybackRate(2);
+            }
+            if (state === PlayerState.Ended) {
+                onVideoEnd();
+//                console.log('this is the end');
+                window.parent.onVideoEnd();
+//                console.log('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa video ends');
+            }
+        }
+
+        const test = () => {
+            console.log('test success');
+        }
+        const videoAction = (ac) => {
+
+            switch (ac) {
+                case 'play':
+                    console.log('go play')
+                    embedApi.playVideo();
+                    embedApi.unmuteVideo();
+                    break;
+                case 'pause':
+                    embedApi.pauseVideo();
+                    break;
+                case 'playpause':
+                    if (embedApi.isPaused) {
+                        embedApi.playVideo();
+                    } else {
+                        embedApi.pauseVideo();
+                    }
+                    break;
+                case 'unmute':
+                    embedApi.unmuteVideo();
+                    break;
+                default:
+                    console.log(`videoAction not understood`);
+            }
+        }
+
+        socket.on('videoAction', (aOb) => {
+            console.log(`hear videoAction`, aOb)
+            videoAction(aOb.action);
+        })
+
+        window.test = test;
+    </script>
+
+    <div id="player"></div>
+</html>

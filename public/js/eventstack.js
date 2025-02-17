@@ -77,6 +77,7 @@ class EventStack {
                 e.current = false;
                 e.complete = false;
                 e.template = e.method === 'profileEvent' ? 'profile_event' : null;
+                e.noModal = !e.hasOwnProperty('noModal') ? false : e.noModal;
                 e.n = i;
                 if (e.hasOwnProperty('metrics')) {
                     e.metrics = this.processMetrics(e.metrics)

@@ -180,7 +180,7 @@ class Climber {
 //        if (this.profile === 1 ) {
         if (this.profile === 0) {
             if (typeof(s) === 'string' || typeof(s) === 'number') {
-                console.log(`%c${this.name} %c${s}`, 'color: white;', `color: ${colour};`);
+//                console.log(`%c${this.name} %c${s}`, 'color: white;', `color: ${colour};`);
             }
         }
         if (this.profile === 0 || force) {
@@ -382,7 +382,7 @@ class Climber {
         this.setProperty('currentSpeed', n);
     }
     setDelay(n) {
-        console.log(`setDelay ${n}`);
+//        console.log(`setDelay ${n}`);
         // a game event has sent a delay to this climber. Prevent updates until the delay (in minutes) has expired
         if (this.currentTimeObject) {
             if (this.currentTimeObject.gametime) {

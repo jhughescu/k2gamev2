@@ -1,6 +1,6 @@
 {
-  "timestamp": "2025-02-12T12:30:53Z",
-  "commitHash": "84a1ced55622fef58eff2b6eff40a22076d18020",
-  "commitMessage": "Second injury event initialised. Support teams are now randomised in the profile event modal.",
+  "timestamp": "2025-02-17T16:42:26Z",
+  "commitHash": "28a62cbe158e6056e1bfb99f2ca8198627234ce5",
+  "commitMessage": "Selfie modal created",
   "branch": "master"
 }

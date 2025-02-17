@@ -3,6 +3,9 @@ html, body {
     color: white;
     background-color: white;
     color: black;
+    margin: 0px;
+    padding: 0px;
+    border: 0px;
 }
 body {
     font-family: 'Courier New', Courier, 'Lucida Console', Monaco, Consolas, monospace;

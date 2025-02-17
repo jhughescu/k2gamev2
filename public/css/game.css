@@ -199,6 +199,10 @@ p.resource_value {
     bottom: 0px;
     width: 100%;
 }
+#modal_content h1, h2, h3{
+    margin-left: 10px;
+    margin-right: 10px;
+}
 #modal_content, .modal {
     pointer-events: all;
 }

@@ -198,17 +198,19 @@
         "resupplyDelay": 20
     },
     "route": {"ratio": [50, 50]},
-    "activeEventRange": [4, 5],
+    "activeEventRange": [0, 15],
     "events": [
         {
             "time": 0.5,
             "event": "equipment",
+            "video": "a4fc6a48-7c1c-4ca9-b50c-b202009975ce",
             "profiles": [2],
             "delay": 7
         },
         {
             "time": 5,
             "event": "injury1",
+            "video": "80addd24-c9b0-471f-84f2-b202009812d5",
             "type": "section",
             "profiles": [0],
             "stage": 1,
@@ -226,6 +228,7 @@
         {
             "time": 10,
             "event": "crampons",
+            "video": "0b3a9911-9079-429e-9815-b2020098879f",
             "type": "p1",
             "method": "profileEvent",
             "profiles": [0],
@@ -321,6 +324,7 @@
         {
             "time": 30,
             "event": "slip",
+            "video": "61e9f9e9-7138-40ab-80d4-b2020098be16",
             "type": "p2",
             "method": "profileEvent",
             "profiles": [1],

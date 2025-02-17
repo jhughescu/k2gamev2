@@ -20,8 +20,8 @@ document.addEventListener('DOMContentLoaded', function () {
         }, 1000);
     });
 
-    const cheating = true;
-//    const cheating = false;
+//    const cheating = true;
+    const cheating = false;
 
 
     const msgWin = $('#msg');
@@ -215,7 +215,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const btn = b instanceof jQuery ? b : $(`#${b}`); // Use directly if jQuery, otherwise select it
         btn.prop('disabled', !a);
         a ? btn.removeClass('disabled') : btn.addClass('disabled');
-        console.log(`enableButton`, a, b);
+//        console.log(`enableButton`, a, b);
 //        console.log(b.html())
     };
 
@@ -265,6 +265,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 setupModalClose(m, true);
             }
         });
+        if (cheating) {
+            setTimeout(() => {
+                t.click();
+            }, 2000);
+            setTimeout(() => {
+                die.click();
+            }, 4000);
+        }
     };
     const getResourcesToReplenish = (ob) => {
         // CREATE A NEW METHOD HERE WHICH RUNS THROUGH THE RESOURCES MOCALE, GETS THE VALUES AND SETS THEM AS RESUPPLIES
@@ -455,9 +463,12 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     };
     const showModalSelfie = (ev) => {
-        console.log('render it', ev);
+//        console.log('render it', ev);
         const C = Climber.getClimbers();
         const c = C[Math.floor(C.length * Math.random())];
+        const m = $('#overlay_modal');
+        m.show();
+        m.addClass('clickable');
         renderTemplate('overlay_modal', `modal`, {type: 'selfie'}, () => {
 //            console.log('base rendered');
             renderTemplate('modal_content', `modal/event/selfie`, c, () => {
@@ -498,6 +509,9 @@ document.addEventListener('DOMContentLoaded', function () {
         window.renderTemplate('modal_footer', 'modal.footer.button', ob, () => {
             if (cb) {
                 cb();
+            }
+            if (cheating) {
+                setTimeout(() => closeModal(), 3000);
             }
         });
     };
@@ -1171,6 +1185,8 @@ document.addEventListener('DOMContentLoaded', function () {
     // key page setup
 
     const setupHome = () => {
+//        console.log(`setupHome`);
+        let checkInt = null;
         const bClimb = $(`#btn-start`);
         const bTeam = $(`#btn-team`);
         const bMap = $(`#btn-map`);
@@ -1179,28 +1195,31 @@ document.addEventListener('DOMContentLoaded', function () {
         bTeam.off('click').on('click', function () {
             if (!$(this).hasClass('disabled')) {
                 renderTeam();
+                clearInterval(checkInt);
             }
         });
         bMap.off('click').on('click', function () {
             if (!$(this).hasClass('disabled')) {
-
+                clearInterval(checkInt);
             }
         });
         bResources.off('click').on('click', function () {
             if (!$(this).hasClass('disabled')) {
                 renderResources();
+                clearInterval(checkInt);
             }
         });
         bClimb.off('click').on('click', function () {
             if (!$(this).hasClass('disabled')) {
                 renderMap();
+                clearInterval(checkInt);
             }
         });
         enableButton(bResources, false);
         enableButton(bTeam, false);
         enableButton(bMap, false);
         enableButton(bClimb, false);
-        const checkInt = setInterval(() => {
+        checkInt = setInterval(() => {
             const cReady = climbersReady();
             const cCreated = climbersCreated();
             const allReady = cReady && cCreated;
@@ -1659,19 +1678,7 @@ document.addEventListener('DOMContentLoaded', function () {
             console.warn(`failure to init, session or gameDatathis.eventSummary not ready yet`);
         }
     };
-    const eventTrigger = (ev) => {
-        // EventStack calls this method when a new event is to be triggered
-//        console.log(`eventTrigger`, ev);
-
-        if (!ev.active) {
-            return;
-        }
-        pauseSession();
-        if (ev.event.includes('photo')) {
-            showModalSelfie(ev);
-//            console.log('photo (selfie) event');
-            return;
-        }
+    const prepEvent = (ev) => {
         if (ev.hasOwnProperty('profiles')) {
             // NOTE: the event model CAN send in  any number of profiles, the line below assumes only a single profile, edit if events effect multiple profiles
             ev.theProfile = session[`profile${ev.profiles[0]}`];
@@ -1679,25 +1686,63 @@ document.addEventListener('DOMContentLoaded', function () {
         ev.supportTeam = session.supportTeam.climbers;
         if (ev.hasOwnProperty('metrics')) {
             if (ev.metrics.hasOwnProperty('results')) {
-//                console.log('have metrics');
                 if (ev.supportTeam) {
-//                    console.log('have team');
                     ev.metrics.results.forEach((r, i) => {
-//                        console.log(i, r);
                         r.profile = Object.values(ev.supportTeam)[i]
                     });
                 }
             }
         }
-
-//        console.log(`event`, ev);
         if (ev.hasOwnProperty('delay')) {
             ev.profiles.forEach(p => {
-//                console.log(p, session[`profile${p}`])
                 session[`profile${p}`].setDelay(ev.delay);
             });
         }
-        showModalEvent(ev);
+        return ev;
+    };
+    const eventTrigger = (ev) => {
+        // EventStack calls this method when a new event is to be triggered
+        console.log(`eventTrigger`, ev);
+        if (!ev.active) {
+            return;
+        }
+        pauseSession();
+        ev = prepEvent(ev);
+//        if (ev.hasOwnProperty('profiles')) {
+//            // NOTE: the event model CAN send in  any number of profiles, the line below assumes only a single profile, edit if events effect multiple profiles
+//            ev.theProfile = session[`profile${ev.profiles[0]}`];
+//        }
+//        ev.supportTeam = session.supportTeam.climbers;
+//        if (ev.hasOwnProperty('metrics')) {
+//            if (ev.metrics.hasOwnProperty('results')) {
+//                if (ev.supportTeam) {
+//                    ev.metrics.results.forEach((r, i) => {
+//                        r.profile = Object.values(ev.supportTeam)[i]
+//                    });
+//                }
+//            }
+//        }
+//        if (ev.hasOwnProperty('delay')) {
+//            ev.profiles.forEach(p => {
+//                session[`profile${p}`].setDelay(ev.delay);
+//            });
+//        }
+
+
+
+        if (ev.hasOwnProperty('video')) {
+            console.log('render the cinema, yes');
+            renderCinema(ev);
+            return;
+        }
+        if (ev.event.includes('photo')) {
+            showModalSelfie(ev);
+//            console.log('photo (selfie) event');
+            return;
+        }
+        if (!ev.noModal) {
+            showModalEvent(ev);
+        }
     };
     const updateEventStack = (cs) => {
 //        console.log(`updateEventStack`);
@@ -1821,6 +1866,11 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     };
     const renderMap = () => {
+//        renderCinema();
+        console.log('play video?', window.clone(gTimer).elapsedTime === 0, window.clone(gTimer));
+        if (window.clone(gTimer).elapsedTime === 0) {
+            renderCinema();
+        }
         renderNone(() => {
             const rOb = {
                 climbers: Climber.getClimbers().map((climber, index) => ({
@@ -1855,6 +1905,85 @@ document.addEventListener('DOMContentLoaded', function () {
             })
         });
     };
+    const renderCinema = (ev) => {
+        if ($('#cinemaFrame').length === 0) {
+            window.renderTemplate('cinema', 'cinema', {}, () => {
+                console.log('cinema rendered')
+                $('#cinema').show();
+                setupCinema(ev);
+            });
+        }
+    };
+
+
+    // cinema (video player)
+    const getVidID = () => {
+        const hard = 'bc54f268-68c0-4fe4-ac80-b20200a14135';
+        let id = hard;
+        const ce = eventStack.getCurrentEvent();
+//        console.log(`hard coded: ${hard}`);
+        if (ce) {
+            if (ce.hasOwnProperty('video')) {
+    //            console.log(ce.video);
+                id = ce.video;
+            }
+        }
+        console.log(`videoID: ${id} (${id === hard ? 'hard coded' : 'from data'})`);
+        return id;
+    };
+    const videoPosition = () => {
+        return 0;
+    };
+    const setupCinema = () => {
+        const i = $('#cinema').find('iframe');
+        i.css({
+//            opacity: 0.5,
+            height: '100%',
+//            height: 'calc(100% + 60px)'
+        });
+        i.contents().find("body").css("margin", "0px");
+    };
+    const showCinema = (boo, cb) => {
+//        return;
+        const c = $('#cinema');
+        if (boo) {
+            c.show();
+        } else {
+            setTimeout(() => {
+                c.fadeOut(300, () => {
+//                    console.log('dunne');
+                    if (cb) {
+                        cb()
+                    }
+                    // by default, restart the timer
+//                    playPauseSession()
+                });
+            }, 1000);
+        }
+    };
+    const onVideoEnd = () => {
+        console.log('video ended');
+        showCinema(false, () => {
+            setTimeout(() => {
+                const ev = eventStack.getCurrentEvent();
+                if (ev.hasOwnProperty('event')) {
+                    showModalEvent(ev);
+                }
+//                playPauseSession();
+            }, 1000);
+        });
+    };
+
+
+    window.ctest = renderCinema;
+    window.setupCinema = setupCinema;
+    window.getVidID = getVidID;
+    window.videoPosition = videoPosition;
+    window.setupCinema = setupCinema;
+    window.onVideoEnd = onVideoEnd;
+    showCinema(false);
+//    setTimeout(renderCinema, 1000);
+    // end cinema
 
     const renderHome = () => {
         renderNone(() => {
