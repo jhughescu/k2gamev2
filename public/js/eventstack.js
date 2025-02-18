@@ -50,6 +50,9 @@ class EventStack {
     getCurrentEvent() {
         return this.currentEvent;
     }
+    getEvent(n) {
+        return this.allEvents[n];
+    }
     processMetrics(m) {
         if (m.hasOwnProperty('results')) {
             m.results.forEach(r => {

@@ -1,6 +1,6 @@
 {
-  "timestamp": "2025-02-17T16:42:26Z",
-  "commitHash": "28a62cbe158e6056e1bfb99f2ca8198627234ce5",
-  "commitMessage": "Selfie modal created",
+  "timestamp": "2025-02-18T11:50:20Z",
+  "commitHash": "8520ae491d09924d77911038b47df10eb38bdb08",
+  "commitMessage": "Video player implemented. Events can now be preceded by the relevant video. Autoplay is still an issue, possibly insurmountable due to browser restrictions.",
   "branch": "master"
 }

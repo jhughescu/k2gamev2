@@ -20,6 +20,8 @@ document.addEventListener('DOMContentLoaded', function () {
         }, 1000);
     });
 
+    // autoResource meane profiles will be set automatically on the resources screen
+    const autoResource = true;
 //    const cheating = true;
     const cheating = false;
 
@@ -433,6 +435,7 @@ document.addEventListener('DOMContentLoaded', function () {
             // to array, sort (*3), back to object:
             ev.supportTeam = Object.fromEntries(Object.entries(ev.supportTeam).sort(() => Math.random() - 0.5).sort(() => Math.random() - 0.5).sort(() => Math.random() - 0.5));
         }
+//        console.log(`showModalEvent`, window.clone(ev));
 //        console.log(`showModalEvent`, window.clone(ev).supportTeam);
         const m = $('#overlay_modal');
         m.show();
@@ -447,7 +450,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (!hasH && !hasBut && !hasImg) {
 //                    console.log('looks like an empty modal');
                     mc.append(`<br><br><br><br><p><b>This is a blank modal and will be auto-closed shortly...</b></p>`);
-                    setTimeout(() => closeModal(), 2000);
+                    setTimeout(() => {
+                        closeModal();
+                        unpauseSession();
+                    }, 2000);
                 }
                 if (devController) {
                     devController.setupGameTimeSelect();
@@ -779,6 +785,16 @@ document.addEventListener('DOMContentLoaded', function () {
                 theState.storeTime(gTimer.elapsedTime);
                 showtime();
             }
+        }
+    };
+    const unpauseSession = (force) => {
+        if (gTimer.hasStarted || force) {
+//            if (gTimer.isRunning) {
+                gTimer.resumeTimer();
+                storeLocal('time', gTimer.elapsedTime);
+                theState.storeTime(gTimer.elapsedTime);
+                showtime();
+//            }
         }
     };
     const packState = () => {
@@ -1328,6 +1344,13 @@ document.addEventListener('DOMContentLoaded', function () {
         const p = session[$('.form-submit-btn').data('profile')];
         nin.prop('disabled', !boo);
         if (boo) {
+//            console.log(p);
+//            console.log(p.options);
+//            console.log(p.temptype);
+            if (!p.hasOwnProperty('temptype')) {
+                console.warn('This action has been cancelled, however the profiles should have been created regardless.');
+                return;
+            }
             const max = p.options[p.temptype].capacity;
             nin.each(function (n, i) {
                 const nn = parseFloat($(i).val());
@@ -1626,7 +1649,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 $(`#resop_${rOb.profile}_${rOb.type}`).addClass('selected');
                 setupResources();
 
-                if (cheating) {
+                if (autoResource) {
                     const c = gameData.constants;
                     const ch =[0, 0, 3];
                     resOptionselect(0, ch[0]);
@@ -1690,19 +1713,25 @@ document.addEventListener('DOMContentLoaded', function () {
                     ev.metrics.results.forEach((r, i) => {
                         r.profile = Object.values(ev.supportTeam)[i]
                     });
+                    Object.values(ev.supportTeam).forEach((c, i) => {
+//                        console.log(c.name, ev.metrics.results[i])
+                        c.hasDie = ev.metrics.results[i].dice;
+                    });
                 }
             }
         }
         if (ev.hasOwnProperty('delay')) {
-            ev.profiles.forEach(p => {
-                session[`profile${p}`].setDelay(ev.delay);
-            });
+            if (ev.hasOwnProperty('profiles')) {
+                ev.profiles.forEach(p => {
+                    session[`profile${p}`].setDelay(ev.delay);
+                });
+            }
         }
         return ev;
     };
     const eventTrigger = (ev) => {
         // EventStack calls this method when a new event is to be triggered
-        console.log(`eventTrigger`, ev);
+//        console.log(`eventTrigger`, ev);
         if (!ev.active) {
             return;
         }
@@ -1731,7 +1760,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
         if (ev.hasOwnProperty('video')) {
-            console.log('render the cinema, yes');
+//            console.log('render the cinema, yes');
             renderCinema(ev);
             return;
         }
@@ -1908,10 +1937,14 @@ document.addEventListener('DOMContentLoaded', function () {
     const renderCinema = (ev) => {
         if ($('#cinemaFrame').length === 0) {
             window.renderTemplate('cinema', 'cinema', {}, () => {
-                console.log('cinema rendered')
+//                console.log('cinema rendered')
                 $('#cinema').show();
                 setupCinema(ev);
             });
+        } else {
+//            console.log('cinema pre-rendered')
+            $('#cinema').show();
+            setupCinema(ev);
         }
     };
 
@@ -1921,14 +1954,16 @@ document.addEventListener('DOMContentLoaded', function () {
         const hard = 'bc54f268-68c0-4fe4-ac80-b20200a14135';
         let id = hard;
         const ce = eventStack.getCurrentEvent();
-//        console.log(`hard coded: ${hard}`);
+        const fe = eventStack.getEvent(0);
+//        console.log('currentEvent', ce);
+//        console.log('zeroEvent', fe);
         if (ce) {
             if (ce.hasOwnProperty('video')) {
     //            console.log(ce.video);
                 id = ce.video;
             }
         }
-        console.log(`videoID: ${id} (${id === hard ? 'hard coded' : 'from data'})`);
+//        console.log(`videoID: ${id} (${id === hard ? 'hard coded' : 'from data'})`);
         return id;
     };
     const videoPosition = () => {
@@ -1936,12 +1971,20 @@ document.addEventListener('DOMContentLoaded', function () {
     };
     const setupCinema = () => {
         const i = $('#cinema').find('iframe');
+        const cl = $('#cinemaControls').find('.close');
+        cl.show();
         i.css({
 //            opacity: 0.5,
             height: '100%',
 //            height: 'calc(100% + 60px)'
         });
         i.contents().find("body").css("margin", "0px");
+        cl.off('click').on('click', () => {
+//            showCinema(false);
+            cl.hide();
+//            onVideoEnd();
+            window.removeTemplate('cinema', onVideoEnd);
+        });
     };
     const showCinema = (boo, cb) => {
 //        return;
@@ -1962,14 +2005,23 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     };
     const onVideoEnd = () => {
-        console.log('video ended');
+//        console.log('video ended');
         showCinema(false, () => {
+            window.removeTemplate('cinema');
             setTimeout(() => {
+                let evModal = false;
                 const ev = eventStack.getCurrentEvent();
-                if (ev.hasOwnProperty('event')) {
-                    showModalEvent(ev);
+                if (ev) {
+                    if (ev.hasOwnProperty('event')) {
+                        showModalEvent(ev);
+                        evModal = true;
+                    }
                 }
-//                playPauseSession();
+                if (evModal) {
+                    showModalEvent(ev);
+                } else {
+                    unpauseSession(true);
+                }
             }, 1000);
         });
     };
