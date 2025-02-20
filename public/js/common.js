@@ -125,6 +125,18 @@ document.addEventListener('DOMContentLoaded', function () {
 //        console.log(`m is ${m}`);
         return Math.round(n * m) / m;
     };
+    const getNumberText = (n) => {
+        const numbersAsWords = [
+            "zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen", "twenty"
+            ];
+        let nt = 'null'
+        if (n < numbersAsWords.length) {
+            nt = numbersAsWords[n];
+        } else {
+            console.warn('getNumberText method only works from 0 - 20');
+        }
+        return nt;
+    };
     const roundAll = (o) => {
         for (let i in o) {
 //            console.log(o[i]);
@@ -1019,6 +1031,7 @@ document.addEventListener('DOMContentLoaded', function () {
     window.procVal = procVal;
     window.justNumber = justNumber;
     window.roundNumber = roundNumber;
+    window.getNumberText = getNumberText;
     window.roundAll = roundAll;
     window.emitWithPromise = emitWithPromise;
     window.reorderObject = reorderObject;

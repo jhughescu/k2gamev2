@@ -19,21 +19,9 @@
             "adjective": "Canadian",
             "active": true,
             "profiles": {
-                "p0": {"name": "Frederic Harris"},
-                "p1": {"name": "Gabela Bouchard"},
-                "p2": {"name": "Jacques Ouellet"}
-            },
-            "responses": {
-                "yes": [
-                    "I’d be happy to help!",
-                    "Absolutely, here you go!",
-                    "Yes, I’ll get it done."
-                ],
-                "no": [
-                    "I’m not able to assist.",
-                    "I can’t do anything to help.",
-                    "Sorry, I’m not the right person."
-                ]
+                "p0": "Frederic Harris",
+                "p1": "Gabela Bouchard",
+                "p2": "Jacques Ouellet"
             }
         },
         {
@@ -42,21 +30,9 @@
             "adjective": "Czech",
             "active": false,
             "profiles": {
-                "p0": {"name": "Hana Dvorakova"},
-                "p1": {"name": "Jan Svoboda"},
-                "p2": {"name": "Petr Novak"}
-            },
-            "responses": {
-                "yes": [
-                    "Of course, I can assist you.",
-                    "I’m able to help with this.",
-                    "I’ll handle this, no problem."
-                ],
-                "no": [
-                    "I have no control over that.",
-                    "That’s not something I can do.",
-                    "I wish I could help!"
-                ]
+                "p0": "Hana Dvorakova",
+                "p1": "Jan Svoboda",
+                "p2": "Petr Novak"
             }
         },
         {
@@ -65,21 +41,9 @@
             "adjective": "Finnish",
             "active": true,
             "profiles": {
-                "p0": {"name": "Luukas Aalto"},
-                "p1": {"name": "Juhani Karppinen"},
-                "p2": {"name": "Oona Takala"}
-            },
-            "responses": {
-                "yes": [
-                    "I’m more than happy to assist.",
-                    "This isn’t convenient, but I’ll assist.",
-                    "I’ll take care of it."
-                ],
-                "no": [
-                    "That’s out of my skillset.",
-                    "I’m not in a position to help.",
-                    "I really wish I could help, but I can’t."
-                ]
+                "p0": "Luukas Aalto",
+                "p1": "Juhani Karppinen",
+                "p2": "Oona Takala"
             }
         },
         {
@@ -88,21 +52,9 @@
             "adjective": "French",
             "active": true,
             "profiles": {
-                "p0": {"name": "Sébastien Martin"},
-                "p1": {"name": "Adrien Romane"},
-                "p2": {"name": "Camille Duval"}
-            },
-            "responses": {
-                "yes": [
-                    "Let me see what I can do.",
-                    "I suppose I have no choice.",
-                    "I’ve got this covered."
-                ],
-                "no": [
-                    "Not my problem, sorry.",
-                    "I’m not equipped to help.",
-                    "This seems like something you should have planned for."
-                ]
+                "p0": "Sébastien Martin",
+                "p1": "Adrien Romane",
+                "p2": "Camille Duval"
             }
         },
         {
@@ -111,21 +63,9 @@
             "adjective": "German",
             "active": true,
             "profiles": {
-                "p0": {"name": "Heinz Mascher"},
-                "p1": {"name": "Irene Koller"},
-                "p2": {"name": "Peter Schmidt"}
-            },
-            "responses": {
-                "yes": [
-                    "I’ll do my best to help!",
-                    "Not ideal, but I’ll do it.",
-                    "I’ll get it sorted right away."
-                ],
-                "no": [
-                    "I can’t do anything.",
-                    "That’s not in my hands.",
-                    "Sorry, you should have planned better."
-                ]
+                "p0": "Heinz Mascher",
+                "p1": "Irene Koller",
+                "p2": "Peter Schmidt"
             }
         },
         {
@@ -134,21 +74,9 @@
             "adjective": "Italian",
             "active": true,
             "profiles": {
-                "p0": {"name": "Andrea D’Angelo"},
-                "p1": {"name": "Celia Serra"},
-                "p2": {"name": "Tommaso Lombardi"}
-            },
-            "responses": {
-                "yes": [
-                    "I’m glad to lend a hand.",
-                    "I guess I can help out.",
-                    "I’ll help, but only this once."
-                ],
-                "no": [
-                    "I can’t give you what you need.",
-                    "I don’t have a way to help.",
-                    "You’ll have to figure that out yourself."
-                ]
+                "p0": "Andrea D’Angelo",
+                "p1": "Celia Serra",
+                "p2": "Tommaso Lombardi"
             }
         },
         {
@@ -157,21 +85,9 @@
             "adjective": "Dutch",
             "active": true,
             "profiles": {
-                "p0": {"name": "Karel de Bakker"},
-                "p1": {"name": "Lotte Brouwer"},
-                "p2": {"name": "Ronald van Coevorden"}
-            },
-            "responses": {
-                "yes": [
-                    "I’d love to help with that.",
-                    "I’ll help, I guess.",
-                    "I’m on it."
-                ],
-                "no": [
-                    "I don’t have the resources.",
-                    "Poor planning on your part isn’t my emergency.",
-                    "I can’t do anything to help."
-                ]
+                "p0": "Karel de Bakker",
+                "p1": "Lotte Brouwer",
+                "p2": "Ronald van Coevorden"
             }
         },
         {
@@ -180,21 +96,9 @@
             "adjective": "Norwegian",
             "active": true,
             "profiles": {
-                "p0": {"name": "Edvard Jenssen"},
-                "p1": {"name": "Frida Nilsen"},
-                "p2": {"name": "Roald Bakke"}
-            },
-            "responses": {
-                "yes": [
-                    "Absolutely, I’d be happy to help.",
-                    "Fine, I’ll take care of it.",
-                    "Sure, I can help with that."
-                ],
-                "no": [
-                    "You might want to be better prepared next time.",
-                    "That’s not something I want to deal with.",
-                    "I’m afraid I can’t help."
-                ]
+                "p0": "Edvard Jenssen",
+                "p1": "Frida Nilsen",
+                "p2": "Roald Bakke"
             }
         },
         {
@@ -203,21 +107,9 @@
             "adjective": "Spanish",
             "active": false,
             "profiles": {
-                "p0": {"name": "Alejandro Sánchez"},
-                "p1": {"name": "Enriqua García"},
-                "p2": {"name": "Hermosa Martín"}
-            },
-            "responses": {
-                "yes": [
-                    "Sure, just let me know what you need!",
-                    "If I must, I’ll help.",
-                    "I can take care of that."
-                ],
-                "no": [
-                    "Unfortunately, I can’t assist.",
-                    "That’s on you, not me.",
-                    "I appreciate you asking, but I’m not able to help."
-                ]
+                "p0": "Alejandro Sánchez",
+                "p1": "Enriqua García",
+                "p2": "Hermosa Martín"
             }
         },
         {
@@ -226,28 +118,9 @@
             "adjective": "American",
             "active": true,
             "profiles": {
-                "p0": {"name": "John Steele"},
-                "p1": {
-                    "name": "Michael Smith",
-                    "responses": {
-                        "yes": "OK, I will, yeah yeah",
-                        "no": "No way, I'm not getting involved bro",
-                        "res": "I will take the penalty of {N} {R}"
-                    }
-                },
-                "p2": {"name": "Susan Trump"}
-            },
-            "responses": {
-                "yes": [
-                    "I’m here to support you.",
-                    "Alright, I’ll handle it.",
-                    "I can help, no problem."
-                ],
-                "no": [
-                    "I don’t have time for this.",
-                    "If this was important, it should have been handled sooner.",
-                    "I truly regret that I can’t be of more help."
-                ]
+                "p0": "John Steele",
+                "p1": "Michael Smith",
+                "p2": "Susan Trump"
             }
         }
     ],
@@ -322,12 +195,7 @@
             "weight": 5,
             "unitLength": 5
         },
-        "resupplyDelay": 20,
-        "responses": {
-            "yes": "Happy to help (default response)",
-            "no": "I can't help (default response)",
-            "res": "I will take the penalty of "
-        }
+        "resupplyDelay": 20
     },
     "route": {"ratio": [50, 50]},
     "activeEventRange": [0, 15],

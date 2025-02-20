@@ -23,7 +23,7 @@ class Climber {
         this.expandOptions();
         this.option = this.getOption(init.profile);
         this.OPTION = this.getOption(init.profile).toUpperCase();
-        this.name = init.team.profiles[`p${init.profile}`];
+        this.name = init.team.profiles[`p${init.profile}`].name;
         this.filename = this.name.replace(' ', '').replace(/[^a-zA-Z0-9]/g, '');
         const stored = Object.assign({position: init.position, currentTime: 0, delayExpiry: 0}, this.unpackStorageSummary(this.getStoredSummary()));
 //        console.log(`new Climber`);
@@ -35,6 +35,23 @@ class Climber {
         this.t2 = init.t2;
         this.tTotal = (this.t1 * 2) + (this.t2 * 2);
         this.currentSpeed = 0;
+        const PROF = init.team.profiles[`p${init.profile}`];
+        const TEAM = init.team;
+//        console.log('TEAM')
+//        console.log(this.name, this.profile);
+//        console.log(TEAM.responses.yes);
+//        console.log(PROF.responses);
+//        this.responses = PROF.hasOwnProperty('responses') ? PROF.responses : this.gameData.constants.responses;
+//        this.responses = TEAM.hasOwnProperty('responses') ? TEAM.responses : this.gameData.constants.responses;
+        this.responses = {
+            yes: TEAM.responses.yes[this.profile],
+            no: TEAM.responses.no[this.profile],
+            res: this.gameData.constants.responses.res
+        }
+//        this.responses.no = TEAM.responses.no[this.profile];
+//        this.responses.res = this.gameData.constants.responses.res;
+
+        this.responsesArray = Object.values(this.responses);
 
         this.oxygen = stored.hasOwnProperty('oxygen') ? stored.oxygen : 0;
         this.sustenance = stored.hasOwnProperty('sustenance') ? stored.sustenance : 0;

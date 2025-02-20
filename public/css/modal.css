@@ -5,7 +5,7 @@
 /*    background-color: yellow;*/
 /*    border: 1px dashed blue;*/
 }
-.modal h4 {
+.modal h2, h3, h4 {
     margin : 5px;
 }
 .climber-response{
@@ -115,6 +115,7 @@
 #choice_option1 {
 /*    display: block;*/
 }
+
 .choice_back {
     width: 150px;
     height: 30px;
@@ -133,6 +134,9 @@
 .choice_option_header h3, .choice_option_header p {
 /*    background-color: aqua;*/
 }
+.choice_option h3 {
+    margin-top: 25px;
+}
 .choice_option_header h3 {
     padding-top: 200px;
     margin-bottom: 2px;
@@ -148,6 +152,10 @@
     height: 100%;
     font-size: 1.2rem;
 /*    background-color: rgba(0, 0, 255, 0.55);*/
+}
+/* NOTE THE "S" \/ */
+.choice_options h1, h2, h3, h4{
+    text-transform: capitalize;
 }
 .fullflag {
     position: absolute;
@@ -216,4 +224,12 @@
     transform: rotate(8deg);
 /*    overflow: hidden;*/
 /*    background-color: rgba(245, 255, 0, 0.57);*/
+}
+
+.modal #radio {
+    margin: 0px 30px;
+}
+.modal #radio img {
+    width: 250px;
+    margin: 40px auto;
 }

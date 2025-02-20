@@ -339,32 +339,85 @@ document.addEventListener('DOMContentLoaded', function () {
                 allDice.each((i, d) => {
                     const diceId = $(d).attr('id');
                     const diceN = justNumber(diceId);
+                    /*
                     new Dice(diceId, (result) => {
-//                        console.log(`rolled a ${result}`);
                         const boo = result > ev.metrics.threshold;
                         const pen = ev.metrics.results[diceN].penalties;
                         const prof = ev.theProfile;
+                        const pen0 = Object.entries(pen)[0];
+                        const summary = [];
                         Object.entries(pen).forEach(p => {
-                            const red = parseInt(p[1][Number(boo)]) * -1;
+                            const n = parseInt(p[1][Number(boo)]);
+                            const red = n * -1;
                             if (red !== 0) {
-                                prof.adjustProperty(p[0], red, (r) => {
-                                    console.log(`adjustment complete`, r);
-                                });
-                                prepProfilesForDisplay();
-                                prof.calculateClimbRate();
-                                devShowProfiles();
+                                summary.push(`${window.getNumberText(n)} ${p[0]}`);
+                                if (prof.adjustProperty) {
+                                    prof.adjustProperty(p[0], red, (r) => {
+                                        console.log(`adjustment complete`, r);
+                                    });
+                                    prepProfilesForDisplay();
+                                    prof.calculateClimbRate();
+                                    devShowProfiles();
+                                }
+
                             } else {
                                 console.log(`no reduction in ${p[0]}`);
                             }
                         });
+                        const response = `rolled a ${result}${boo ? ', ' + prof.responses.res + summary.join(', ') : ''}`;
+                        console.log(response);
                         completeEvent();
                         setupModalClose(m, true);
 //                        enableButton(c, true);
                     });
+                    */
                 });
-                setupModalBackButton(() => {
+//                console.log(res);
+                if (res.dice) {
+                    setupModalDiceButton((ob) => {
 
-                });
+                        const dv = $('.choice_option:visible');
+                        const dn = window.justNumber(dv.attr('id'));
+                        if (ob.state === 0) {
+                            dv.find('.choice_option_content').html(' ');
+                        } else {
+                            const result = ob.res;
+                            const boo = result > ev.metrics.threshold;
+                            const pen = ev.metrics.results[dn].penalties;
+                            const prof = ev.theProfile;
+                            const pen0 = Object.entries(pen)[0];
+                            const summary = [];
+                            Object.entries(pen).forEach(p => {
+                                const n = parseInt(p[1][Number(boo)]);
+                                const red = n * -1;
+                                if (red !== 0) {
+                                    summary.push(`${window.getNumberText(n)} ${p[0]}`);
+                                    if (prof.adjustProperty) {
+                                        prof.adjustProperty(p[0], red, (r) => {
+                                            console.log(`adjustment complete`, r);
+                                        });
+                                        prepProfilesForDisplay();
+                                        prof.calculateClimbRate();
+                                        devShowProfiles();
+                                    }
+
+                                } else {
+                                    console.log(`no reduction in ${p[0]}`);
+                                }
+                            });
+                            const response = `You rolled a ${result}${boo ? ', ' + prof.responses.res + summary.join(' and ') : ' - no penalty'}`;
+                            dv.find('.choice_option_content').html(response);
+//                            console.log(response);
+                            completeEvent();
+                            setupModalClose(m, true);
+                        }
+//                        enableButton(c, true);
+                    });
+                } else {
+                    setupModalBackButton(() => {
+
+                    });
+                }
                 $(`.choice_options`).hide();
                 $(`#choice_option${id}`).show(0, () => {});
             }
@@ -408,7 +461,9 @@ document.addEventListener('DOMContentLoaded', function () {
         })
     };
     const setupModalClose = (modal, boo, ob) => {
-        setupModalFooter('close', () => {
+        ob = ob === undefined ? {} : ob;
+        const display = ob.hasOwnProperty('display') ? ob.display : 'Close';
+        setupModalFooter(display, () => {
             const closer = modal.find('.k2-modal-btn');
 //            console.log(`setupModalClose`, boo, closer);
             if (!boo) {
@@ -425,6 +480,12 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 }
                 closeModal();
+                if (ob) {
+                    if (ob.hasOwnProperty('methodPost')) {
+                        const ev = ob.ev || {};
+                        ob.methodPost(ob);
+                    }
+                }
             });
         })
     };
@@ -435,7 +496,7 @@ document.addEventListener('DOMContentLoaded', function () {
             // to array, sort (*3), back to object:
             ev.supportTeam = Object.fromEntries(Object.entries(ev.supportTeam).sort(() => Math.random() - 0.5).sort(() => Math.random() - 0.5).sort(() => Math.random() - 0.5));
         }
-//        console.log(`showModalEvent`, window.clone(ev));
+        console.log(`showModalEvent`, window.clone(ev));
 //        console.log(`showModalEvent`, window.clone(ev).supportTeam);
         const m = $('#overlay_modal');
         m.show();
@@ -484,6 +545,19 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         });
     };
+    const showModalRadio = (ev) => {
+//        console.log('render it', ev);
+        const C = Climber.getClimbers();
+        const c = C[Math.floor(C.length * Math.random())];
+        const m = $('#overlay_modal');
+        m.show();
+        m.addClass('clickable');
+        renderTemplate('overlay_modal', `modal`, {type: 'radio'}, () => {
+            renderTemplate('modal_content', `modal/event/radio`, c, () => {
+                setupModalClose($('#overlay_modal'), true, {display: 'OK', ev: ev, methodPost: renderCinema});
+            });
+        });
+    };
     const removeFullscreenModalClick = () => {
         document.querySelector('#overlay_modal').removeEventListener('click', closeModal);
     }
@@ -511,7 +585,7 @@ document.addEventListener('DOMContentLoaded', function () {
     };
     const setupModalFooter = (str, cb) => {
 //        console.log('modal_footer', 'modal.footer.button', {});
-        const ob = {display: 'Close'};
+        const ob = {display: str ? str : 'Close'};
         window.renderTemplate('modal_footer', 'modal.footer.button', ob, () => {
             if (cb) {
                 cb();
@@ -521,7 +595,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     };
-    const setupModalBackButton = (str, cb) => {
+    const setupModalBackButton = (cb) => {
         const ob = {display: 'Back'};
         window.renderTemplate('modal_footer', 'modal.footer.button', ob, () => {
             const bb = $('.k2-modal-btn');
@@ -534,6 +608,38 @@ document.addEventListener('DOMContentLoaded', function () {
             if (cb) {
                 cb();
             }
+        });
+    };
+    const setupModalDiceButton = (cb) => {
+        const ob = {display: 'Roll die'};
+        window.renderTemplate('modal_footer', 'modal.footer.button', ob, () => {
+            const bb = $('.k2-modal-btn');
+            const dr = $('.dieroll');
+            let dint = null;
+            bb.off('click').on('click', () => {
+//                $(`.choice_options`).show();
+                bb.hide();
+                if (cb) {
+                    cb({state: 0});
+                }
+//                window.removeTemplate('modal_footer', () => console.log('over and out'))
+                let n = 0;
+                const res = dieRoll();
+                clearInterval(dint);
+                dint = setInterval(() => {
+//                    console.log(n++%6 + 1);
+                    const r = n++%12 + 1;
+//                    console.log(r);
+                    dr.css('background-image', `url('../assets/dice/diejhroll${r}.svg')`);
+                    if (n > 7 && r === ((res * 2) - 1)) {
+                        clearInterval(dint);
+                        if (cb) {
+                            cb({state: 1, res: res});
+                        }
+                    }
+                }, 100);
+            })
+
         });
     };
 
@@ -991,6 +1097,7 @@ document.addEventListener('DOMContentLoaded', function () {
             o.team = JSON.parse(JSON.stringify(session.team));
             o.teamID = o.team.id;
 //            console.log(`create Climber from object`);
+//            console.log(o);
             const c = new Climber(o);
             c.setView($('.map-pointer-container'));
             return c;
@@ -1004,6 +1111,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (session[`profile${profile}`]) {
                 if (session[`profile${profile}`].profile === null || $.isEmptyObject(session[`profile${profile}`].profile)) {
                     const gtm = getTeamMember(profile, type);
+//                    console.log(gtm);
                     const fullProfile = Object.assign(getTeamMember(profile, type), {profile: profile, type: type});
                     const p = getClimber(fullProfile);
                     tm = {summary: p.getStorageSummary()};
@@ -1702,6 +1810,8 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     };
     const prepEvent = (ev) => {
+//        console.log('prepEvent');
+//        console.log(window.clone(ev));
         if (ev.hasOwnProperty('profiles')) {
             // NOTE: the event model CAN send in  any number of profiles, the line below assumes only a single profile, edit if events effect multiple profiles
             ev.theProfile = session[`profile${ev.profiles[0]}`];
@@ -1711,7 +1821,9 @@ document.addEventListener('DOMContentLoaded', function () {
             if (ev.metrics.hasOwnProperty('results')) {
                 if (ev.supportTeam) {
                     ev.metrics.results.forEach((r, i) => {
-                        r.profile = Object.values(ev.supportTeam)[i]
+                        const p = Object.values(ev.supportTeam)[i];
+                        r.profile = p;
+                        r.text = p.responses[r.dice ? 'yes' : 'no'];
                     });
                     Object.values(ev.supportTeam).forEach((c, i) => {
 //                        console.log(c.name, ev.metrics.results[i])
@@ -1727,6 +1839,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
             }
         }
+
+//        console.log(window.clone(ev));
         return ev;
     };
     const eventTrigger = (ev) => {
@@ -1761,7 +1875,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (ev.hasOwnProperty('video')) {
 //            console.log('render the cinema, yes');
-            renderCinema(ev);
+//            renderCinema(ev);
+            showModalRadio(ev);
             return;
         }
         if (ev.event.includes('photo')) {
@@ -2061,6 +2176,48 @@ document.addEventListener('DOMContentLoaded', function () {
     window.showData = showData;
     window.showProfiles = showProfiles;
     window.showEvents = showEvents;
+    window.listEvents = (type) => {
+        let E = gameData.events;
+        E = E.map((e, i) => ({ ...e, n: i }));
+        if (type !== undefined) {
+            E = E.filter(e => e.method === type)
+        }
+        E.forEach((e, n) => {
+            console.log(e.n, e.event);
+
+        });
+    }
+
+    window.testEvents = (n) => {
+        const E = gameData.events;
+        if (n < E.length) {
+            const ev = window.clone(prepEvent(E[n]));
+            ev.active = true;
+            ev.complete = false;
+//            console.log(ev);
+            showModalEvent(ev);
+        } else {
+            console.warn(`there are only ${E.length} events`);
+        }
+    };
+    const evTest = () => {
+        let r = false;
+        if (gameData) {
+            if (gameData.events) {
+                if (gameData.events[0].hasOwnProperty('active')) {
+                    r = true;
+                }
+            }
+        }
+        if (r) {
+//            console.log('reddy');
+//            console.log(window.clone(gameData.events));
+            window.testEvents(2);
+        } else {
+            setTimeout(evTest, 100);
+        }
+    }
+//    evTest();
     window.updateVersion = () => {
         return versionControl.updateVersion();
     }
