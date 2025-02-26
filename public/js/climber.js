@@ -69,6 +69,7 @@ class Climber {
         this.currentTimeObject = {};
         // delay in minutes
         this.delayExpiry = stored.delayExpiry > 0 ? stored.delayExpiry : 0;
+        this.delayCurrentTotal = stored.delayCurrentTotal > 0 ? stored.delayCurrentTotal : 0;
         this.delayRemaining = null;
         this.eventTime = stored.eventTime > 0 ? stored.eventTime : 0;
         this.currentStage = 0;
@@ -121,7 +122,8 @@ class Climber {
             console.warn(`no 'o' value supplied, updates will fail`);
             return;
         }
-        const active = Climber.getClimbers().filter(c => !c.finished);
+//        const active = Climber.getClimbers().filter(c => !c.finished);/*/
+        const active = Climber.getClimbers().filter(c => c.profile === 0);
         active.forEach(c => {
             c.updateViewFromTime(o);
         });
@@ -242,6 +244,7 @@ class Climber {
             pos: 'position',
             st: 'currentStage',
             de: 'delayExpiry', /* delay is a time in minutes  */
+            dct: 'delayCurrentTotal', /* delayCurrentTotal is a time in minutes  */
             ad: 'allDelays', /* allDelays stores all delays as separate integers in a per-stage array*/
             et: 'eventTime', /* if under the effect of an event, this is the time in minutes when the event occured */
         }
@@ -264,7 +267,7 @@ class Climber {
 
     // sets
     setProperty(p, v, cb) {
-//        console.log(`setProperty: ${p}`);
+//        console.log(`setProperty: ${p} to ${v}`);
         if (p === undefined) {
             return;
         }
@@ -359,13 +362,14 @@ class Climber {
     }
     setOxygen(n, cb) {
         this.setProperty('oxygen', n, cb);
+//        console.log('set oxygen', n);
     }
     adjustOxygen(n, cb) {
         this.adjustProperty('oxygen', n, cb);
     }
     setRope(n, cb) {
         this.setProperty('rope', n, cb);
-//        console.log('set rope', n, cb);
+//        console.log('set rope', n);
     }
     adjustRope(n, cb) {
         this.adjustProperty('rope', n, cb);
@@ -373,12 +377,31 @@ class Climber {
     }
     setSustenance(n, cb) {
         this.setProperty('sustenance', n, cb);
+//        console.log('set sustenance', n);
     }
     adjustSustenance(n, cb) {
         this.adjustProperty('sustenance', n, cb);
     }
-    addResupply(s) {
+    addResupply(s, v) {
         // add an item to the resupplies string if it doesn't already contain it (use initials only)
+        const sm = this.getSummaryMap();
+        const str = `${s}${v}`;
+        if (s.length > 1) {
+            // if a full string has been passed in, convert to an initial
+            s = sm[s]
+        }
+        if (this.resupplies === '') {
+            this.resupplies = str;
+        } else {
+            if (!this.resupplies.includes(s)) {
+                this.resupplies += str;
+            }
+        }
+        console.log(`${this.name} resupplies = ${this.resupplies}`);
+    }
+    addResupplyV1(s) {
+        // add an item to the resupplies string if it doesn't already contain it (use initials only)
+        // V1 works with a simple string of letters (o, s, r)
         const sm = this.getSummaryMap();
         if (s.length > 1) {
             s = sm[s]
@@ -399,17 +422,20 @@ class Climber {
         this.setProperty('currentSpeed', n);
     }
     setDelay(n) {
-//        console.log(`setDelay ${n}`);
+        console.log(`setDelay ${n}`);
         // a game event has sent a delay to this climber. Prevent updates until the delay (in minutes) has expired
         if (this.currentTimeObject) {
             if (this.currentTimeObject.gametime) {
                 if (isNaN(this.delayExpiry) || this.delayExpiry === 0) {
                     this.delayExpiry = this.currentTimeObject.gametime.m + n;
+                    this.delayCurrentTotal = n;
                     this.log(`${n} minute delay`, true);
                 } else {
                     // delays accrue:
                     this.delayExpiry += n;
+                    this.delayCurrentTotal += n;
                 }
+                console.log(`time now: ${this.currentTimeObject.gametime.m}, delay expires at ${this.delayExpiry}`);
                 this.showPie(true);
             } else {
                 console.warn('cannot set delay; currentTimeObject not yet defined');
@@ -506,9 +532,12 @@ class Climber {
         };
     }
     updateCountdownPie(value) {
-        const maxValue = 20;
+//        console.log(`updateCountdownPie, value: ${value}, dct: ${this.delayCurrentTotal}`);
+
+//        const maxValue = 20;
+        const maxValue = this.delayCurrentTotal;
         const endAngle = (value / maxValue) * 360;
-        document.getElementById(`countdownPie${this.profile}`).setAttribute("d", this.describeArc(18, 18, 16, 0, endAngle));
+        document.getElementById(`countdownPie${this.profile}`).setAttribute("d", this.describeArc(18, 18, 18, 0, endAngle));
     }
     // end delay countdown chart
 
@@ -574,7 +603,48 @@ class Climber {
 //        console.log(this);
 //        this.currentStage += 1;
     }
+    getResupplyDetail() {
+        const ra = [...this.resupplies.matchAll(/([a-zA-Z])(\d+)/g)].map(match => [match[1], Number(match[2])]);
+        return ra;
+    }
     resupply() {
+        // this method runs at the end of the resupply delay, and completes all pending resupplies.
+        if (this.resupplies !== '') {
+            console.log(`${this.name} resupply:`);
+//            const ra = [...this.resupplies.matchAll(/([a-zA-Z])(\d+)/g)].map(match => [match[1], Number(match[2])]);
+            const ra = this.getResupplyDetail();
+//            console.log('we will resupply');
+//            console.log(ra);
+            const sm = this.getSummaryMap();
+            ra.forEach(r => {
+                console.log(`hoping to set ${sm[r[0]]} to ${r[1]}`);
+                const p = r[0];
+                const v = r[1];
+                this.setProperty(sm[p], v);
+                /*
+                switch (p) {
+                    case 'o':
+                        this.setOxygen(v);
+                        break;
+                    case 's':
+                        this.setSustenance(v);
+                        break;
+                    case 'r':
+                        this.setRope(v);
+                        break;
+                }
+                */
+            });
+
+//            this.resupplies.split('').map(s => sm[s]).forEach(r => {
+//                console.log(` - ${r}`);
+//                this.resetProperty(r);
+//            });
+            this.resupplies = '';
+        }
+    }
+    resupplyV1() {
+        // this method runs at the end of the resupply delay, and completes all pending resupplies.
         if (this.resupplies !== '') {
             console.log(`${this.name} resupply:`);
             // apply any pending resupplies

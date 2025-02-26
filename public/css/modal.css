@@ -27,22 +27,94 @@
 .climber-response img:first-of-type{
 	justify-self: end;
 }
-.resupply {
+.resupplyV1 {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
     margin: 0px auto;
-/*    background-color: purple;*/
     width: 80%;
 }
-.resupply img {
+.resupplyV1 img {
     width: 70px;
     margin: 0 auto;
 }
-.resupply div {
+.resupplyV1 div {
     display: grid;
     grid-template-rows: auto auto;
     grid-template-columns: auto;
     justify-content: center;
+}
+
+
+.resupply {
+    display: grid;
+    grid-template-columns: 1fr; /* Single column layout for the container */
+    gap: 10px; /* Adds spacing between each item */
+    width: 80%;
+    margin: 0 auto;
+}
+
+.resupply div {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr); /* Two columns: Image and Input */
+    align-items: center; /* Align items vertically */
+    gap: 2px; /* Space between image and input */
+/*    background-color: blue;*/
+    margin: 0px;
+    width: 40px;
+    height: 40px;
+}
+
+.resupply p {
+    position: relative;
+    text-align: center;
+    width: 100%;
+/*    background-color: yellow;*/
+}
+.resupply div:nth-child(2), .resupply div:nth-child(2) p  {
+    width: 150px;
+    text-align: left;
+}
+.resupply div:nth-child(4) p {
+    width: 40px;
+}
+
+.resupply div:nth-child(3) p, .resupply div:nth-child(5) p {
+    background-color: #0f1a34;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    cursor: pointer;
+    color: white;
+    font-size: 14px;
+    font-weight: bold;
+    margin: 5px;
+    line-height: 30px;
+}
+.resupply div:nth-child(3) p.disabled, .resupply div:nth-child(5) p.disabled {
+    cursor: default;
+    background-color: #475169;
+}
+
+
+.resupply img {
+    width: 40px;
+    margin: 0 auto;
+}
+
+#resourceForm #resourceSummary {
+    margin-top: 50px;
+}
+#resourceForm .resourceReset {
+    cursor: pointer;
+    margin: 10px;
+    font-size: 0.8rem;
+    right: 60px;
+    width: 70px;
+    position: absolute;
+/*    background-color: blue;*/
+}
+#resourceForm .resourceReset:hover {
+    text-decoration: underline;
 }
 
 .teamSelectButton {
@@ -155,7 +227,7 @@
 }
 /* NOTE THE "S" \/ */
 .choice_options h1, h2, h3, h4{
-    text-transform: capitalize;
+/*    text-transform: capitalize;*/
 }
 .fullflag {
     position: absolute;

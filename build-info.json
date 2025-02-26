@@ -1,6 +1,6 @@
 {
-  "timestamp": "2025-02-20T16:45:22Z",
-  "commitHash": "c42542b86d20ab6d56b1d48690666e5c09aa9adf",
-  "commitMessage": "Event videos implemented & tested. Profile event videos wired in.",
+  "timestamp": "2025-02-26T09:35:30Z",
+  "commitHash": "bb8f79d493bff741382c74e38ec6a5ca823a4470",
+  "commitMessage": "\"Incoming radio\" modal implemented. Country-specific dialogue implemeted. Profile events completed (new die roll).",
   "branch": "master"
 }

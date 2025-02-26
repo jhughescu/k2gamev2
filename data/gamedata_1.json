@@ -312,11 +312,13 @@
     "constants": {
         "oxygen": {
             "weight": 5,
-            "unitTime": 10
+            "unitTime": 10,
+            "unitTime": 3
         },
         "sustenance": {
             "weight": 2.5,
-            "unitTime": 20
+            "unitTime": 20,
+            "unitTime": 4
         },
         "rope": {
             "weight": 5,
@@ -330,7 +332,7 @@
         }
     },
     "route": {"ratio": [50, 50]},
-    "activeEventRange": [0, 15],
+    "activeEventRange": [120, 13],
     "events": [
         {
             "time": 0.5,

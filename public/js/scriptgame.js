@@ -22,6 +22,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // autoResource meane profiles will be set automatically on the resources screen
     const autoResource = true;
+//    const autoResource = false;
 //    const cheating = true;
     const cheating = false;
 
@@ -40,6 +41,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const sessionPlayPause = $('#b_playpause');
     const sessionReset = $('#b_reset');
     const toggleDebug = $('#b_toggle');
+    const clearConsole = $('#b_clear');
     let timeDisplay = $('#time_display');
 
     // programmable event methods
@@ -183,7 +185,7 @@ document.addEventListener('DOMContentLoaded', function () {
         o.page = h;
 //        console.log(`h: ${h}`);
         return o;
-    }
+    };
     const showOverlay = (msg, ob) => {
         const o = $('#overlay');
         const m = o.find('#msg');
@@ -291,12 +293,142 @@ document.addEventListener('DOMContentLoaded', function () {
         });
         prof.setDelay(gameData.constants.resupplyDelay);
     };
+    const buildResourceObject = (ob) => {
+        // create a resource object for rendering the resource depletion modal
+        const c = gameData.constants;
+        const order = ['Oxygen', 'Sustenance', 'Rope'];
+        const map = order.reduce((obj, item) => {
+            obj[item[0].toLowerCase()] = item.toLowerCase();
+            return obj;
+        }, {});
+        const resup = order.reduce((obj, item) => {
+            obj[item.toLowerCase()] = 0;
+            return obj;
+        }, {});
+        let load = 0;
+        let resOb = {
+            resupplying: false,
+            resupplies: ''
+        };
+        const resources = [];
+//        console.log(`buildResourceObject ${ob.name}:`, ob);
+//        console.log(map);
+//        console.log(resup);
+        if (ob.resupplies) {
+            if (ob.resupplies.length > 0) {
+//                console.log(`resupply mission in progess for ${ob.name}:`);
+//                console.log(ob.resupplies);
+                resOb.resupplying = true;
+                resOb.resupplies = ob.resupplies;
+                const p = Climber.getClimbers()[ob.profile];
+                const ra = Object.fromEntries(p.getResupplyDetail());
+                console.log(ra);
+            }
+        }
+        order.forEach((r, i) => {
+            const lc = r.toLowerCase();
+            const rs = resOb.resupplying ? Object.fromEntries(Climber.getClimbers()[ob.profile].getResupplyDetail())[lc.substr(0, 1)] : 0;
+//            console.log(`${lc} pending resup = ${rs}`);
+            const o = {
+                type: lc,
+//                level: Math.ceil(ob[lc]) + (resOb.resupplying ? resOb.resupplies[lc.substr(0, 1)] : 0),
+                level: Math.ceil(ob[lc]) + rs,
+                weight: c[lc].weight,
+                weightTotal: c[lc].weight * Math.ceil(ob[lc]),
+                icon: `Icons_${r}`,
+                canMinus: Math.ceil(ob[lc]) > 0
+            };
+            resOb[lc] = ob[lc];
+            load += o.weightTotal;
+            resources.push(o);
+        });
+        resources.forEach(r => {
+            r.canPlus = load + r.weight < ob.capacity;
+        });
+        resOb.resources = resources;
+        resOb.capacity = ob.capacity;
+        resOb.load = load;
+        resOb.profile = ob.profile;
+//        console.log(window.clone(resOb));
+        return resOb;
+    };
+    const renderResourceForm = (resOb, cb) => {
+//        console.log(`renderResourceForm`, resOb);
+        window.renderTemplate('resourceForm', 'modal/event/resource_form', resOb, () => {
+            const resources = resOb.resources;
+            const reset = $('#resourceForm').find('.resourceReset');
+            const profile = window.justNumber(reset.attr('id'));
+            const theCB = cb ? cb : () => {};
+            reset.off('click').on('click', () => {
+                renderResourceForm(buildResourceObject(Climber.getClimbers()[profile]));
+            });
+            resources.forEach((r, i) => {
+                const f = $(`#resupply_${r.type}`);
+                const bPlus = $(f.find('.resPlus')[0]);
+                const bMinus = $(f.find('.resMinus')[0]);
+                const l = $(f.find('.level')[0]);
+
+                l.html(r.level);
+                bPlus.off('click').on('click', function () {
+                    if (!$(this).hasClass('disabled')) {
+                        r.level += 1;
+                        resOb[r.type] += 1;
+                        renderResourceForm(buildResourceObject(resOb), theCB);
+                    }
+                });
+                bMinus.off('click').on('click', function () {
+                    if (!$(this).hasClass('disabled')) {
+                        r.level -= 1;
+                        resOb[r.type] -= 1;
+                        renderResourceForm(buildResourceObject(resOb), theCB);
+                    }
+                });
+
+            });
+            if (cb) {
+//                console.log('returning', resOb.resources);
+                cb(window.clone(resOb));
+            }
+        });
+    };
     const resourcesGoneSetup = (m, ev) => {
         const d = $('.resupply');
         const b = $('.k2-modal-btn');
         const out = {};
         const prof = session[`profile${ev.profile}`];
-        ///*
+        renderResourceForm(ev.resourceObject, (rOb) => {
+            console.log('form rendered', rOb);
+            if (!rOb) {
+                console.warn('no return object provided');
+                return;
+            }
+            setupModalClose($('#overlay_modal'), true, {display: 'OK', ev: ev, methodPre: () => {
+//                console.log(ev.resourceObject.resources);
+//                console.log(rOb);
+                rOb.resources.forEach(r => {
+                    console.log(r)
+                    prof.addResupply(r.type.substr(0, 1), r.level);
+                });
+//                debugger;
+                prof.setDelay(gameData.constants.resupplyDelay);
+//                debugger;
+            }});
+
+            /*
+            b.off('click').on('click', () => {
+                d.find('input[type="checkbox"]').each((i, c) => {
+                    if ($(c).prop('checked')) {
+                        prof.addResupply($(c).attr('id'));
+                    }
+                });
+                prof.setDelay(gameData.constants.resupplyDelay);
+                closeModal({noevent: true});
+            });
+            */
+
+        });
+
+        /*
         b.off('click').on('click', () => {
             d.find('input[type="checkbox"]').each((i, c) => {
                 if ($(c).prop('checked')) {
@@ -304,10 +436,36 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             });
             prof.setDelay(gameData.constants.resupplyDelay);
-
             closeModal({noevent: true});
         });
-        //*/
+        d.find('input[type="checkbox"]').on('change', function () {
+            let any = false;
+            d.find('input[type="checkbox"]').each((i, c) => {
+                if ($(c).prop('checked')) {
+                    any = true;
+                }
+            });
+            setupModalClose(m, any, {methodPre: getResourcesToReplenish, ev: ev});
+            enableButton(b, any);
+        });
+        */
+    };
+    const resourcesGoneSetupV1 = (m, ev) => {
+        const d = $('.resupply');
+        const b = $('.k2-modal-btn');
+        const out = {};
+        const prof = session[`profile${ev.profile}`];
+
+        window.renderTemplate('resourceForm', 'modal/event/resource_form', ev, () => {});
+        b.off('click').on('click', () => {
+            d.find('input[type="checkbox"]').each((i, c) => {
+                if ($(c).prop('checked')) {
+                    prof.addResupply($(c).attr('id'));
+                }
+            });
+            prof.setDelay(gameData.constants.resupplyDelay);
+            closeModal({noevent: true});
+        });
         d.find('input[type="checkbox"]').on('change', function () {
             let any = false;
             d.find('input[type="checkbox"]').each((i, c) => {
@@ -496,7 +654,7 @@ document.addEventListener('DOMContentLoaded', function () {
             // to array, sort (*3), back to object:
             ev.supportTeam = Object.fromEntries(Object.entries(ev.supportTeam).sort(() => Math.random() - 0.5).sort(() => Math.random() - 0.5).sort(() => Math.random() - 0.5));
         }
-        console.log(`showModalEvent`, window.clone(ev));
+//        console.log(`showModalEvent`, window.clone(ev));
 //        console.log(`showModalEvent`, window.clone(ev).supportTeam);
         const m = $('#overlay_modal');
         m.show();
@@ -1759,6 +1917,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 if (autoResource) {
                     const c = gameData.constants;
+//                    console.log(c);
                     const ch =[0, 0, 3];
                     resOptionselect(0, ch[0]);
                     resOptionselect(1, ch[1]);
@@ -1771,7 +1930,23 @@ document.addEventListener('DOMContentLoaded', function () {
                         if (over < 0) {
                             const redOx = Math.ceil(Math.abs(over) / c.oxygen.weight);
                             const newOx = p.oxygen - redOx;
-                            updateProfile(i, 'oxygen', newOx);
+//                            console.log(`total: ${total}, over: ${over}, redOx: ${redOx}, newOx: ${newOx}`);
+                            let tot = 0;
+                            const res = [{r: 'oxygen', c: 0}, {r: 'sustenance', c: 0}, {r: 'rope', c: 0}];
+                            ///*
+                            while (tot < p.options[ch[i]].capacity) {
+                                res.forEach(r => {
+                                    tot += c[r.r].weight;
+                                    r.c++;
+                                });
+                            }
+                            res.forEach(r => {
+                                r.c--;
+                                updateProfile(i, r.r, r.c);
+                            });
+//                            console.log(p.options[ch[i]].capacity, tot, res);
+                            //*/
+//                            updateProfile(i, 'oxygen', newOx);
                             updateResourceView(i);
                         }
                         const uo = {o: p.oxygen, s: p.sustenance, r: p.rope};
@@ -1914,14 +2089,26 @@ document.addEventListener('DOMContentLoaded', function () {
         console.log('#######################');
         session.events.forEach(e => console.log(e));
     };
+
+
+
+
     const climberDepletionEvent = (ob) => {
+        // Usually called by the Climber class (publically exposed method)
         const rem = Math.ceil(ob[ob.resource]);
-//        console.log(`depletion of ${ob.resource} for ${ob.name}, remaining: ${rem}`);
+        console.log(`depletion of ${ob.resource} for ${ob.name}, remaining: ${rem}`);
+
+        if (rem === 0) {
+
+        }
         devShowProfiles();
         if (rem === 0) {
+            const resOb = buildResourceObject(ob);
+            ob.resourceObject = resOb;
             gTimer.pauseTimer();
             const o = Object.assign(ob, {event: 'resource_gone', method: 'resourcesGoneSetup'});
             showModalEvent(o);
+//            debugger;
         }
     };
     /*
@@ -1945,10 +2132,12 @@ document.addEventListener('DOMContentLoaded', function () {
             e.quantumOxygen = Math.ceil(e.oxygen);
             e.quantumSustenance = Math.ceil(e.sustenance);
             e.quantumRope = Math.ceil(e.rope);
-            e.delayRemainingRounded = window.roundNumber(e.delayRemaining, 3)
+            e.delayRemainingRounded = window.roundNumber(e.delayRemaining, 3);
+            e.nameTruncated = e.name.substr(0, 10) + (e.name.length > 10 ? '..' : '');
         });
         return p;
     };
+    // dev stuff
     const devShowProfiles = () => {
         const p = prepProfilesForDisplay();
         const pd = $('.map-pointer-label');
@@ -2009,6 +2198,10 @@ document.addEventListener('DOMContentLoaded', function () {
             p.show();
         }
     };
+    const clearBrowserConsole = () => {
+        console.clear();
+    };
+    // end dev stuff
     const renderMap = () => {
 //        renderCinema();
         console.log('play video?', window.clone(gTimer).elapsedTime === 0, window.clone(gTimer));
@@ -2216,7 +2409,18 @@ document.addEventListener('DOMContentLoaded', function () {
         } else {
             setTimeout(evTest, 100);
         }
-    }
+    };
+    const depTest = (n) => {
+        if (window.location.hash.includes('map')) {
+            const cn = n || 1;
+            const cl = Climber.getClimbers()[cn];
+            cl.setOxygen(0);
+            const c = Object.assign(cl, {resource: 'oxygen'});
+            climberDepletionEvent(c);
+        }
+    };
+    window.depTest = depTest;
+//    setTimeout(depTest, 2000);
 //    evTest();
     window.updateVersion = () => {
         return versionControl.updateVersion();
@@ -2318,6 +2522,7 @@ document.addEventListener('DOMContentLoaded', function () {
     sessionReset.on('click', resetSession);
     sessionPlayPause.on('click', playPauseSession);
     toggleDebug.on('click', toggleDebugPanels);
+    clearConsole.on('click', clearBrowserConsole);
     const onUnload = () => {
         snapshot();
         theState.storeTime(gTimer.elapsedTime);

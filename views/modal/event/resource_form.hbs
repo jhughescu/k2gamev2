@@ -1,0 +1,16 @@
+{{#each resources}}
+    <div class="resupply" id='resupply_{{type}}'>
+        <div>
+          <div>
+              <img src="assets/icons/{{icon}}.png"/><br/>
+          </div>
+          <div><p>({{weight}}kg each)</p></div>
+          <div><p class='resMinus {{#if canMinus}}{{else}}disabled{{/if}}'>-</p></div>
+          <div><p class='level'>{{level}}</p></div>
+          <div><p class='resPlus {{#if canPlus}}{{else}}disabled{{/if}}'>+</p></div>
+        </div>
+    </div>
+{{/each}}
+<p class='resourceReset' id='resourceReset{{profile}}'>reset all</p>
+<p id='resourceSummary'>{{load}}kg of total {{capacity}}kg capacity</p>
+{{#if resupplying}}<p>(Note: these figures include the current resupply run, which has not yet completed</p>{{/if}}
