@@ -733,7 +733,7 @@ class Climber {
         if (Math.ceil(this.oxygen) !== Math.ceil(currOxygen) || Math.ceil(this.oxygen) === 0 && this.delayRemaining === 0) {
             // cond.1: ox change, cond.2 no delay, ox to zero
             if (Math.ceil(this.oxygen) >= 0) {
-                window.climberDepletionEvent(Object.assign(this, {resource: 'oxygen'}));
+                window.climberDepletionEvent(Object.assign(window.clone(this), {resource: 'oxygen'}));
                 this.log(`oxygen reduced to ${Math.ceil(this.oxygen)}`, true);
             }
         }
@@ -747,7 +747,7 @@ class Climber {
         if (Math.ceil(this.sustenance) !== Math.ceil(currSustenance) || Math.ceil(this.sustenance) === 0 && this.delayRemaining === 0) {
             // cond.1: sus change, cond.2 no delay, sus to zero
             if (Math.ceil(this.sustenance) >= 0) {
-                window.climberDepletionEvent(Object.assign(this, {resource: 'sustenance'}));
+                window.climberDepletionEvent(Object.assign(window.clone(this), {resource: 'sustenance'}));
                 this.log(`sustenance reduced to ${Math.ceil(this.sustenance)}`, true);
             }
         }

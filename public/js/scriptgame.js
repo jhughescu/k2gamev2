@@ -308,7 +308,8 @@ document.addEventListener('DOMContentLoaded', function () {
         let load = 0;
         let resOb = {
             resupplying: false,
-            resupplies: ''
+            resupplies: '',
+            adjusted: ob.adjusted || false
         };
         const resources = [];
 //        console.log(`buildResourceObject ${ob.name}:`, ob);
@@ -343,7 +344,7 @@ document.addEventListener('DOMContentLoaded', function () {
             resources.push(o);
         });
         resources.forEach(r => {
-            r.canPlus = load + r.weight < ob.capacity;
+            r.canPlus = load + r.weight <= ob.capacity;
         });
         resOb.resources = resources;
         resOb.capacity = ob.capacity;
@@ -353,34 +354,46 @@ document.addEventListener('DOMContentLoaded', function () {
         return resOb;
     };
     const renderResourceForm = (resOb, cb) => {
-//        console.log(`renderResourceForm`, resOb);
+        console.log(`renderResourceForm`, resOb);
+//        console.log(`renderResourceForm, adjusted? ${resOb.adjusted}`);
         window.renderTemplate('resourceForm', 'modal/event/resource_form', resOb, () => {
             const resources = resOb.resources;
-            const reset = $('#resourceForm').find('.resourceReset');
+            const form = $('#resourceForm');
+            const reset = form.find('.resourceReset');
             const profile = window.justNumber(reset.attr('id'));
             const theCB = cb ? cb : () => {};
+            const climberOrig = window.clone(Climber.getClimbers()[profile]);
+            form.data('resupplyData', resOb);
+            console.log(form);
             reset.off('click').on('click', () => {
-                renderResourceForm(buildResourceObject(Climber.getClimbers()[profile]));
+                renderResourceForm(buildResourceObject(climberOrig));
             });
             resources.forEach((r, i) => {
                 const f = $(`#resupply_${r.type}`);
                 const bPlus = $(f.find('.resPlus')[0]);
                 const bMinus = $(f.find('.resMinus')[0]);
                 const l = $(f.find('.level')[0]);
-
                 l.html(r.level);
                 bPlus.off('click').on('click', function () {
                     if (!$(this).hasClass('disabled')) {
                         r.level += 1;
                         resOb[r.type] += 1;
-                        renderResourceForm(buildResourceObject(resOb), theCB);
+                        const adjusted = resOb[r.type] !== climberOrig[r.type];
+//                        console.log(`have we adjusted? ${adjusted}`);
+                        const passing = Object.assign(resOb, {adjusted: adjusted});
+//                        console.log(passing);
+                        renderResourceForm(buildResourceObject(passing, theCB));
                     }
                 });
                 bMinus.off('click').on('click', function () {
                     if (!$(this).hasClass('disabled')) {
                         r.level -= 1;
                         resOb[r.type] -= 1;
-                        renderResourceForm(buildResourceObject(resOb), theCB);
+                        const adjusted = resOb[r.type] !== climberOrig[r.type];
+//                        console.log(`have we adjusted? ${adjusted}`);
+                        const passing = Object.assign(resOb, {adjusted: adjusted});
+//                        console.log(passing);
+                        renderResourceForm(buildResourceObject(passing, theCB));
                     }
                 });
 
@@ -392,63 +405,44 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     };
     const resourcesGoneSetup = (m, ev) => {
+        console.log(`resourcesGoneSetup`, ev);
         const d = $('.resupply');
         const b = $('.k2-modal-btn');
         const out = {};
         const prof = session[`profile${ev.profile}`];
         renderResourceForm(ev.resourceObject, (rOb) => {
-            console.log('form rendered', rOb);
+//            console.log(`resourcesGoneSetup, adjusted? ${rOb.adjusted}`);
+//            console.log('form rendered', rOb);
+            const form = $('#resourceForm');
+//            console.log(form);
+//            console.log(form.data().resupplyData);
+
             if (!rOb) {
                 console.warn('no return object provided');
                 return;
             }
-            setupModalClose($('#overlay_modal'), true, {display: 'OK', ev: ev, methodPre: () => {
-//                console.log(ev.resourceObject.resources);
+            setupModalClose($('#overlay_modal'), true, {canClose: false, display: 'OK', ev: ev, methodPre: () => {
+                const ressuplyData = form.data().resupplyData;
+                let rtn = false;
+//                console.log(ev);
+//                console.log(ressuplyData);
 //                console.log(rOb);
-                rOb.resources.forEach(r => {
-                    console.log(r)
-                    prof.addResupply(r.type.substr(0, 1), r.level);
-                });
 //                debugger;
-                prof.setDelay(gameData.constants.resupplyDelay);
-//                debugger;
+                if (ressuplyData.adjusted) {
+                    ressuplyData.resources.forEach(r => {
+                        prof.addResupply(r.type.substr(0, 1), r.level);
+                    });
+                    prof.setDelay(gameData.constants.resupplyDelay);
+                    rtn = true;
+                } else {
+                    const ok = confirm('are you sure you want to resupply nothing at this time?');
+                    rtn = ok;
+                }
+
+                return rtn;
             }});
 
-            /*
-            b.off('click').on('click', () => {
-                d.find('input[type="checkbox"]').each((i, c) => {
-                    if ($(c).prop('checked')) {
-                        prof.addResupply($(c).attr('id'));
-                    }
-                });
-                prof.setDelay(gameData.constants.resupplyDelay);
-                closeModal({noevent: true});
-            });
-            */
-
         });
-
-        /*
-        b.off('click').on('click', () => {
-            d.find('input[type="checkbox"]').each((i, c) => {
-                if ($(c).prop('checked')) {
-                    prof.addResupply($(c).attr('id'));
-                }
-            });
-            prof.setDelay(gameData.constants.resupplyDelay);
-            closeModal({noevent: true});
-        });
-        d.find('input[type="checkbox"]').on('change', function () {
-            let any = false;
-            d.find('input[type="checkbox"]').each((i, c) => {
-                if ($(c).prop('checked')) {
-                    any = true;
-                }
-            });
-            setupModalClose(m, any, {methodPre: getResourcesToReplenish, ev: ev});
-            enableButton(b, any);
-        });
-        */
     };
     const resourcesGoneSetupV1 = (m, ev) => {
         const d = $('.resupply');
@@ -621,6 +615,9 @@ document.addEventListener('DOMContentLoaded', function () {
     const setupModalClose = (modal, boo, ob) => {
         ob = ob === undefined ? {} : ob;
         const display = ob.hasOwnProperty('display') ? ob.display : 'Close';
+        let canClose = ob.hasOwnProperty('canClose') ? ob.canClose : true;
+//        console.log(`setupModalClose, canClose? ${canClose}`);
+//        console.log(ob);
         setupModalFooter(display, () => {
             const closer = modal.find('.k2-modal-btn');
 //            console.log(`setupModalClose`, boo, closer);
@@ -634,10 +631,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (ob) {
                     if (ob.hasOwnProperty('methodPre')) {
                         const ev = ob.ev || {};
-                        ob.methodPre(ob);
+                        canClose = ob.methodPre(ob);
+                        console.log(`methodPre returns canClose: ${canClose}`)
+//                        debugger;
                     }
                 }
-                closeModal();
+                if (canClose) {
+                    closeModal();
+                }
                 if (ob) {
                     if (ob.hasOwnProperty('methodPost')) {
                         const ev = ob.ev || {};
@@ -873,16 +874,17 @@ document.addEventListener('DOMContentLoaded', function () {
                 eventStack = new EventStack(initO);
                 summariseSession();
                 if (!versionControl.isCurrentVersion(session.uniqueID)) {
-
-                    versionControl.updateVersion(session.uniqueID);
-                    console.warn('version control limited in dev; version number will update automatically')
-                    return;
-
-                    const rs = confirm(`There is a newer version of the software available, would you like to start a new session? You may experience unexpected results if you continue your current session.`);
-                    if (rs) {
+//                    console.log(window.location);
+                    if (window.location.host.includes('localhost')) {
                         versionControl.updateVersion(session.uniqueID);
-                        startNew();
-                        return;
+                        console.warn('version control limited in dev; version number will update automatically');
+                    } else {
+                        const rs = confirm(`There is a newer version of the software available, would you like to start a new session? You may experience unexpected results if you continue your current session.`);
+                        if (rs) {
+                            versionControl.updateVersion(session.uniqueID);
+                            startNew();
+                            return;
+                        }
                     }
                 }
                 initRender();
@@ -954,7 +956,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 const i = setInterval(() => {
                     if (gameData !== null) {
                         clearInterval(i);
-                        console.log('creating three blank team members');
+//                        console.log('creating three blank team members');
 //                        debugger;
                         setTeamMember(0, -1);
                         setTeamMember(1, -1);
@@ -2089,15 +2091,11 @@ document.addEventListener('DOMContentLoaded', function () {
         console.log('#######################');
         session.events.forEach(e => console.log(e));
     };
-
-
-
-
     const climberDepletionEvent = (ob) => {
         // Usually called by the Climber class (publically exposed method)
         const rem = Math.ceil(ob[ob.resource]);
         console.log(`depletion of ${ob.resource} for ${ob.name}, remaining: ${rem}`);
-
+        console.log(ob);
         if (rem === 0) {
 
         }
@@ -2107,6 +2105,7 @@ document.addEventListener('DOMContentLoaded', function () {
             ob.resourceObject = resOb;
             gTimer.pauseTimer();
             const o = Object.assign(ob, {event: 'resource_gone', method: 'resourcesGoneSetup'});
+            console.log('climberDep', o);
             showModalEvent(o);
 //            debugger;
         }
@@ -2204,7 +2203,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // end dev stuff
     const renderMap = () => {
 //        renderCinema();
-        console.log('play video?', window.clone(gTimer).elapsedTime === 0, window.clone(gTimer));
+//        console.log('play video?', window.clone(gTimer).elapsedTime === 0, window.clone(gTimer));
         if (window.clone(gTimer).elapsedTime === 0) {
             renderCinema();
         }

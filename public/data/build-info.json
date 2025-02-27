@@ -1,6 +1,6 @@
 {
-  "timestamp": "2025-02-26T09:35:30Z",
-  "commitHash": "bb8f79d493bff741382c74e38ec6a5ca823a4470",
-  "commitMessage": "\"Incoming radio\" modal implemented. Country-specific dialogue implemeted. Profile events completed (new die roll).",
+  "timestamp": "2025-02-27T13:32:48Z",
+  "commitHash": "0428e9f0503e54c2576b27e6a2dfdf445d4a7166",
+  "commitMessage": "Delay pie charts larger and now indicate TOTAL delay remaining (i.e. delays can accrue)",
   "branch": "master"
 }

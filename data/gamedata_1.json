@@ -312,13 +312,11 @@
     "constants": {
         "oxygen": {
             "weight": 5,
-            "unitTime": 10,
-            "unitTime": 3
+            "unitTime": 10
         },
         "sustenance": {
             "weight": 2.5,
-            "unitTime": 20,
-            "unitTime": 4
+            "unitTime": 20
         },
         "rope": {
             "weight": 5,
