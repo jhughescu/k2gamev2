@@ -330,17 +330,19 @@ document.addEventListener('DOMContentLoaded', function () {
             const lc = r.toLowerCase();
             const rs = resOb.resupplying ? Object.fromEntries(Climber.getClimbers()[ob.profile].getResupplyDetail())[lc.substr(0, 1)] : 0;
 //            console.log(`${lc} pending resup = ${rs}`);
+            const adjustedLevel = Math.ceil(ob[lc]) + rs;
             const o = {
                 type: lc,
 //                level: Math.ceil(ob[lc]) + (resOb.resupplying ? resOb.resupplies[lc.substr(0, 1)] : 0),
-                level: Math.ceil(ob[lc]) + rs,
+                level: adjustedLevel,
                 weight: c[lc].weight,
-                weightTotal: c[lc].weight * Math.ceil(ob[lc]),
+                weightTotal: c[lc].weight * adjustedLevel,
                 icon: `Icons_${r}`,
                 canMinus: Math.ceil(ob[lc]) > 0
             };
             resOb[lc] = ob[lc];
             load += o.weightTotal;
+            console.log(`add ${c[lc].weight} x ${Math.ceil(ob[lc])} to total weight: ${o.weightTotal}`);
             resources.push(o);
         });
         resources.forEach(r => {
@@ -350,7 +352,7 @@ document.addEventListener('DOMContentLoaded', function () {
         resOb.capacity = ob.capacity;
         resOb.load = load;
         resOb.profile = ob.profile;
-//        console.log(window.clone(resOb));
+        console.log('resourceObject', window.clone(resOb));
         return resOb;
     };
     const renderResourceForm = (resOb, cb) => {

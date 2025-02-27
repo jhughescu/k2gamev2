@@ -122,8 +122,8 @@ class Climber {
             console.warn(`no 'o' value supplied, updates will fail`);
             return;
         }
-//        const active = Climber.getClimbers().filter(c => !c.finished);/*/
-        const active = Climber.getClimbers().filter(c => c.profile === 0);
+        const active = Climber.getClimbers().filter(c => !c.finished);
+//        const active = Climber.getClimbers().filter(c => c.profile === 0);
         active.forEach(c => {
             c.updateViewFromTime(o);
         });
