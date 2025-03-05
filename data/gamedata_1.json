@@ -331,7 +331,7 @@
     },
     "route": {"ratio": [50, 50]},
     "activeEventRange": [0, 15],
-    "activeEventRange": [-10, -10],
+    "activeEventRange": [0, 18],
     "events": [
         {
             "time": 0.5,
