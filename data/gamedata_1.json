@@ -330,7 +330,8 @@
         }
     },
     "route": {"ratio": [50, 50]},
-    "activeEventRange": [0, 18],
+    "activeEventRange": [0, 15],
+    "activeEventRange": [-10, -10],
     "events": [
         {
             "time": 0.5,
@@ -397,6 +398,7 @@
             "time": 15,
             "ref": "SP2",
             "event": "icefall1",
+            "active": false,
             "video": "57238436-3bc0-426a-84b0-b20200984062",
             "video": "57238436-3bc0-426a-84b0-b20200984062",
             "type": "section",
@@ -442,6 +444,7 @@
             "time": 25,
             "ref": "SP3",
             "event": "icefall2",
+            "active": false,
             "video": "2507cf51-4c29-4cfd-91c2-b2020098582e",
             "profiles": [1],
             "stage": 2,

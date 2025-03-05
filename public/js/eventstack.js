@@ -75,7 +75,7 @@ class EventStack {
         const r = this.gameData.activeEventRange;
         if (this.allEvents) {
             this.allEvents.forEach((e, i) => {
-                e.active = i >= r[0] && i <= r[1];
+                e.active = e.hasOwnProperty('active') ? e.active : (i >= r[0] && i <= r[1]);
                 e.next = false;
                 e.current = false;
                 e.complete = false;

@@ -349,6 +349,7 @@ class Climber {
         this.setProperty('type', n, cb);
         this.options = Object.values(this.gameData.profiles[`profile_${this.profile}`]);
         const op = this.options[n];
+        console.log('climber setType', n, op);
         this.t1 = op.t1;
         this.t2 = op.t2;
         this.tTotal = (this.t1 * 2) + (this.t2 * 2);
@@ -383,9 +384,33 @@ class Climber {
         this.adjustProperty('sustenance', n, cb);
     }
     addResupply(s, v) {
+        if (s.length > 1) {
+            // if a full string has been passed in, convert to an initial
+            s = sm[s]
+        }
+        const sm = this.getSummaryMap();
+        const str = `${s}${v}`;
+//        console.log(str);
+
+        if (this.resupplies === '') {
+            this.resupplies = str;
+        } else {
+            const ro = [...this.resupplies.matchAll(/([a-z])(\d)/g)].reduce((obj, [, key, value]) => (obj[key] = +value, obj), {});
+//            console.log(ro);
+            ro.hasOwnProperty(s) ? ro[s] += v : ro[s] = v;
+            this.resupplies = Object.entries(ro)
+                .map(([key, value]) => key + value)
+                .join("");
+            }
+        if (this.resupplies.length === 6) {
+//            console.log(`${this.name} resupplies = ${this.resupplies}`);
+        }
+    }
+    addResupplyV1(s, v) {
         // add an item to the resupplies string if it doesn't already contain it (use initials only)
         const sm = this.getSummaryMap();
         const str = `${s}${v}`;
+        console.log(str);
         if (s.length > 1) {
             // if a full string has been passed in, convert to an initial
             s = sm[s]
@@ -397,7 +422,9 @@ class Climber {
                 this.resupplies += str;
             }
         }
-        console.log(`${this.name} resupplies = ${this.resupplies}`);
+        if (this.resupplies.length ) {
+            console.log(`${this.name} resupplies = ${this.resupplies}`);
+        }
     }
     addResupplyV1(s) {
         // add an item to the resupplies string if it doesn't already contain it (use initials only)
@@ -422,7 +449,7 @@ class Climber {
         this.setProperty('currentSpeed', n);
     }
     setDelay(n) {
-        console.log(`setDelay ${n}`);
+//        console.log(`setDelay ${n}`);
         // a game event has sent a delay to this climber. Prevent updates until the delay (in minutes) has expired
         if (this.currentTimeObject) {
             if (this.currentTimeObject.gametime) {
@@ -435,7 +462,7 @@ class Climber {
                     this.delayExpiry += n;
                     this.delayCurrentTotal += n;
                 }
-                console.log(`time now: ${this.currentTimeObject.gametime.m}, delay expires at ${this.delayExpiry}`);
+//                console.log(`time now: ${this.currentTimeObject.gametime.m}, delay expires at ${this.delayExpiry}`);
                 this.showPie(true);
             } else {
                 console.warn('cannot set delay; currentTimeObject not yet defined');
@@ -897,17 +924,19 @@ class Climber {
         this.currentTimeObject = cs;
         this.setDelay(0);
         this.delayExpiry = 0;
+        this.onDelayExpiry();
         this.resupplies = '';
         this.allDelays = '';
         this.finished = false;
         clearInterval(this.bounceInt);
         this.calculateClimbRate();
         this.resetAllInitial();
-//        console.log('i bet this is the culprit');
+//        console.log(`${this.name} reset`);
 //        console.log(cs);
 //        console.log(this);
         this.updatePosition(cs);
         this.showPie(false);
+        this.storeSummary();
     }
     zero(cs) {
 //        console.log('zero');

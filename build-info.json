@@ -1,6 +1,6 @@
 {
-  "timestamp": "2025-02-27T15:55:10Z",
-  "commitHash": "ea358d62dddc2d4b659c2e3de64a88d842f4c54f",
-  "commitMessage": "Repeat resupply implemented. Limited test deployment for testing (only one climber, events paused). Version control active in deployment.",
+  "timestamp": "2025-03-05T14:01:07Z",
+  "commitHash": "8a2c464a6997816c689ff3c10a61601c21fa47e5",
+  "commitMessage": "Secondary resupply fixed - total calculations now include pending resupply",
   "branch": "master"
 }

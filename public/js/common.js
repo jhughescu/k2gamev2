@@ -294,6 +294,21 @@ document.addEventListener('DOMContentLoaded', function () {
             console.warn('no callback provided for removeTemplate method');
         }
     };
+    const renderToClassOrID = (targ, targType, ob, compiledTemplate) => {
+        if (targType === 'id') {
+            if (document.getElementById(targ)) {
+                document.getElementById(targ).innerHTML = compiledTemplate(ob);
+            } else {
+                console.warn(`target HTML not found: ${targ}`);
+            }
+        } else {
+            if (document.getElementsByClassName(targ.replace('.', ''))) {
+                document.getElementsByClassName(targ.replace('.', ''))[0].innerHTML = compiledTemplate(ob);
+            } else {
+                console.warn(`target HTML not found: ${targ}`);
+            }
+        }
+    };
     const renderTemplate = (targ, temp, ob, cb) => {
         if (temp !== 'blank') {
 //            console.log(`renderTemplate`, targ, temp);
@@ -307,25 +322,31 @@ document.addEventListener('DOMContentLoaded', function () {
         if (targ.indexOf('#', 0) === 0) {
             targ = targ.replace('#', '');
         }
+        const targType = targ.indexOf('.', 0) === 0 ? 'class' : 'id';
+        const theTarg = targType === 'class' ? $($(`${targ}`)[0]) : $(`#${targ}`);
+//        console.log(targ, targType, theTarg);
+        if (targType === 'class' && $(`${targ}`).length > 1) {
+            console.warn('rendering template to a class with more than one member; may cause unexpected results');
+        }
 //        console.log(`targ: ${targ}`);
-        $(`#${targ}`).css({opacity: 0});
+        theTarg.css({opacity: 0});
         if (templateStore.hasOwnProperty(temp)) {
-//            console.log('new temp');
             // if this template has already been requested we can just serve it from the store
             const compiledTemplate = Handlebars.compile(templateStore[temp]);
+            renderToClassOrID(targ, targType, ob, compiledTemplate);
+            /*
             if (document.getElementById(targ)) {
                 document.getElementById(targ).innerHTML = compiledTemplate(ob);
-//                console.log(compiledTemplate(ob))
             } else {
-//                console.warn(`target HTML not found: ${targ}`);
+                console.warn(`target HTML not found: ${targ}`);
             }
+            */
             if (cb) {
                 cb();
             }
-            $(`#${targ}`).css({opacity: 1});
+            theTarg.css({opacity: 1});
         } else {
             // If this template is being requested for the first time we will have to fetch it from the server
-//            console.log('reload temp')
             fetch(`/getTemplate?template=${temp}`, {
                     method: 'POST',
                     headers: {
@@ -335,21 +356,30 @@ document.addEventListener('DOMContentLoaded', function () {
                 })
                 .then(response => response.text())
                 .then(uncompiledTemplate => {
-//                    console.log(';;;;;')
                     const template = uncompiledTemplate;
                     templateStore[temp] = uncompiledTemplate;
                     const compiledTemplate = Handlebars.compile(template);
-                    if (document.getElementById(targ)) {
-                        document.getElementById(targ).innerHTML = compiledTemplate(ob);
-//                        console.log(compiledTemplate(ob))
+                    renderToClassOrID(targ, targType, ob, compiledTemplate);
+                    /*
+                    if (targType === 'id') {
+                        if (document.getElementById(targ)) {
+                            document.getElementById(targ).innerHTML = compiledTemplate(ob);
+                        } else {
+                            console.warn(`target HTML not found: ${targ}`);
+                        }
                     } else {
-                        console.warn(`target HTML not found: ${targ}`);
+                        if (document.getElementsByClassName(targ.replace('.', ''))) {
+                            document.getElementsByClassName(targ.replace('.', ''))[0].innerHTML = compiledTemplate(ob);
+                        } else {
+                            console.warn(`target HTML not found: ${targ}`);
+                        }
                     }
+                    */
                     if (cb) {
                         cb();
                     }
 
-                    $(`#${targ}`).animate({opacity: 1});
+                    theTarg.animate({opacity: 1});
                 })
                 .catch(error => {
                     console.error('Error fetching or rendering template:', error);
