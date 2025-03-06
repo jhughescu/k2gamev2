@@ -804,21 +804,20 @@ document.addEventListener('DOMContentLoaded', function () {
             const dr = $('.dieroll');
             let dint = null;
             bb.off('click').on('click', () => {
-//                $(`.choice_options`).show();
                 bb.hide();
                 if (cb) {
                     cb({state: 0});
                 }
-//                window.removeTemplate('modal_footer', () => console.log('over and out'))
-                let n = 0;
+                let d = 0;
                 const res = dieRoll();
                 clearInterval(dint);
                 dint = setInterval(() => {
-//                    console.log(n++%6 + 1);
-                    const r = n++%12 + 1;
-//                    console.log(r);
-                    dr.css('background-image', `url('../assets/dice/diejhroll${r}.svg')`);
-                    if (n > 7 && r === ((res * 2) - 1)) {
+                    let n = (d / 4) % 6 + 1;
+                    let fr = d%24 + 1;
+                    d++;
+                    $('.dieimg').hide();
+                    $(`#dieimg_${fr}`).show();
+                    if (d > 20 && n === res) {
                         clearInterval(dint);
                         if (cb) {
                             cb({state: 1, res: res});
@@ -826,10 +825,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 }, 100);
             })
-
         });
     };
-
     const storeLocal = (p, v) => {
         const id = `${getStoreID()}-${p}`;
 //        console.log(`storing`, id, v);
