@@ -1,6 +1,6 @@
 {
-  "timestamp": "2025-03-06T13:40:30Z",
-  "commitHash": "cc11ccfb6625c1cf4713b3fde57fccbdc541717f",
-  "commitMessage": "Added global stringToCamelCase method & applied it to the Climber filename property (fixes missing icon for three-word climber names)",
+  "timestamp": "2025-03-06T17:01:21Z",
+  "commitHash": "f26eb1a7b937ad679255ebea6d7a2303b5c93df2",
+  "commitMessage": "New die roll graphic, roll animation optimised.",
   "branch": "master"
 }

@@ -19,9 +19,9 @@
             "adjective": "Canadian",
             "active": true,
             "profiles": {
-                "p0": {"name": "Frederic Harris"},
-                "p1": {"name": "Gabela Bouchard"},
-                "p2": {"name": "Jacques Ouellet"}
+                "p0": {"name": "Frederic Harris", "gender": "m"},
+                "p1": {"name": "Gabela Bouchard", "gender": "f"},
+                "p2": {"name": "Jacques Ouellet", "gender": "m"}
             },
             "responses": {
                 "yes": [
@@ -42,9 +42,9 @@
             "adjective": "Czech",
             "active": false,
             "profiles": {
-                "p0": {"name": "Hana Dvorakova"},
-                "p1": {"name": "Jan Svoboda"},
-                "p2": {"name": "Petr Novak"}
+                "p0": {"name": "Hana Dvorakova", "gender": "f"},
+                "p1": {"name": "Jan Svoboda", "gender": "m"},
+                "p2": {"name": "Petr Novak", "gender": "m"}
             },
             "responses": {
                 "yes": [
@@ -65,9 +65,9 @@
             "adjective": "Finnish",
             "active": true,
             "profiles": {
-                "p0": {"name": "Luukas Aalto"},
-                "p1": {"name": "Juhani Karppinen"},
-                "p2": {"name": "Oona Takala"}
+                "p0": {"name": "Luukas Aalto", "gender": "m"},
+                "p1": {"name": "Juhani Karppinen", "gender": "m"},
+                "p2": {"name": "Oona Takala", "gender": "f"}
             },
             "responses": {
                 "yes": [
@@ -88,9 +88,9 @@
             "adjective": "French",
             "active": true,
             "profiles": {
-                "p0": {"name": "Sébastien Martin"},
-                "p1": {"name": "Adrien Romane"},
-                "p2": {"name": "Camille Duval"}
+                "p0": {"name": "Sébastien Martin", "gender": "m"},
+                "p1": {"name": "Adrien Romane", "gender": "m"},
+                "p2": {"name": "Camille Duval", "gender": "f"}
             },
             "responses": {
                 "yes": [
@@ -111,9 +111,9 @@
             "adjective": "German",
             "active": true,
             "profiles": {
-                "p0": {"name": "Heinz Mascher"},
-                "p1": {"name": "Irene Koller"},
-                "p2": {"name": "Peter Schmidt"}
+                "p0": {"name": "Heinz Mascher", "gender": "m"},
+                "p1": {"name": "Irene Koller", "gender": "f"},
+                "p2": {"name": "Peter Schmidt", "gender": "m"}
             },
             "responses": {
                 "yes": [
@@ -134,9 +134,9 @@
             "adjective": "Italian",
             "active": true,
             "profiles": {
-                "p0": {"name": "Andrea D’Angelo"},
-                "p1": {"name": "Celia Serra"},
-                "p2": {"name": "Tommaso Lombardi"}
+                "p0": {"name": "Andrea D’Angelo", "gender": "m"},
+                "p1": {"name": "Celia Serra", "gender": "f"},
+                "p2": {"name": "Tommaso Lombardi", "gender": "m"}
             },
             "responses": {
                 "yes": [
@@ -157,9 +157,9 @@
             "adjective": "Dutch",
             "active": true,
             "profiles": {
-                "p0": {"name": "Karel de Bakker"},
-                "p1": {"name": "Lotte Brouwer"},
-                "p2": {"name": "Ronald van Coevorden"}
+                "p0": {"name": "Karel de Bakker", "gender": "m"},
+                "p1": {"name": "Lotte Brouwer", "gender": "f"},
+                "p2": {"name": "Ronald van Coevorden", "gender": "m"}
             },
             "responses": {
                 "yes": [
@@ -180,9 +180,9 @@
             "adjective": "Norwegian",
             "active": true,
             "profiles": {
-                "p0": {"name": "Edvard Jenssen"},
-                "p1": {"name": "Frida Nilsen"},
-                "p2": {"name": "Roald Bakke"}
+                "p0": {"name": "Edvard Jenssen", "gender": "m"},
+                "p1": {"name": "Frida Nilsen", "gender": "f"},
+                "p2": {"name": "Roald Bakke", "gender": "m"}
             },
             "responses": {
                 "yes": [
@@ -203,9 +203,9 @@
             "adjective": "Spanish",
             "active": false,
             "profiles": {
-                "p0": {"name": "Alejandro Sánchez"},
-                "p1": {"name": "Enriqua García"},
-                "p2": {"name": "Hermosa Martín"}
+                "p0": {"name": "Alejandro Sánchez", "gender": "m"},
+                "p1": {"name": "Enriqua García", "gender": "f"},
+                "p2": {"name": "Hermosa Martín", "gender": "m"}
             },
             "responses": {
                 "yes": [
@@ -226,16 +226,9 @@
             "adjective": "American",
             "active": true,
             "profiles": {
-                "p0": {"name": "John Steele"},
-                "p1": {
-                    "name": "Michael Smith",
-                    "responses": {
-                        "yes": "OK, I will, yeah yeah",
-                        "no": "No way, I'm not getting involved bro",
-                        "res": "I will take the penalty of {N} {R}"
-                    }
-                },
-                "p2": {"name": "Susan Trump"}
+                "p0": {"name": "John Steele", "gender": "m"},
+                "p1": {"name": "Michael Smith", "gender": "m"},
+                "p2": {"name": "Susan Trump", "gender": "f"}
             },
             "responses": {
                 "yes": [
@@ -262,6 +255,14 @@
                 "capacity": 60,
                 "t1": 22,
                 "t2": 30
+            },
+            "about": {
+                "p1": "41 years old, married with three children, can be described as a regular fit citizen. In the last two years, he has gradually increased his fitness regime by running up to 8 miles every week."
+            },
+            "partials": {
+                "about1": "team_profile1about1",
+                "about2": "team_profile1about2",
+                "medical": "team_profile1medical"
             }
         },
         "profile_1": {
@@ -279,6 +280,14 @@
                 "capacity": 100,
                 "t1": 12,
                 "t2": 13
+            },
+            "about": {
+                "p1": "41 years old, married with three children, can be described as a regular fit citizen. In the last two years, he has gradually increased his fitness regime by running up to 8 miles every week."
+            },
+            "partials": {
+                "about1": "team_profile2about1",
+                "about2": "team_profile2about2",
+                "medical": "team_profile2medical"
             }
         },
         "profile_2": {
@@ -306,6 +315,14 @@
                 "capacity": 80,
                 "t1": 32,
                 "t2": 40
+            },
+            "about": {
+                "p1": "41 years old, married with three children, can be described as a regular fit citizen. In the last two years, he has gradually increased his fitness regime by running up to 8 miles every week."
+            },
+            "partials": {
+                "about1": "team_profile3about1",
+                "about2": "team_profile3about2",
+                "medical": "team_profile3medical"
             }
         }
     },

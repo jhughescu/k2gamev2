@@ -281,14 +281,44 @@ p{
 	font-weight: 600;
 }
 
-.hero-image{
-			background: #205d77;
-			width: 100%;
-			height: 150px;
-			background-image: url("../assets/flags/Flags_French.png");
-			background-size: cover;
-			background-position: center;
-		}
+.hero-image {
+    background: #205d77;
+    width: 100%;
+    height: 150px;
+
+    background-size: cover;
+    background-position: center;
+}
+.hero-image-french {
+    background-image: url("../../assets/flags/Flags_French.png");
+}
+.hero-image-canadian {
+    background-image: url("../../assets/flags/Flags_Canadian.png");
+}
+.hero-image-czech {
+    background-image: url("../../assets/flags/Flags_Czech.png");
+}
+.hero-image-finnish {
+    background-image: url("../../assets/flags/Flags_Finnish.png");
+}
+.hero-image-german {
+    background-image: url("../../assets/flags/Flags_German.png");
+}
+.hero-image-italian {
+    background-image: url("../../assets/flags/Flags_Italian.png");
+}
+.hero-image-dutch {
+    background-image: url("../../assets/flags/Flags_Dutch.png");
+}
+.hero-image-norwegian {
+    background-image: url("../../assets/flags/Flags_Norwegian.png");
+}
+.hero-image-spanish {
+    background-image: url("../../assets/flags/Flags_Spanish.png");
+}
+.hero-image-american {
+    background-image: url("../../assets/flags/Flags_American.png");
+}
 
 .profile-flags{
 	width: 100%;

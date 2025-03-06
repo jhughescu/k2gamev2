@@ -432,7 +432,7 @@ document.addEventListener('DOMContentLoaded', function () {
             return new Handlebars.SafeString(Handlebars.partials[partialName](this));
         } else {
             // Handle the case where the specified partial is not found
-            return new Handlebars.SafeString('Partial not found');
+            return new Handlebars.SafeString(`Partial "${partialName}" not found`);
         }
     });
     Handlebars.registerHelper('moreThan', function(a, b, options) {

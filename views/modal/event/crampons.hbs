@@ -1,5 +1,5 @@
 <div class='choice_options'>
-    <img src="assets/profiles/ProfileImages_{{theProfile.filename}}.png"/>
+    <img src="assets/profiles/profileimages_{{theProfile.filename}}.png"/>
     <h4>{{theProfile.name}}</h4>
     <!--<p>Profile {{theProfile.OPTION}}</p>-->
 
@@ -9,7 +9,7 @@
     <br>
     {{#each supportTeam}}
     <div class="teamSelectButton" id="{{profile}}">
-        <div class="teamSelectIcon"><img src='assets/profiles/ProfileImages_{{filename}}.png'></div>
+        <div class="teamSelectIcon"><img src='assets/profiles/profileimages_{{filename}}.png'></div>
         <div class="teamSelectText">  <!-- Added wrapper div -->
             <h4>{{name}}</h4>
             <p>Profile {{OPTION}}</p>
@@ -23,7 +23,7 @@
 <div class='choice_option' id='choice_option{{profile.profile}}'>
     <div class='choice_option_header'>
     <div class='fullflag'><img src='assets/flags/Flags_{{profile.team.adjective}}.png'></div>
-    <div class="choiceIcon"><img src='assets/profilesjh/ProfileImages_{{profile.filename}}.png'></div>
+    <div class="choiceIcon"><img src='assets/profilesjh/profileimages_{{profile.filename}}.png'></div>
     <h3>{{profile.name}}</h3>
     <p>Profile {{profile.OPTION}} | {{profile.team.adjective}} Team</p>
     </div>

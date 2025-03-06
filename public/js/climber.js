@@ -24,8 +24,12 @@ class Climber {
         this.option = this.getOption(init.profile);
         this.OPTION = this.getOption(init.profile).toUpperCase();
         this.name = init.team.profiles[`p${init.profile}`].name;
+        this.nameFirst = this.name.split(' ')[0];
+        this.pronouns = init.team.profiles[`p${init.profile}`].gender === 'm' ? {p1: 'he', p2: 'his', p3: 'him'} : {p1: 'she', p2: 'her', p3: 'her'};
+        Object.values(this.pronouns).forEach((p, i) => this.pronouns[`P${(i + 1)}`] = window.stringToCamelCase(p));
+//        console.log(init.team.profiles[`p${init.profile}`]);
         this.filename = this.name.replace(' ', '').replace(/[^a-zA-Z0-9]/g, '');
-        this.filename = window.stringToCamelCase(this.name).replace(' ', '').replace(/[^a-zA-Z0-9]/g, '');
+        this.filename = window.stringToCamelCase(this.name).replace(' ', '').replace(/[^a-zA-Z0-9]/g, '').toLocaleLowerCase();
         const stored = Object.assign({position: init.position, currentTime: 0, delayExpiry: 0}, this.unpackStorageSummary(this.getStoredSummary()));
 //        console.log(`new Climber`);
 //        console.log(this.getStoredSummary());
@@ -38,22 +42,14 @@ class Climber {
         this.currentSpeed = 0;
         const PROF = init.team.profiles[`p${init.profile}`];
         const TEAM = init.team;
-//        console.log('TEAM')
-//        console.log(this.name, this.profile);
-//        console.log(TEAM.responses.yes);
-//        console.log(PROF.responses);
-//        this.responses = PROF.hasOwnProperty('responses') ? PROF.responses : this.gameData.constants.responses;
-//        this.responses = TEAM.hasOwnProperty('responses') ? TEAM.responses : this.gameData.constants.responses;
         this.responses = {
             yes: TEAM.responses.yes[this.profile],
             no: TEAM.responses.no[this.profile],
             res: this.gameData.constants.responses.res
         }
-//        this.responses.no = TEAM.responses.no[this.profile];
-//        this.responses.res = this.gameData.constants.responses.res;
-
         this.responsesArray = Object.values(this.responses);
-
+        this.profileData = init.gameData.profiles[`profile_${init.profile}`];
+//        console.log(init.gameData);
         this.oxygen = stored.hasOwnProperty('oxygen') ? stored.oxygen : 0;
         this.sustenance = stored.hasOwnProperty('sustenance') ? stored.sustenance : 0;
         this.rope = stored.hasOwnProperty('rope') ? stored.rope : 0;
@@ -913,7 +909,9 @@ class Climber {
     expandOptions() {
         this.options.forEach((o, n) => {
             o.n = n;
-            o.option = this.getOption(n).toUpperCase();
+            if (this.getOption(n)) {
+                o.option = this.getOption(n).toUpperCase();
+            }
 //            o.profile = this.profile;
         });
     }

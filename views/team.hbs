@@ -13,7 +13,7 @@
             {{#each profiles}}
                 <div class="content-block">
                     <div class="your-team-profile">
-                        <a class="profile-btn" href="#profile-{{OPTION}}" title="Previous page"><img src="assets/profiles/ProfileImages_{{filename}}.png" alt="Team member icon" /></a>
+                        <a class="profile-btn" href="#profile-{{OPTION}}" title="Previous page"><img src="assets/profiles/profileimages_{{filename}}.png" alt="Team member icon" /></a>
                         <div>
                             <h2><span class='dyno'>{{name}}</span></h2>
                             <p>Profile <span class='dyno'>{{OPTION}}</span></p>
@@ -32,13 +32,13 @@
                 <!-- PROFILE A START -->
                 <!-- Header -->
                 <div class="profile-header" id="profile-{{OPTION}}">
-                    <div class="hero-image">
+                    <div class="hero-image hero-image-{{team.adjectiveLower}}">
                         <div class="back-btn-title-bar">
                             <a class="back-btn" href="#page-top" title="Previous page"><img alt="Previous page icon" src="assets/buttons/topButton.svg" /></a>
                         </div>
                     </div>
                     <div class="profile-info center">
-                        <img class="profile-icon" alt="Profile icon" src="assets/profiles/ProfileImages_{{filename}}.png" />
+                        <img class="profile-icon" alt="Profile icon" src="assets/profiles/profileimages_{{filename}}.png" />
                         <h2>{{name}}</h2>
                         <p>Profile {{OPTION}}</p>
 
@@ -49,7 +49,7 @@
                 <div class="main-content">
                     <div class="content-block">
                         <h3>About</h3>
-                        <p>41 years old, married with three children, can be described as a regular fit citizen. In the last two years, he has gradually increased his fitness regime by running up to 8 miles every week.</p>
+                        <p>{{dynamicPartial profileData.partials.about1}}</p>
                     </div>
                     <div class="content-block" style="padding: 0 10px;">
 
@@ -89,14 +89,14 @@
                         </div>
                     </div>
                     <div class="content-block">
-                        <p>Mountaineering is new to him. Four months before this climb, his company hired him a professional mountaineering guide as a reward for his achievements. In a range of dry-run exercises, he has become familiar with ice crampons, ice axes and was introduced to fixing ropes. </p>
+                        <p>{{dynamicPartial profileData.partials.about2}}</p>
                     </div>
                     <div class="content-block">
                         <div class="icon-box">
                             <img src="assets/icons/Icons_medicalIcon.png" alt="Medical icon" />
                             <div>
                                 <h3>Camp IV Medical Assessment</h3>
-                                <p>Doctor Gerhard Karlowski has examined Susan. Two years ago she had eye surgery and a residual risk remains at high altitudes. However, she has had no issues so far. She has previously suffered minor frostbite on her hands but with no lasting damage.</p>
+                                <p>{{dynamicPartial profileData.partials.medical}}</p>
                             </div>
                         </div>
                     </div>
@@ -104,7 +104,7 @@
                         <h3>Climbing information</h3>
                         <div class="climbing-overview-grid">
                             <div class="climbing-overview-mountain">
-                                <img src="assets/profiles/ProfileImages_MountainKey.png" alt="" />
+                                <img src="assets/profiles/profileimages_MountainKey.png" alt="" />
                             </div>
 
                             <div>
@@ -153,176 +153,3 @@
     </div> <!-- Closing Desktop Fade BG Tag -->
 </div> <!-- Closing Main BG Tag -->
 <!-- The Modals -->
-<div class="modal fade" id="goalModal">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-
-            <!-- Modal Header
-      <div class="modal-header">
-        <h4 class="modal-title">Modal Heading</h4>
-        <button type="button" class="close" data-dismiss="modal">&times;</button>
-      </div> -->
-
-            <!-- Modal body -->
-            <div class="modal-body">
-                <img src="assets/icons/Icons_GoalIcon.png" alt="Goal icon" style="display: block; width: 100px; margin: 0 auto;" />
-                <h3>Goal</h3>
-                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
-
-            </div>
-
-            <!-- Modal footer -->
-            <div class="modal-footer">
-                <button type="button" class="btn k2-modal-btn" data-dismiss="modal">OK</button>
-            </div>
-
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="journeyModal">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-
-            <!-- Modal body -->
-            <div class="modal-body">
-                <img src="assets/icons/Icons_JourneyIcon.png" alt="Journey icon" style="display: block; width: 100px; margin: 0 auto;" />
-                <h3>Journey</h3>
-                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
-
-            </div>
-
-            <!-- Modal footer -->
-            <div class="modal-footer">
-                <button type="button" class="btn k2-modal-btn" data-dismiss="modal">OK</button>
-            </div>
-
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="ropeModal">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-
-            <!-- Modal body -->
-            <div class="modal-body">
-                <img src="assets/icons/Icons_RopeIcon.png" alt="Rope icon" style="display: block; width: 100px; margin: 0 auto;" />
-                <h3>100m Emergency Rope</h3>
-                <p>You will only need a maximum of 100 metres emergency rope for the entire journey, across all expedition teams. How will you divide it? Within your own team? Across all other teams?</p>
-
-            </div>
-
-            <!-- Modal footer -->
-            <div class="modal-footer">
-                <button type="button" class="btn k2-modal-btn" data-dismiss="modal">OK</button>
-            </div>
-
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="waitTimeModal">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-
-            <!-- Modal body -->
-            <div class="modal-body">
-                <img src="assets/icons/Icons_WaitTimesIcon.png" alt="Wait time icon" style="display: block; width: 100px; margin: 0 auto;" />
-                <h3>Wait time</h3>
-                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
-
-            </div>
-
-            <!-- Modal footer -->
-            <div class="modal-footer">
-                <button type="button" class="btn k2-modal-btn" data-dismiss="modal">OK</button>
-            </div>
-
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="resourcesModal">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-
-            <!-- Modal body -->
-            <div class="modal-body">
-                <img src="assets/icons/Icons_ResourceSharingIcon.png" alt="Wait time icon" style="display: block; width: 100px; margin: 0 auto;" />
-                <h3>Resource sharing</h3>
-                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
-
-            </div>
-
-            <!-- Modal footer -->
-            <div class="modal-footer">
-                <button type="button" class="btn k2-modal-btn" data-dismiss="modal">OK</button>
-            </div>
-
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="noResourcesModal">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-
-            <!-- Modal body -->
-            <div class="modal-body">
-                <img src="assets/icons/Icons_NoResourcesIcon.png" alt="Wait time icon" style="display: block; width: 100px; margin: 0 auto;" />
-                <h3>No resource sharing</h3>
-                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
-
-            </div>
-
-            <!-- Modal footer -->
-            <div class="modal-footer">
-                <button type="button" class="btn k2-modal-btn" data-dismiss="modal">OK</button>
-            </div>
-
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="sectionProblemModal">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-
-            <!-- Modal body -->
-            <div class="modal-body">
-                <img src="assets/icons/Icons_SectionProblemIcon.png" alt="Wait time icon" style="display: block; width: 100px; margin: 0 auto;" />
-                <h3>Section problem</h3>
-                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
-
-            </div>
-
-            <!-- Modal footer -->
-            <div class="modal-footer">
-                <button type="button" class="btn k2-modal-btn" data-dismiss="modal">OK</button>
-            </div>
-
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="profileProblemModal">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-
-            <!-- Modal body -->
-            <div class="modal-body">
-                <img src="assets/icons/Icons_ProfileProblemIcon.png" alt="Wait time icon" style="display: block; width: 100px; margin: 0 auto;" />
-                <h3>Profile problem</h3>
-                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
-
-            </div>
-
-            <!-- Modal footer -->
-            <div class="modal-footer">
-                <button type="button" class="btn k2-modal-btn" data-dismiss="modal">OK</button>
-            </div>
-
-        </div>
-    </div>
-</div>

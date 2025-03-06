@@ -1192,6 +1192,8 @@ document.addEventListener('DOMContentLoaded', function () {
             d.storeID = getStoreID();
             d.timer = gTimer;
 //            console.log(d.route.stages);
+//            console.log(d);
+            d.teams.forEach(t => t.adjectiveLower = t.adjective.toLowerCase());
             return d;
         }
     };
@@ -1787,7 +1789,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const img = $('.summit-graphic');
         const P = getAlph(p).toUpperCase()
         const T = getAlph(t).toUpperCase();
-        const src = `assets/profiles/ProfileImages_Profile${P}-${T}.png`
+        const src = `assets/profiles/profileimages_Profile${P}-${T}.png`
 //        console.log('src', src);
         img.attr('src', src);
     };
