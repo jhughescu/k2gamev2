@@ -98,6 +98,14 @@ document.addEventListener('DOMContentLoaded', function () {
             return index !== 0 ? word.toLowerCase() : word.toUpperCase();
         }).replace(/\s+/g, '');
     };
+    const stringToCamelCase = (str) => {
+        // i.e. I am the string => I Am The String
+        return str
+            .toLowerCase()
+            .split(/[^a-zA-Z0-9]+/) // Split by non-alphanumeric characters
+            .map((word, index) =>  word.charAt(0).toUpperCase() + word.slice(1))
+            .join('');
+    }
     const logBoolean = (boo) => {
         if (!typeof(boo)) {
             return;
@@ -1071,6 +1079,7 @@ document.addEventListener('DOMContentLoaded', function () {
     window.getAlph = getAlph;
     window.clone = clone;
     window.toCamelCase = toCamelCase;
+    window.stringToCamelCase = stringToCamelCase;
     window.logBoolean = logBoolean;
     window.removeTemplate = removeTemplate;
     window.renderTemplate = renderTemplate;

@@ -25,6 +25,7 @@ class Climber {
         this.OPTION = this.getOption(init.profile).toUpperCase();
         this.name = init.team.profiles[`p${init.profile}`].name;
         this.filename = this.name.replace(' ', '').replace(/[^a-zA-Z0-9]/g, '');
+        this.filename = window.stringToCamelCase(this.name).replace(' ', '').replace(/[^a-zA-Z0-9]/g, '');
         const stored = Object.assign({position: init.position, currentTime: 0, delayExpiry: 0}, this.unpackStorageSummary(this.getStoredSummary()));
 //        console.log(`new Climber`);
 //        console.log(this.getStoredSummary());
