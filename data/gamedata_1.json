@@ -256,9 +256,7 @@
                 "t1": 22,
                 "t2": 30
             },
-            "about": {
-                "p1": "41 years old, married with three children, can be described as a regular fit citizen. In the last two years, he has gradually increased his fitness regime by running up to 8 miles every week."
-            },
+            "stats": {"e": 25, "h": 65, "f": 85, "s": 65},
             "partials": {
                 "about1": "team_profile1about1",
                 "about2": "team_profile1about2",
@@ -281,9 +279,7 @@
                 "t1": 12,
                 "t2": 13
             },
-            "about": {
-                "p1": "41 years old, married with three children, can be described as a regular fit citizen. In the last two years, he has gradually increased his fitness regime by running up to 8 miles every week."
-            },
+            "stats": {"e": 25, "h": 95, "f": 95, "s": 70},
             "partials": {
                 "about1": "team_profile2about1",
                 "about2": "team_profile2about2",
@@ -316,9 +312,7 @@
                 "t1": 32,
                 "t2": 40
             },
-            "about": {
-                "p1": "41 years old, married with three children, can be described as a regular fit citizen. In the last two years, he has gradually increased his fitness regime by running up to 8 miles every week."
-            },
+            "stats": {"e": 60, "h": 95, "f": 95, "s": 65},
             "partials": {
                 "about1": "team_profile3about1",
                 "about2": "team_profile3about2",

@@ -1,6 +1,6 @@
 {
-  "timestamp": "2025-03-06T17:01:21Z",
-  "commitHash": "f26eb1a7b937ad679255ebea6d7a2303b5c93df2",
-  "commitMessage": "New die roll graphic, roll animation optimised.",
+  "timestamp": "2025-03-06T20:21:50Z",
+  "commitHash": "17265e1acfe75179671d2d6563e972ce6721a37b",
+  "commitMessage": "Returned folder names to complete asset refresh",
   "branch": "master"
 }

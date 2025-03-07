@@ -1945,7 +1945,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 $(`#resop_${rOb.profile}_${rOb.type}`).addClass('selected');
                 setupResources();
 
-                if (autoResource) {
+                if (autoResource && window.isLocal()) {
                     const c = gameData.constants;
 //                    console.log(c);
                     const ch =[0, 0, 3];
@@ -1990,9 +1990,39 @@ document.addEventListener('DOMContentLoaded', function () {
 //        console.log(`renderTeam`);
         renderNone(() => {
             const rOb = {profiles: Climber.getClimbers()}
-//            console.log(rOb);
             renderTemplate('theatre', 'team', rOb, () => {
                 updateAddress('team');
+                const pm = $('#profile-menu');
+                const bt = pm.find('.teamSelectButton');
+                const tp = $('.teamProfile');
+                const homer = $($('.back-btn')[0]);
+
+                bt.off('click').on('click', function () {
+                    const i = window.justNumber($(this).attr('id'));
+                    const p = $(tp[i]);
+                    tp.hide();
+                    p.show();
+                    pm.hide();
+                    // Store existing click handler
+                    const events = $._data(homer[0], 'events');
+                    let existingClickHandler = null;
+                    if (events && events.click && events.click.length > 0) {
+                        existingClickHandler = events.click[0].handler;
+                    }
+                    homer.off('click').one('click', function () {
+                        console.log('back');
+                        pm.show();
+                        tp.hide();
+                        // Restore previous handler
+                        if (existingClickHandler) homer.on('click', existingClickHandler);
+                    });
+
+
+                });
+
+
+
+
             })
         });
     };

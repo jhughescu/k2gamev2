@@ -53,6 +53,9 @@ document.addEventListener('DOMContentLoaded', function () {
         // Later, you can disconnect the observer when it's no longer needed
         // observer.disconnect();
     };
+    const isLocal = () => {
+        return window.location.host.includes('localhost');
+    };
     const checkDevMode = async () => {
         let dm = false;
 //        console.log(`checkDevMode`);
@@ -75,7 +78,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
             });
         }
-    }
+    };
     const procVal = (v) => {
 //        console.log(`procval receives ${v}`);
         // process values into numbers, booleans etc
@@ -92,7 +95,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 //        console.log(`procval returns ${v}`);
         return v;
-    }
+    };
     const toCamelCase = (str) => {
         return str.replace(/(?:^\w|[A-Z]|\b\w)/g, function(word, index) {
             return index !== 0 ? word.toLowerCase() : word.toUpperCase();
@@ -105,7 +108,7 @@ document.addEventListener('DOMContentLoaded', function () {
             .split(/[^a-zA-Z0-9]+/) // Split by non-alphanumeric characters
             .map((word, index) =>  word.charAt(0).toUpperCase() + word.slice(1))
             .join('');
-    }
+    };
     const logBoolean = (boo) => {
         if (!typeof(boo)) {
             return;
@@ -205,7 +208,7 @@ document.addEventListener('DOMContentLoaded', function () {
             o = JSON.stringify(o);
         }
         localStorage.setItem(id, o);
-    }
+    };
 
     const getTemplate = (temp, ob, cb) => {
         // returns a compiled template, but does not render it
@@ -1067,6 +1070,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // In case of problems getting partials, check the order of system architecture.
     getPartials();
     window.procVal = procVal;
+    window.isLocal = isLocal;
     window.justNumber = justNumber;
     window.roundNumber = roundNumber;
     window.getNumberText = getNumberText;

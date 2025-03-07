@@ -11,24 +11,25 @@
         <!-- Main Content -->
         <div class="main-content" style="margin-bottom: 300px;" id="profile-menu">
             {{#each profiles}}
-                <div class="content-block">
-                    <div class="your-team-profile">
-                        <a class="profile-btn" href="#profile-{{OPTION}}" title="Previous page"><img src="assets/profiles/profileimages_{{filename}}.png" alt="Team member icon" /></a>
-                        <div>
-                            <h2><span class='dyno'>{{name}}</span></h2>
-                            <p>Profile <span class='dyno'>{{OPTION}}</span></p>
-                        </div>
-                    </div>
+            <div class="teamSelectButton" id="teamSelect{{profile}}">
+                <div class="teamSelectIcon"><img src='assets/profiles/profileimages_{{filename}}.png'></div>
+                <div class="teamSelectText">
+                    <!-- Added wrapper div -->
+                    <h4 class='{{#if hasDie}}canHelp{{/if}}'>{{name}}</h4>
+                    <p>Profile {{OPTION}}</p>
                 </div>
-                <hr />
+            </div>
             {{/each}}
+
+
+
 
 
         </div>
 
         <div class="flex-container">
             {{#each profiles}}
-            <div class="flex-item">
+            <div class="flex-item teamProfile" id='teamProfile{{profile}}' style='display: none;'>
                 <!-- PROFILE A START -->
                 <!-- Header -->
                 <div class="profile-header" id="profile-{{OPTION}}">
@@ -59,7 +60,7 @@
                             </div>
                             <div class="col-7">
                                 <div class="progress" style="height:12px;">
-                                    <div class="progress-bar" style="width:25%;"></div>
+                                    <div class="progress-bar" style="width:{{profileData.stats.e}}%;"></div>
                                 </div>
                             </div>
                             <div class="col-5">
@@ -67,7 +68,7 @@
                             </div>
                             <div class="col-7">
                                 <div class="progress" style="height:12px;">
-                                    <div class="progress-bar" style="width:65%;"></div>
+                                    <div class="progress-bar" style="width:{{profileData.stats.h}}%;"></div>
                                 </div>
                             </div>
                             <div class="col-5">
@@ -75,7 +76,7 @@
                             </div>
                             <div class="col-7">
                                 <div class="progress" style="height:12px;">
-                                    <div class="progress-bar" style="width:80%;"></div>
+                                    <div class="progress-bar" style="width:{{profileData.stats.f}}%;"></div>
                                 </div>
                             </div>
                             <div class="col-5">
@@ -83,7 +84,7 @@
                             </div>
                             <div class="col-7">
                                 <div class="progress" style="height:12px;">
-                                    <div class="progress-bar" style="width:65%;"></div>
+                                    <div class="progress-bar" style="width:{{profileData.stats.s}}%;"></div>
                                 </div>
                             </div>
                         </div>
