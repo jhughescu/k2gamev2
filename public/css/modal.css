@@ -319,3 +319,7 @@
 /*    background-color: blue;*/
     text-align: left;
 }
+.modal-profileDetail {
+    height: 400px;
+    padding-top: 20px;
+}

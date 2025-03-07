@@ -759,9 +759,11 @@ document.addEventListener('DOMContentLoaded', function () {
         const o = ob ? ob : {};
         m.show();
         m.addClass('clickable');
-        renderTemplate('overlay_modal', 'modal', {}, () => {
+        renderTemplate('overlay_modal', 'modal', {type: ob.hasOwnProperty('type') ? ob.type : 'basic'}, () => {
             renderTemplate('modal_content', id, o, () => {
 //                console.log(`%cshowModal adds the click event`, 'color: yellow;');
+                const hasMethod = o.hasOwnProperty('hasMethod') ? o.hasMethod : false;
+//                console.log(o);
                 setupFullscreenModalClick();
                 if (devController) {
                     devController.setupGameTimeSelect();
@@ -1996,7 +1998,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 const bt = pm.find('.teamSelectButton');
                 const tp = $('.teamProfile');
                 const homer = $($('.back-btn')[0]);
-
                 bt.off('click').on('click', function () {
                     const i = window.justNumber($(this).attr('id'));
                     const p = $(tp[i]);
@@ -2010,20 +2011,31 @@ document.addEventListener('DOMContentLoaded', function () {
                         existingClickHandler = events.click[0].handler;
                     }
                     homer.off('click').one('click', function () {
-                        console.log('back');
+//                        console.log('back');
                         pm.show();
                         tp.hide();
                         // Restore previous handler
                         if (existingClickHandler) homer.on('click', existingClickHandler);
                     });
-
-
+//                    tiles to launch modals
+                    const t = p.find('.profileDetailTile');
+//                    console.log(t.length);
+                    t.off('click').on('click', function () {
+                        const i = window.justNumber($(this).attr('id'));
+//                        console.log(`tile${i}`);
+//                        console.log($(this).attr('data-target'));
+                        const obber = {
+                            type: 'profileDetail',
+                            id: $(this).attr('data-target')
+                        };
+                        const d = $(this).attr('data-target');
+                        const D = d.substr(0, 1).toUpperCase() + d.substring(1);
+                        obber[`is${D}`] = true;
+                        console.log(obber)
+                        showModal('profileDetail', obber);
+                    });
                 });
-
-
-
-
-            })
+            });
         });
     };
 
