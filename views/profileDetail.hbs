@@ -2,7 +2,7 @@
     <div class="modal-body">
         <img src="assets/icons/Icons_GoalIcon.png" alt="Goal icon" style="display: block; width: 100px; margin: 0 auto;" />
         <h3>Goal</h3>
-        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+        <p>Everyone in your team must summit, take a photo, and return to camp IV. The best accumulated team time wins.</p>
 
     </div>
 {{/if}}
@@ -10,7 +10,7 @@
     <div class="modal-body">
         <img src="assets/icons/Icons_JourneyIcon.png" alt="Journey icon" style="display: block; width: 100px; margin: 0 auto;" />
         <h3>Journey</h3>
-        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+        <p>The rope is already fixed to the mountain for your climb and descent. You cannot move back to a previous section.</p>
 
     </div>
 {{/if}}
@@ -26,7 +26,8 @@
     <div class="modal-body">
         <img src="assets/icons/Icons_WaitTimesIcon.png" alt="Wait time icon" style="display: block; width: 100px; margin: 0 auto;" />
         <h3>Wait time</h3>
-        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+        <p>You must stay the minimum waiting time within each section before you can proceed to the next. You can decrease your wait time by 7 minutes at the expense of 1
+unit of oxygen. This can only be done once in the Traverse and once in the Bottleneck.</p>
 
     </div>
 {{/if}}
@@ -34,31 +35,31 @@
     <div class="modal-body">
         <img src="assets/icons/Icons_ResourceSharingIcon.png" alt="Resource Sharing icon" style="display: block; width: 100px; margin: 0 auto;" />
         <h3>Resource sharing</h3>
-        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+        <p>You can share emergency rope between teams in the same section with NO PENALTY. You CANNOT share resources outside of your current section. You CAN share resources in the same section with a penalty. 1 oxygen or sustenance unit shared will incur a penalty of 1 extra unit. Costing you 2 in total.</p>
 
     </div>
 {{/if}}
 {{#if isNoResources}}
     <div class="modal-body">
         <img src="assets/icons/Icons_NoResourcesIcon.png" alt="No resources icon" style="display: block; width: 100px; margin: 0 auto;" />
-        <h3>No resource sharing</h3>
-        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+        <h3>Running Out of Resources</h3>
+        <p>If you run out of resources, you must return to Camp IV to resupply. You will not die from a lack of resources but will receive a penalty. The greater the altitude, the greater the penalty.</p>
 
     </div>
 {{/if}}
 {{#if isSectionProblem}}
     <div class="modal-body">
         <img src="assets/icons/Icons_SectionProblemIcon.png" alt="Section problem icon" style="display: block; width: 100px; margin: 0 auto;" />
-        <h3>Section problem</h3>
-        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+        <h3>Section problems</h3>
+        <p>Must be resolved by everyone in the same section, regardless of team, before anyone can proceed.</p>
 
     </div>
 {{/if}}
 {{#if isProfileProblem}}
     <div class="modal-body">
         <img src="assets/icons/Icons_ProfileProblemIcon.png" alt="Profile problem icon" style="display: block; width: 100px; margin: 0 auto;" />
-        <h3>Profile problem</h3>
-        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+        <h3>Profile problems</h3>
+        <p>If your profile is called out, you must return immediately to Camp IV to solve the problem with your Special Advisor. You will communicate with climbers in different sections over the radio but they might be reluctant to assist you due to the penalty they would incur. If nobody helps you, you receive a larger penalty. You CANNOT ask for help from climbers who have summited and returned to Camp IV.</p>
 
     </div>
 {{/if}}
