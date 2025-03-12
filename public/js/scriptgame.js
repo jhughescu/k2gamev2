@@ -21,10 +21,11 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // autoResource meane profiles will be set automatically on the resources screen
-    const autoResource = true;
-//    const autoResource = false;
-//    const cheating = true;
-    const cheating = false;
+//    const autoResource = true;
+    const autoResource = window.isLocal() ? true : false;
+    const cheating = window.isLocal() ? true : false;
+//    const cheating = false;
+    const cheatTimeout = 2500;
 
 
     const msgWin = $('#msg');
@@ -234,9 +235,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const both = $('.treatleave');
         const die = $('.dieroll');
         const rollDisplay = $('#rollresult');
-//        const ev = eventStack.getCurrentEvent();
         const ev = gameData.events[1];
-//        console.log(gameData.events);
         const threshold = ev.metrics.threshold;
         let act = null;
         let results = null;
@@ -250,17 +249,13 @@ document.addEventListener('DOMContentLoaded', function () {
             results = ev.metrics[act].results;
             setupModalDiceButton((ob) => {
                 if (ob.state === 1) {
-                    rollDisplay.html(`You rolled a ${ob.res}`);
+                    rollDisplay.html(`You rolled a ${ob.res}.`);
                     const r = ob.res >= 3 ? 1 : 0;
                     const cl = Climber.getClimbers();
-//                    console.log('die result', ob, act, results, r);
-//                    console.log(results);
-//                    console.log(cl);
                     results.forEach((c, i) => {
                         const prof = session[`profile${i}`];
-//                        console.log(`${cl[i].name} in the section? ${cl[i].currentStage === section}, penalty: ${c[r]}`);
                         if (c[r] > 0) {
-                            rollDisplay.append(`, ${cl[i].name.split(' ')[0]} will be slowed by ${c[r]} minutes`);
+                            rollDisplay.append(`<p><b>${cl[i].name.split(' ')[0]}</b> will be slowed by ${c[r]} minutes</p>`);
                             prof.adjustProperty(ev.metrics.penalty, c[r], (res) => {
 //                                console.log(`adjustment complete`, res);
                             });
@@ -274,40 +269,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             });
         });
-        /*
-        die.off('click').on('click', () => {
-            die.addClass('disabled');
-            die.prop('disabled', true);
-            const r = dieRoll();
-            const a = results.results.map(e => e[r <= threshold ? 0 : 1]);
-            rollDisplay.html(`you rolled a ${r}`);
-            a.forEach((p, id) => {
-                const prof = session[`profile${id}`];
-                if (prof.currentStage === 1) {
-                    const p1 = window.clone(prof);
-                    prof.adjustProperty(ev.metrics.penalty, p, (r) => {
-//                        console.log(`adjustment complete`, r);
-                    });
-                    prepProfilesForDisplay();
-                    prof.calculateClimbRate();
-                    devShowProfiles();
-                }
-
-            });
-            completeEvent();
-            if (m) {
-                setupModalClose(m, true);
-            }
-        });
         if (cheating) {
             setTimeout(() => {
                 t.click();
-            }, 2000);
-            setTimeout(() => {
-                die.click();
-            }, 4000);
+            }, cheatTimeout);
         }
-        */
     };
     const getResourcesToReplenish = (ob) => {
         // CREATE A NEW METHOD HERE WHICH RUNS THROUGH THE RESOURCES MOCALE, GETS THE VALUES AND SETS THEM AS RESUPPLIES
@@ -353,7 +319,9 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         order.forEach((r, i) => {
             const lc = r.toLowerCase();
-            const rs = resOb.resupplying ? Object.fromEntries(Climber.getClimbers()[ob.profile].getResupplyDetail())[lc.substr(0, 1)] : 0;
+            const rd = Object.fromEntries(Climber.getClimbers()[ob.profile].getResupplyDetail());
+//            const rs = resOb.resupplying ? Object.fromEntries(Climber.getClimbers()[ob.profile].getResupplyDetail())[lc.substr(0, 1)] : 0;
+            const rs = resOb.resupplying ? rd[lc.substr(0, 1)] || 0 : 0;
             const adjustedLevel = Math.ceil(ob[lc]) + rs;
             const o = {
                 type: lc,
@@ -364,6 +332,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 canMinus: Math.ceil(ob[lc]) > 0
             };
             resOb[lc] = ob[lc];
+            console.log('add', o.weightTotal, adjustedLevel, rs, ob[lc]);
             load += o.weightTotal;
             resources.push(o);
         });
@@ -374,13 +343,17 @@ document.addEventListener('DOMContentLoaded', function () {
         resOb.capacity = ob.capacity;
         resOb.load = load;
         resOb.profile = ob.profile;
-//        console.log(`buildResourceObject`, resOb);
+        console.log(`buildResourceObject`, resOb);
 
         return resOb;
     };
     const renderResourceForm = (resOb, cb) => {
 //        console.log(`renderResourceForm`, resOb);
 //        console.log(`renderResourceForm, adjusted? ${resOb.adjusted}`);
+
+        // NOTE: Rope temporarily removed from the game
+        resOb.resources = resOb.resources.filter(r => r.type !== 'rope');
+
         window.renderTemplate('resourceForm', 'modal/event/resource_form', resOb, () => {
             const resources = resOb.resources;
             const form = $('#resourceForm');
@@ -447,7 +420,7 @@ document.addEventListener('DOMContentLoaded', function () {
 //                console.log(ressuplyData);
 //                debugger;
                 if (ressuplyData.resources[0].level === 0 || ressuplyData.resources[1].level === 0) {
-                    alert(`you cannot continue if oxygen or sustenance are zero`);
+                    alert(`You must resupply at least one unit of oxygen and sustenance.`);
                 } else {
                     if (ressuplyData.adjusted) {
                         ressuplyData.resources.forEach(r => {
@@ -457,7 +430,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         prof.setDelay(gameData.constants.resupplyDelay);
                         rtn = true;
                     } else {
-                        const ok = confirm('are you sure you want to resupply nothing at this time?');
+                        const ok = confirm('Are you sure you want to resupply nothing at this time?');
                         rtn = ok;
                     }
                 }
@@ -499,7 +472,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const b = m.find('.teamSelectButton');
         const c = m.find('.k2-modal-btn');
         const back = m.find('.choice_back');
-//        console.log(m);
+//        console.log(ev);
         enableButton(c, false);
         b.off('click').on('click', function () {
             if ($(this).attr('class').includes('k2-modal-btn')) {
@@ -513,43 +486,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 allDice.each((i, d) => {
                     const diceId = $(d).attr('id');
                     const diceN = justNumber(diceId);
-                    /*
-                    new Dice(diceId, (result) => {
-                        const boo = result > ev.metrics.threshold;
-                        const pen = ev.metrics.results[diceN].penalties;
-                        const prof = ev.theProfile;
-                        const pen0 = Object.entries(pen)[0];
-                        const summary = [];
-                        Object.entries(pen).forEach(p => {
-                            const n = parseInt(p[1][Number(boo)]);
-                            const red = n * -1;
-                            if (red !== 0) {
-                                summary.push(`${window.getNumberText(n)} ${p[0]}`);
-                                if (prof.adjustProperty) {
-                                    prof.adjustProperty(p[0], red, (r) => {
-                                        console.log(`adjustment complete`, r);
-                                    });
-                                    prepProfilesForDisplay();
-                                    prof.calculateClimbRate();
-                                    devShowProfiles();
-                                }
-
-                            } else {
-                                console.log(`no reduction in ${p[0]}`);
-                            }
-                        });
-                        const response = `rolled a ${result}${boo ? ', ' + prof.responses.res + summary.join(', ') : ''}`;
-                        console.log(response);
-                        completeEvent();
-                        setupModalClose(m, true);
-//                        enableButton(c, true);
-                    });
-                    */
                 });
 //                console.log(res);
                 if (res.dice) {
+//                    const die = $(this).parent().find('#die');
+//                    die.show();
                     setupModalDiceButton((ob) => {
-
                         const dv = $('.choice_option:visible');
                         const dn = window.justNumber(dv.attr('id'));
                         if (ob.state === 0) {
@@ -596,6 +538,20 @@ document.addEventListener('DOMContentLoaded', function () {
                 $(`#choice_option${id}`).show(0, () => {});
             }
         });
+        console.log('profile event');
+        if (cheating) {
+            setTimeout(() => {
+                const R = ev.metrics.results;
+                console.log(R);
+                for (let i = 0; i < R.length; i++) {
+                    if (R[i].dice) {
+                        console.log(`auto-click on ${i}`, R[i], $(b[i]));
+                        $(b[i]).click();
+                        break;
+                    }
+                }
+            }, cheatTimeout);
+        }
         back.off('click').on('click', () => {
             $(`.choice_options`).show();
             $(`.choice_option`).hide();
@@ -624,6 +580,8 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         removeFullscreenModalClick();
         m.removeClass('clickable');
+        const mContent = m.find('.modal');
+        mContent.remove();
         m.hide();
     };
     // note: unify the two methods below & kill one of them
@@ -638,11 +596,9 @@ document.addEventListener('DOMContentLoaded', function () {
         ob = ob === undefined ? {} : ob;
         const display = ob.hasOwnProperty('display') ? ob.display : 'Close';
         let canClose = ob.hasOwnProperty('canClose') ? ob.canClose : true;
-//        console.log(`setupModalClose, canClose? ${canClose}`);
-//        console.log(ob);
+//        console.log('setupModalClose')
         setupModalFooter(display, () => {
             const closer = modal.find('.k2-modal-btn');
-//            console.log(`setupModalClose`, boo, closer);
             if (!boo) {
                 closer.addClass('disabled');
             } else {
@@ -654,8 +610,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     if (ob.hasOwnProperty('methodPre')) {
                         const ev = ob.ev || {};
                         canClose = ob.methodPre(ob);
-//                        console.log(`methodPre returns canClose: ${canClose}`)
-//                        debugger;
                     }
                 }
                 if (canClose) {
@@ -668,6 +622,13 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 }
             });
+            if (cheating) {
+                setTimeout(() => {
+                    console.log('auto-close');
+//                    debugger;
+                    closer.click();
+                }, cheatTimeout);
+            }
         })
     };
     const showModalEvent = (ev) => {
@@ -707,8 +668,10 @@ document.addEventListener('DOMContentLoaded', function () {
                     devController.setupGameTimeSelect();
                 }
                 const hasMethod = ev.hasOwnProperty('method');
+//                console.log(`showModalEvent call: `, hasMethod);
                 // event modals cannot be closed by clicking the overlay, they require user input before progression
                 if (hasMethod) {
+//                    console.log(ev.method);
                     eval(ev.method)(m, ev);
                 } else {
                     setupModalClose(m, !hasMethod);
@@ -726,6 +689,19 @@ document.addEventListener('DOMContentLoaded', function () {
         renderTemplate('overlay_modal', `modal`, {type: 'selfie'}, () => {
 //            console.log('base rendered');
             renderTemplate('modal_content', `modal/event/selfie`, c, () => {
+//                console.log('content rendered');
+                setupModalClose($('#overlay_modal'), true);
+//                enableButton($($('.k2-modal-btn')[0]), true);
+            });
+        });
+    };
+    const showModalPhoto = (ev) => {
+        const m = $('#overlay_modal');
+        m.show();
+        m.addClass('clickable');
+        renderTemplate('overlay_modal', `modal`, {type: 'photo'}, () => {
+//            console.log('base rendered');
+            renderTemplate('modal_content', `modal/event/photo`, ev, () => {
 //                console.log('content rendered');
                 setupModalClose($('#overlay_modal'), true);
 //                enableButton($($('.k2-modal-btn')[0]), true);
@@ -779,9 +755,9 @@ document.addEventListener('DOMContentLoaded', function () {
             if (cb) {
                 cb();
             }
-            if (cheating) {
-                setTimeout(() => closeModal(), 3000);
-            }
+//            if (cheating) {
+//                setTimeout(() => closeModal(), 3000);
+//            }
         });
     };
     const setupModalBackButton = (cb) => {
@@ -800,12 +776,17 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     };
     const setupModalDiceButton = (cb) => {
+//        console.log(`setupModalDiceButton`);
         const ob = {display: 'Roll die'};
+        window.removeTemplate('modal_footer');
         window.renderTemplate('modal_footer', 'modal.footer.button', ob, () => {
             const bb = $('.k2-modal-btn');
             const dr = $('.dieroll');
             let dint = null;
-            bb.off('click').on('click', () => {
+            bb.off('click').on('click', function () {
+//                const dv = $('.choice_option:visible');
+                const dv = $('#die:visible');
+                console.log(`no of vis dice: ${dv.length} out of ${$('#die').length}`);
                 bb.hide();
                 if (cb) {
                     cb({state: 0});
@@ -818,7 +799,9 @@ document.addEventListener('DOMContentLoaded', function () {
                     let fr = d%24 + 1;
                     d++;
                     $('.dieimg').hide();
-                    $(`#dieimg_${fr}`).show();
+//                    $(`#dieimg_${fr}`).show();
+                    dv.find(`#dieimg_${fr}`).show();
+//                    console.log(`show #dieimg_${fr}`);
                     if (d > 20 && n === res) {
                         clearInterval(dint);
                         if (cb) {
@@ -826,7 +809,13 @@ document.addEventListener('DOMContentLoaded', function () {
                         }
                     }
                 }, 100);
-            })
+            });
+            if (cheating) {
+
+                setTimeout(() => {
+                    bb.click();
+                }, cheatTimeout)
+            }
         });
     };
     const storeLocal = (p, v) => {
@@ -1948,6 +1937,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 setupResources();
 
                 if (autoResource && window.isLocal()) {
+                    checkCapacity();
                     const c = gameData.constants;
 //                    console.log(c);
                     const ch =[0, 0, 3];
@@ -2031,7 +2021,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         const d = $(this).attr('data-target');
                         const D = d.substr(0, 1).toUpperCase() + d.substring(1);
                         obber[`is${D}`] = true;
-                        console.log(obber)
+//                        console.log(obber)
                         showModal('profileDetail', obber);
                     });
                 });
@@ -2093,33 +2083,24 @@ document.addEventListener('DOMContentLoaded', function () {
     const eventTrigger = (ev) => {
         // EventStack calls this method when a new event is to be triggered
 //        console.log(`eventTrigger`, ev);
+        const C = Climber.getClimbers();
         if (!ev.active) {
             return;
         }
+
+        if (ev.profiles) {
+            if (ev.profiles.length === 1) {
+                // Profile event, only one climber
+                if (C[ev.profiles[0]].finished) {
+                    // profile has finished, do not run this event
+                    return;
+                }
+            }
+        }
         pauseSession();
         ev = prepEvent(ev);
-//        if (ev.hasOwnProperty('profiles')) {
-//            // NOTE: the event model CAN send in  any number of profiles, the line below assumes only a single profile, edit if events effect multiple profiles
-//            ev.theProfile = session[`profile${ev.profiles[0]}`];
-//        }
-//        ev.supportTeam = session.supportTeam.climbers;
-//        if (ev.hasOwnProperty('metrics')) {
-//            if (ev.metrics.hasOwnProperty('results')) {
-//                if (ev.supportTeam) {
-//                    ev.metrics.results.forEach((r, i) => {
-//                        r.profile = Object.values(ev.supportTeam)[i]
-//                    });
-//                }
-//            }
-//        }
-//        if (ev.hasOwnProperty('delay')) {
-//            ev.profiles.forEach(p => {
-//                session[`profile${p}`].setDelay(ev.delay);
-//            });
-//        }
 
-
-
+//        console.log('trigger', ev);
         if (ev.hasOwnProperty('video')) {
 //            console.log('render the cinema, yes');
 //            renderCinema(ev);
@@ -2127,12 +2108,18 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
         if (ev.event.includes('photo')) {
-            console.log('photo', ev)
-            showModalSelfie(ev);
-            console.log('photo (selfie) event');
+//            console.log('photo', ev);
+            if (ev.type === 'selfie') {
+                showModalSelfie(ev);
+//                console.log('photo (selfie) event');
+            } else {
+                showModalPhoto(ev);
+            }
             return;
         }
         if (!ev.noModal) {
+//            console.log('eventTrigger calls showModalEvent');
+//            console.log(ev);
             showModalEvent(ev);
         }
     };
@@ -2363,6 +2350,7 @@ document.addEventListener('DOMContentLoaded', function () {
         return 0;
     };
     const setupCinema = () => {
+//        console.log(`setupCinema`);
         const i = $('#cinema').find('iframe');
         const cl = $('#cinemaControls').find('.close');
         cl.show();
@@ -2378,6 +2366,12 @@ document.addEventListener('DOMContentLoaded', function () {
 //            onVideoEnd();
             window.removeTemplate('cinema', onVideoEnd);
         });
+        if (cheating) {
+            setTimeout(() => {
+//                console.log('close video now');
+                cl.click();
+            }, cheatTimeout * 1.3);
+        }
     };
     const showCinema = (boo, cb) => {
 //        return;
@@ -2391,6 +2385,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     if (cb) {
                         cb()
                     }
+                    c.find('iframe').remove();
                     // by default, restart the timer
 //                    playPauseSession()
                 });
@@ -2406,11 +2401,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 const ev = eventStack.getCurrentEvent();
                 if (ev) {
                     if (ev.hasOwnProperty('event')) {
-                        showModalEvent(ev);
+//                        console.log(`video end calls showModalEvent once`);
+//                        showModalEvent(ev);
                         evModal = true;
                     }
                 }
                 if (evModal) {
+//                    console.log(`video end calls showModalEvent twice`);
                     showModalEvent(ev);
                 } else {
                     unpauseSession(true);
@@ -2490,6 +2487,13 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     }
+    window.forceZeroOx = (n) => {
+        const c = Object.assign(Climber.getClimbers()[n || 0], {resource: 'oxygen'});
+        c.setOxygen(0);
+        climberDepletionEvent(c);
+        console.log(c);
+        console.log(`${c.name} ox: ${c.oxygen}`);
+    };
 
     window.testEvents = (n) => {
         const E = gameData.events;
@@ -2498,7 +2502,8 @@ document.addEventListener('DOMContentLoaded', function () {
             ev.active = true;
             ev.complete = false;
             console.log(ev);
-            showModalEvent(ev);
+//            showModalEvent(ev);
+            eventTrigger(ev);
         } else {
             console.warn(`there are only ${E.length} events`);
         }
@@ -2539,6 +2544,18 @@ document.addEventListener('DOMContentLoaded', function () {
     setTimeout(() => {
 //        listClimberProperty('capacity');
     }, 3000);
+    const checkCapacity = () => {
+        const unCount = setInterval(() => {
+            const C = Climber.getClimbers().filter(c => c.capacity === 'undefined');
+    //        console.log('no?');
+            if (C.length) {
+                C.forEach(c => console.log(`${c.nameFirst} capacity: ${c.capacity}`));
+                clearInterval(unCount);
+            } else {
+    //            console.log('no');
+            }
+        }, 1000);
+    }
 //    evTest();
     window.updateVersion = () => {
         return versionControl.updateVersion();

@@ -19,7 +19,8 @@ class Climber {
             this.option = this.getOption(init.type);
             this.OPTION = this.getOption(init.type).toUpperCase();
         }
-        this.options = Object.values(this.gameData.profiles[`profile_${this.profile}`]);
+        this.options = Object.values(this.gameData.profiles[`profile_${this.profile}`]).filter(p => p.hasOwnProperty('capacity'));
+//        console.log(this.options);
         this.expandOptions();
         this.option = this.getOption(init.profile);
         this.OPTION = this.getOption(init.profile).toUpperCase();
@@ -120,7 +121,7 @@ class Climber {
             return;
         }
         const active = Climber.getClimbers().filter(c => !c.finished);
-//        const active = Climber.getClimbers().filter(c => c.profile === 0);
+//        const active = Climber.getClimbers().filter(c => c.profile === 1);
         active.forEach(c => {
             c.updateViewFromTime(o);
         });
@@ -402,6 +403,7 @@ class Climber {
         if (this.resupplies.length === 6) {
 //            console.log(`${this.name} resupplies = ${this.resupplies}`);
         }
+        console.log(`${this.name} resupplies = ${this.resupplies}`);
     }
     addResupplyV1(s, v) {
         // add an item to the resupplies string if it doesn't already contain it (use initials only)
@@ -641,10 +643,10 @@ class Climber {
 //            console.log(ra);
             const sm = this.getSummaryMap();
             ra.forEach(r => {
-                console.log(`hoping to set ${sm[r[0]]} to ${r[1]}`);
+                console.log(`hoping to adjust ${sm[r[0]]} by ${r[1]}`);
                 const p = r[0];
                 const v = r[1];
-                this.setProperty(sm[p], v);
+                this.adjustProperty(sm[p], v);
                 /*
                 switch (p) {
                     case 'o':

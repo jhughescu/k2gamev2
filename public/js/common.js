@@ -297,6 +297,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!targ.includes('#')) {
             targ = `#${targ}`;
         }
+        $(targ).children().remove();
         $(targ).html('');
 //        console.log(targ, $(targ));
         if (cb) {

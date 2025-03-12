@@ -341,8 +341,8 @@
         }
     },
     "route": {"ratio": [50, 50]},
+    "activeEventRange": [-10, -18],
     "activeEventRange": [0, 15],
-    "activeEventRange": [0, 18],
     "events": [
         {
             "time": 0.5,
@@ -350,7 +350,7 @@
             "event": "equipment",
             "videoNO": "00dc2a60-3539-4014-8227-b202009d4ea9",
             "video": "a4fc6a48-7c1c-4ca9-b50c-b202009975ce",
-            "profiles": [0],
+            "profiles": [2],
             "delay": 7
         },
         {
@@ -447,7 +447,8 @@
         },
         {
             "time": 20,
-            "event": "photo1",
+            "event": "photo",
+            "type": "selfie",
             "penalties": {"oxygen": 1, "sustenance": 1}
 
         },
@@ -508,11 +509,15 @@
         },
         {
             "time": 35,
-            "event": "ai1"
+            "event": "ai1",
+            "active": false
         },
         {
             "time": 40,
-            "event": "photo_storm"
+            "event": "photo",
+            "type": "view",
+            "asset": "PhotoImages_Photo-A.png",
+            "msg": "Camp IV has received reports of an incoming storm. They will monitor the situation closely and provide further reports once its impact is confirmed."
         },
         {
             "time": 45,
@@ -546,7 +551,8 @@
         },
         {
             "time": 50,
-            "event": "foundoxygen"
+            "event": "foundoxygen",
+            "active": false
         },
         {
             "time": 55,
@@ -580,7 +586,8 @@
         },
         {
             "time": 60,
-            "event": "ai2"
+            "event": "ai2",
+            "active": false
         },
         {
             "time": 62,
