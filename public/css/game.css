@@ -227,7 +227,7 @@ p.resource_value {
     padding: 0; /* Remove padding to ensure proper alignment */
     margin: 10px;
 }
-#die {
+.die {
 
     width: 100px;
     height: 100px;
@@ -236,7 +236,7 @@ p.resource_value {
     margin-top: 10px;
     left: calc(50% - 55px); /* 55px: half width plus half margin (see main class above) */
 }
-[id^="modal_content_p"] #die {
+[id^="modal_content_p"] .die {
 /*    background-color: red;*/
     top: 360px;
 }
@@ -261,7 +261,7 @@ p.resource_value {
     left: calc(50% - 55px); /* 55px: half width plus half margin (see main class above) */
 }
 /*
-#modal_content_section .choice_option #die {
+#modal_content_section .choice_option .die {
     top: 360px;
     opacity: 0.4;
 }

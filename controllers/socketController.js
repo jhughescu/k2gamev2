@@ -5,6 +5,7 @@ const sessionController = require('./../controllers/sessionController');
 const downloadController = require('./../controllers/downloadController');
 const logController = require('./../controllers/logController');
 const databaseController = require('./../controllers/databaseController');
+const gfxController = require('./../controllers/gfxController');
 
 const tools = require('./../controllers/tools');
 
@@ -81,7 +82,7 @@ function initSocket(server) {
             // end common
             // game clients
             if (sType === 'player') {
-                console.log('player enters')
+                console.log('player enters');
                 socket.emit('handshakeCheck', getPlayerHandshake());
                 socket.on('disconnect', () => {
 //                    console.log('gone');
@@ -111,6 +112,10 @@ function initSocket(server) {
                 });
                 socket.on('writeJsonFile', (dir, f, o) => {
                     logController.writeBeautifiedJson(dir, f, o);
+                });
+                socket.on('createQR', (loc, cb) => {
+                    console.log('create a QR');
+                    gfxController.generateLocationQR(loc, cb);
                 });
             }
             // end game clients

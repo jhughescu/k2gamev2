@@ -77,7 +77,9 @@ const newSession = async (cb) => {
         profile1: {blank: true},
         profile2: {blank: true}
     });
+
     s.save();
+    console.log('NEW SESSION');
     console.log(s);
     cb(developSession(s));
 };

@@ -36,7 +36,8 @@ class Climber {
 //        console.log(this.getStoredSummary());
 //        console.log(stored);
         this.type = init.type;
-        this.capacity = init.capacity;
+        this.capacity = init.capacity || 0;
+//        console.log(`${this.name} init capacity: ${this.capacity}`);
         this.t1 = init.t1;
         this.t2 = init.t2;
         this.tTotal = (this.t1 * 2) + (this.t2 * 2);
@@ -63,6 +64,7 @@ class Climber {
 
         // currentTime is a simple integer which can be written/read from the database
         this.currentTime = stored.currentTime > 0 ? stored.currentTime : 0;
+        this.finishTime = stored.hasOwnProperty('finishTime') ? stored.finishTime : 0;
         // currentTimeObject is a read-only object sent in by the game code (see updatePosition)
         this.currentTimeObject = {};
         // delay in minutes
@@ -234,6 +236,7 @@ class Climber {
             t2: 't2',
             cs: 'currentSpeed',
             ct: 'currentTime',
+            ft: 'finishTime',
             o: 'oxygen',
             s: 'sustenance',
             r: 'rope',
@@ -347,11 +350,11 @@ class Climber {
         this.setProperty('type', n, cb);
         this.options = Object.values(this.gameData.profiles[`profile_${this.profile}`]);
         const op = this.options[n];
-        console.log('climber setType', n, op);
         this.t1 = op.t1;
         this.t2 = op.t2;
         this.tTotal = (this.t1 * 2) + (this.t2 * 2);
         this.capacity = op.capacity;
+//        console.log('climber setType', n, op, `capacity: ${this.capacity}`);
         this.option = this.getOption(n);
         this.OPTION = this.getOption(n).toUpperCase();
         this.storeSummary();
@@ -403,7 +406,7 @@ class Climber {
         if (this.resupplies.length === 6) {
 //            console.log(`${this.name} resupplies = ${this.resupplies}`);
         }
-        console.log(`${this.name} resupplies = ${this.resupplies}`);
+//        console.log(`${this.name} resupplies = ${this.resupplies}`);
     }
     addResupplyV1(s, v) {
         // add an item to the resupplies string if it doesn't already contain it (use initials only)
@@ -491,7 +494,8 @@ class Climber {
             const sid = this.getStorageID();
             const ss = this.getStorageSummary();
     //        const sid = `${this.gameData.storeID}-c${this.profile}-${this.filename}`;
-    //        console.log(`storing climber with ID ${sid} - use filename? ${this.filename}`);
+//            console.log(`storing climber with ID ${sid} - use filename? ${this.filename}`);
+//            console.log(ss);
             localStorage.setItem(sid, ss);
         }
     }
@@ -838,11 +842,16 @@ class Climber {
             if (this.position > 50) {
                 pos = H - (pos - H);
             }
-            if (this.position === 100) {
+            if (this.position === 100 && !this.finished) {
                 this.showFinished();
                 this.finished = true;
-//                console.log(`${this.name} has finished`);
+                this.finishTime = this.currentTime;
+                console.log(`${this.name} has finished, ct: ${this.currentTime}, ft: ${this.finishTime}`);
+//                console.log(this.currentTime);
+//                console.log(this.finishTime);
+                this.storeSummary();
 //                console.log(this);
+//                debugger;
                 window.climberUpdate(this, true);
             }
             const scaleFactor = 200;

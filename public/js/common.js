@@ -200,7 +200,8 @@ document.addEventListener('DOMContentLoaded', function () {
     };
     const clone = (o) => {
         // return a discrete copy of the object
-        return JSON.parse(JSON.stringify(o));
+        const ro = o || {};
+        return JSON.parse(JSON.stringify(ro));
     };
     const localStorageSet = (id, o) => {
         // unify all setting of localStorage
@@ -487,7 +488,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const setupPanel = () => {
         console.log('setupPanel')
     };
-    const getQueries = (u) => {
+    const getQueriesV1 = (u) => {
         // return an object all query string properties in a given URL
         let qu = {};
         if (u.indexOf('?', 0) > -1) {
@@ -503,6 +504,25 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         return qu;
     };
+    const getQueries = () => {
+        let q = window.location.search;
+        let o = {};
+        if (q) {
+            q = q.replace('?', '').split('&');
+//            console.log(q);
+            q.forEach((e, id) => {
+//                const o = {};
+                o[e.split('=')[0]] = procVal(e.split('=')[1])
+//                q[i] = ob;
+            });
+        }
+        return o;
+    };
+    const getQuery = (q) => {
+        const Q = getQueries();
+        const rq = Q[q] || null;
+        return rq;
+    }
     const filterScorePackets = (sp, prop, val) => {
         const spo = [];
         val = procVal(val);
@@ -1097,6 +1117,7 @@ document.addEventListener('DOMContentLoaded', function () {
     window.copyToClipboard = copyToClipboard;
     window.createCopyLinks = createCopyLinks;
     window.getQueries = getQueries;
+    window.getQuery = getQuery;
     window.getPartials = getPartials;
     window.socketShare = socketShare;
     window.getSocket = getSocket;
