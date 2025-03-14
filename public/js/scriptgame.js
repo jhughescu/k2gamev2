@@ -49,6 +49,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const sessionReset = $('#b_reset');
     const toggleDebug = $('#b_toggle');
     const clearConsole = $('#b_clear');
+    const stormStarter = $('#b_storm');
+
     let timeDisplay = $('#time_display');
 
     // programmable event methods
@@ -2239,6 +2241,138 @@ document.addEventListener('DOMContentLoaded', function () {
         }, 2000);
 
     };
+    // storm
+    const stormTime = {min: 10000, max: 20000};
+    // cloudDelay will be an interval after which the cloud animations will start
+    let cloudDelay = null;
+    let lightningActive = false; // Prevent re-triggering while active
+    //
+    const getCloudTime = () => {
+        let range = stormTime;
+        const t = range.min + (Math.random() * (range.max - range.min));
+        return t;
+    };
+    const getCloudEndPos = (c) => {
+        const w = c.getBoundingClientRect().width;
+        const ep = (window.innerWidth / 2) - w + (Math.random() * w);
+        return ep;
+    };
+    $.easing.easeOutQuad = function (x) {
+        return 1 - (1 - x) * (1 - x);
+    };
+    const resetClouds = () => {
+        const cl = $('.cloudleft');
+        const cr = $('.cloudright');
+        cl.each((i, c) => {
+            $(c).stop(true, true); // Stop ongoing animation & jump to the final position
+            const w = c.getBoundingClientRect().width;
+            $(c).css('left', `-${w}px`);
+        });
+        cr.each((i, c) => {
+            $(c).stop(true, true);
+            const w = c.getBoundingClientRect().width;
+            $(c).css('right', `-${w}px`);
+        });
+    };
+    const startClouds = () => {
+        const cl = $('.cloudleft');
+        const cr = $('.cloudright');
+//        cr.hide();
+        let t, l, r;
+        resetClouds();
+        cl.each((i, c) => {
+            t = getCloudTime();
+            l = getCloudEndPos(c);
+            $(c).stop(true, true) // Stop any previous animation
+                .removeClass('cloudleftInit')
+                .delay(Math.random() * 5000)
+                .animate({ left: `${l}px` }, t, 'easeOutQuad');
+        });
+        cr.each((i, c) => {
+            t = getCloudTime();
+            r = getCloudEndPos(c);
+            $(c).stop(true, true)
+                .removeClass('cloudrightInit')
+                .delay(Math.random() * 5000)
+                .animate({ right: `${r}px` }, t, 'easeOutQuad');
+        });
+    };
+    const goDarkSky = () => {
+        const sb = $('.stormbg');
+        sb.css('opacity', 0);
+        sb.animate({'opacity': 1}, {
+            duration: stormTime.max,
+            step: function(now) {
+                //
+            },
+            complete: function() {
+                console.log("Animation complete!");
+            }
+        });
+    };
+
+    const flashLightning = () => {
+        if (lightningActive) return; // Exit if already in progress
+        lightningActive = true; // Set flag
+
+        const l = $('.lightningzones');
+        const flipTarget = $('#lightninggfx');
+        const setFlashPattern = [40, 100, 100, 50, 40, 100, 40, 40, 100, 50, 50, 100, 130, 50];
+        const flashPattern = setFlashPattern.sort(() => Math.random() - 0.5);
+
+        let flipped = false;
+        let totalTime = 0;
+
+        flashPattern.forEach((delayTime, index) => {
+            totalTime += delayTime;
+            setTimeout(() => {
+                l.toggle(); // Toggle visibility
+                if (Math.random() > 0.75) {
+                    flipped = !flipped;
+                    flipTarget.toggleClass('flip-horizontal', flipped);
+                }
+                if (index === flashPattern.length - 1) {
+                    lightningActive = false; // Reset flag when sequence ends
+                    scheduleNextLightning(); // Schedule next flash
+                }
+            }, totalTime);
+        });
+    };
+    const scheduleNextLightning = () => {
+        const nextInterval = Math.random() * 9000 + 1000; // Random time between 1s - 10s
+        setTimeout(flashLightning, nextInterval);
+    };
+    const flashLightningV2 = () => {
+        const l = $('.lightningzones');
+        const flipTarget = $('#lightninggfx'); // Change this to the specific element to flip
+        const setFlashPattern = [40, 100, 100, 50, 40, 100, 40, 40, 100, 50, 50, 100, 130, 50]; // Timings for flashes
+        const flashPattern = setFlashPattern.sort(() => Math.random() - 0.5);
+        let flipped = false; // Track flip state
+        flashPattern.forEach((delayTime, index) => {
+            setTimeout(() => {
+                l.toggle(); // Toggle visibility
+                if (Math.random() > 0.75) {
+                    flipped = !flipped;
+                    flipTarget.toggleClass('flip-horizontal', flipped);
+                }
+            }, flashPattern.slice(0, index + 1).reduce((a, b) => a + b, 0));
+        });
+    };
+
+    window.startClouds = startClouds;
+    window.resetClouds = resetClouds;
+    window.goDarkSky = goDarkSky;
+    window.flashLightning = flashLightning;
+    window.startStorm = () => {
+        goDarkSky();
+        clearTimeout(cloudDelay);
+        cloudDelay = setTimeout(() => {
+            startClouds();
+            scheduleNextLightning();
+        }, 6000);
+
+    };
+    // end storm
     /*
     const testDep = () => {
         const data = Object.assign(Climber.getClimbers()[0], {oxygen: 0, resource: 'oxygen', event: 'resource_gone', method: 'resourcesGoneSetup'});
@@ -2349,6 +2483,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 renderTemplateWithStyle('timerpanel', 'dev.timer.panel', gameData, () => {
                     devTimer = new DevTimer();
                 });
+                renderTemplate('cloudzone', 'storm', {}, () => {
+
+                });
                 devShowProfiles();
                 Climber.getRouteMap(() => {
                     Climber.setViews($('.map-pointer-container'));
@@ -2362,7 +2499,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         allClimbersFinished();
                         pauseSession();
                     } else {
-                        unpauseSession(true);
+//                        unpauseSession(true);
                     }
                 });
             })
@@ -2746,6 +2883,7 @@ document.addEventListener('DOMContentLoaded', function () {
     sessionPlayPause.on('click', playPauseSession);
     toggleDebug.on('click', toggleDebugPanels);
     clearConsole.on('click', clearBrowserConsole);
+    stormStarter.on('click', startStorm);
     const onUnload = () => {
         snapshot();
         theState.storeTime(gTimer.elapsedTime);

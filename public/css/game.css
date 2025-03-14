@@ -286,3 +286,128 @@ p.resource_value {
     height: 20px;
 
 }
+
+
+.stormoverlay {
+    width: 100%;
+    min-width: 100%;
+    position: absolute;
+    z-index: 8;
+/*    background-color: rgba(255, 255, 255, 0.44);*/
+}
+#lightningzone1 {
+    z-index: 2;
+    opacity: 0.8;
+}
+#lightningzonetop {
+    z-index: 20;
+    opacity: 0.2;
+}
+#lightningzone2 {
+    z-index: 20;
+    opacity: 0.5;
+}
+#lightninggfx {
+    background-image: url(../assets/weather/lightningglow.png);
+    background-repeat: no-repeat;
+    background-size: contain;
+    background-position: center;
+/*    transform: scaleX(-1);*/
+    display: none;
+    background-color: transparent;
+    z-index: 7;
+}
+.flip-horizontal {
+    transform: scaleX(-1);
+    background-position: 0px;
+}
+.lightningzones {
+/*    z-index: 2;*/
+    background-color: white;
+    display: none;
+}
+.stormbg {
+    background-image: linear-gradient(#010a12, #5a706d);
+    z-index: 1;
+    opacity: 0;
+}
+
+.stormcloud {
+    opacity: 0.97;
+    position: absolute;
+    top: 0px;
+    transform: scale(50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center; /* Ensures proper centering of text */
+}
+
+.stormcloud p {
+    color: white;
+    font-size: 50px;
+    font-weight: bold;
+    margin: 0; /* Removes any default margins */
+    display: none;
+}
+
+.cloudleft {
+    transform-origin: left top;
+/*    left: -100vw;*/
+}
+.cloudleftInit {
+/*    transform-origin: left top;*/
+    left: -100vw;
+}
+.cloudright {
+    transform-origin: right top;
+/*    right: -100vw;*/
+}
+.cloudrightInit {
+/*    transform-origin: right top;*/
+    right: -100vw;
+}
+.cloud1 {
+    background-image: url(../assets/weather/stormcloud_1.png);
+    width: 718px;
+    height: 435px;
+    top: -50px;
+}
+.cloud2 {
+    background-image: url(../assets/weather/stormcloud_2.png);
+    width: 1048px;
+    height: 492px;
+    top: -20px;
+}
+.cloud3 {
+    background-image: url(../assets/weather/stormcloud_3.png);
+    width: 1089px;
+    height: 511px;
+    top: 400px;
+}
+.cloud4 {
+    background-image: url(../assets/weather/stormcloud_4.png);
+    width: 1048px;
+    height: 491px;
+    top: 90px
+}
+.cloud5 {
+    background-image: url(../assets/weather/stormcloud_5.png);
+    width: 1131px;
+    height: 659px;
+    top: 120px;
+}
+.cloud6 {
+    background-image: url(../assets/weather/stormcloud_6.png);
+    width: 1595px;
+    height: 748px;
+    top: 200px;
+}
+.cloud7 {
+    background-image: url(../assets/weather/stormcloud_7.png);
+    width: 1696px;
+    height: 795px;
+    right: -100vw;
+    top: 310px;
+/*    left: calc(100vw - 400px);*/
+}
