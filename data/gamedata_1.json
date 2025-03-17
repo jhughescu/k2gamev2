@@ -348,6 +348,7 @@
             "time": 0.5,
             "ref": "C1PP",
             "event": "equipment",
+            "eventTitle": "Missing Equipment",
             "videoNO": "00dc2a60-3539-4014-8227-b202009d4ea9",
             "video": "a4fc6a48-7c1c-4ca9-b50c-b202009975ce",
             "profiles": [2],
@@ -377,6 +378,7 @@
             "time": 10,
             "ref": "A1PP",
             "event": "crampons",
+            "eventTitle": "Loose Crampons",
             "video": "0b3a9911-9079-429e-9815-b2020098879f",
             "video": "0b3a9911-9079-429e-9815-b2020098879f",
             "type": "p1",
@@ -591,7 +593,10 @@
         },
         {
             "time": 62,
-            "event": "announcestorm"
+            "event": "photo",
+            "type": "view",
+            "asset": "PhotoImages_Photo-A.pngCHANGE THIS",
+            "msg": "A climber has sent you a photo of the incoming storm."
         },
         {
             "time": 65,
@@ -622,6 +627,12 @@
                     }
                 ]
             }
+        },
+        {
+            "time": 65,
+            "event": "startstorm",
+            "method": "startStorm",
+            "noModal": true
         },
         {
             "time": 70,

@@ -326,6 +326,10 @@ p.resource_value {
     background-color: white;
     display: none;
 }
+
+.lightningzones .lightninglight {
+    opacity: 0.2;
+}
 .stormbg {
     background-image: linear-gradient(#010a12, #5a706d);
     z-index: 1;

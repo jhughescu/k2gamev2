@@ -25,6 +25,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const autoResource = window.isLocal() ? true : false;
 
     const getCheatState = () => {
+        return false;
         const cs = window.isLocal() || window.getQuery('cheating') ? true : false;
         console.log(`request cheat state, window.isLocal? ${window.isLocal()}, query cheating? ${window.getQuery('cheating')}, returning ${cs}`);
         return cs;
@@ -1830,7 +1831,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const img = $('.summit-graphic');
         const P = getAlph(p).toUpperCase()
         const T = getAlph(t).toUpperCase();
-        const src = `assets/profiles/profileimages_Profile${P}-${T}.png`
+        const src = `assets/profiles/profileimages_Profile${getAlph(p)}-${getAlph(t)}.png`
 //        console.log('src', src);
         img.attr('src', src);
     };
@@ -2147,7 +2148,7 @@ document.addEventListener('DOMContentLoaded', function () {
         pauseSession();
         ev = prepEvent(ev);
 
-//        console.log('trigger', ev);
+        console.log('trigger', ev);
         if (ev.hasOwnProperty('video')) {
 //            console.log('render the cinema, yes');
 //            renderCinema(ev);
@@ -2168,6 +2169,12 @@ document.addEventListener('DOMContentLoaded', function () {
 //            console.log('eventTrigger calls showModalEvent');
 //            console.log(ev);
             showModalEvent(ev);
+        } else {
+//            unpauseSession();
+            if (ev.hasOwnProperty('method')) {
+//                ev.method
+                eval(ev.method)({}, ev);
+            }
         }
     };
     const updateEventStack = (cs) => {
@@ -2246,6 +2253,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // cloudDelay will be an interval after which the cloud animations will start
     let cloudDelay = null;
     let lightningActive = false; // Prevent re-triggering while active
+    let lightningTimeouts = [];
     //
     const getCloudTime = () => {
         let range = stormTime;
@@ -2306,14 +2314,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 //
             },
             complete: function() {
-                console.log("Animation complete!");
+//                console.log("Animation complete!");
             }
         });
     };
-
     const flashLightning = () => {
-        if (lightningActive) return; // Exit if already in progress
-        lightningActive = true; // Set flag
+    if (lightningActive) return;
+        lightningActive = true;
 
         const l = $('.lightningzones');
         const flipTarget = $('#lightninggfx');
@@ -2325,22 +2332,26 @@ document.addEventListener('DOMContentLoaded', function () {
 
         flashPattern.forEach((delayTime, index) => {
             totalTime += delayTime;
-            setTimeout(() => {
-                l.toggle(); // Toggle visibility
+            const timeout = setTimeout(() => {
+                if (!lightningActive) return; // Stop execution if reset
+                l.toggle();
                 if (Math.random() > 0.75) {
                     flipped = !flipped;
                     flipTarget.toggleClass('flip-horizontal', flipped);
                 }
                 if (index === flashPattern.length - 1) {
-                    lightningActive = false; // Reset flag when sequence ends
-                    scheduleNextLightning(); // Schedule next flash
+                    lightningActive = false;
+                    scheduleNextLightning();
                 }
             }, totalTime);
+            lightningTimeouts.push(timeout); // Store timeout reference
         });
     };
+
     const scheduleNextLightning = () => {
-        const nextInterval = Math.random() * 9000 + 1000; // Random time between 1s - 10s
-        setTimeout(flashLightning, nextInterval);
+        const nextInterval = Math.random() * 9000 + 1000;
+        const timeout = setTimeout(flashLightning, nextInterval);
+        lightningTimeouts.push(timeout); // Store timeout reference
     };
     const flashLightningV2 = () => {
         const l = $('.lightningzones');
@@ -2358,20 +2369,35 @@ document.addEventListener('DOMContentLoaded', function () {
             }, flashPattern.slice(0, index + 1).reduce((a, b) => a + b, 0));
         });
     };
+    const startStorm = () => {
+        $('#lightningzone1').addClass('lightninglight');
+//        debugger;
+        goDarkSky();
+        scheduleNextLightning();
+        clearTimeout(cloudDelay);
+        cloudDelay = setTimeout(() => {
+            startClouds();
+            $('#lightningzone1').removeClass('lightninglight');
+        }, 9000);
+    };
+    const resetStorm = () => {
+        const sb = $('.stormbg');
+        sb.css('opacity', 0);
+        resetClouds();
+        // lightning:
+        lightningActive = false; // Stop effect
+        lightningTimeouts.forEach(clearTimeout); // Clear all pending timeouts
+        lightningTimeouts = []; // Reset timeout storage
+        $('.lightningzones').hide(); // Ensure the lightning visuals are off
+        $('#lightninggfx').removeClass('flip-horizontal'); // Reset flip state
+    };
 
     window.startClouds = startClouds;
     window.resetClouds = resetClouds;
     window.goDarkSky = goDarkSky;
     window.flashLightning = flashLightning;
-    window.startStorm = () => {
-        goDarkSky();
-        clearTimeout(cloudDelay);
-        cloudDelay = setTimeout(() => {
-            startClouds();
-            scheduleNextLightning();
-        }, 6000);
-
-    };
+    window.startStorm = startStorm;
+    window.resetStorm = resetStorm;
     // end storm
     /*
     const testDep = () => {

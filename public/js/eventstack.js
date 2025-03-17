@@ -82,6 +82,7 @@ class EventStack {
                 e.template = e.method === 'profileEvent' ? 'profile_event' : null;
                 e.noModal = !e.hasOwnProperty('noModal') ? false : e.noModal;
                 e.n = i;
+                e.eventTitle = e.hasOwnProperty('eventTitle') ? e.eventTitle : e.event.replace(/\d/g, '').replace(/^./, c => c.toUpperCase());
                 if (e.hasOwnProperty('metrics')) {
                     e.metrics = this.processMetrics(e.metrics)
                 }
