@@ -1831,7 +1831,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const img = $('.summit-graphic');
         const P = getAlph(p).toUpperCase()
         const T = getAlph(t).toUpperCase();
-        const src = `assets/profiles/profileimages_Profile${getAlph(p)}-${getAlph(t)}.png`
+        const src = `assets/profiles/profileimages_profile${getAlph(p)}-${getAlph(t)}.png`
 //        console.log('src', src);
         img.attr('src', src);
     };
