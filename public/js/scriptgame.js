@@ -2290,7 +2290,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const eOb = {
             template: 'climb-incomplete'
         };
-//        cheating = false;
+        cheating = false;
         setTimeout(() => {
             showModalEvent(eOb);
         }, 2000);
