@@ -83,6 +83,9 @@ class EventStack {
                 e.noModal = !e.hasOwnProperty('noModal') ? false : e.noModal;
                 e.n = i;
                 e.eventTitle = e.hasOwnProperty('eventTitle') ? e.eventTitle : e.event.replace(/\d/g, '').replace(/^./, c => c.toUpperCase());
+                if (e.event === 'photo') {
+                    e.modalIcon = e.type === 'storm' ? 'KillerStorm' : 'Camera';
+                }
                 if (e.hasOwnProperty('metrics')) {
                     e.metrics = this.processMetrics(e.metrics)
                 }

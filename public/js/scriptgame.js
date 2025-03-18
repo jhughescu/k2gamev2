@@ -21,11 +21,11 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // autoResource meane profiles will be set automatically on the resources screen
-//    const autoResource = true;
+//    const autoResource = false;
     const autoResource = window.isLocal() ? true : false;
 
     const getCheatState = () => {
-        return false;
+//        return false;
         const cs = window.isLocal() || window.getQuery('cheating') ? true : false;
         console.log(`request cheat state, window.isLocal? ${window.isLocal()}, query cheating? ${window.getQuery('cheating')}, returning ${cs}`);
         return cs;
@@ -223,7 +223,7 @@ document.addEventListener('DOMContentLoaded', function () {
         o.fadeOut();
     };
     const showAlert = (s) => {
-//        alert(s);
+        alert(s);
     };
     const showConfirm = (s) => {
         let ok = confirm(s);
@@ -548,7 +548,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                     summary.push(`${window.getNumberText(n)} ${p[0]}`);
                                     if (prof.adjustProperty) {
                                         prof.adjustProperty(p[0], red, (r) => {
-                                            console.log(`adjustment complete`, r);
+//                                            console.log(`adjustment complete`, r);
                                         });
                                         prepProfilesForDisplay();
                                         prof.calculateClimbRate();
@@ -556,7 +556,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                     }
 
                                 } else {
-                                    console.log(`no reduction in ${p[0]}`);
+//                                    console.log(`no reduction in ${p[0]}`);
                                 }
                             });
                             const response = `You rolled a ${result}${boo ? ', ' + prof.responses.res + summary.join(' and ') : ' - no penalty'}`;
@@ -828,7 +828,7 @@ document.addEventListener('DOMContentLoaded', function () {
             bb.off('click').on('click', function () {
 //                const dv = $('.choice_option:visible');
                 const dv = $('.die:visible');
-                console.log(`no of vis dice: ${dv.length} out of ${$('.die').length}`);
+//                console.log(`no of vis dice: ${dv.length} out of ${$('.die').length}`);
                 if (dv.length === 0) {
                     cheating = false;
                     return;
@@ -1082,6 +1082,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const e = eventStack.resetEvents();
         updateSession('events', e);
         resetClimbers();
+        resetStorm();
         devShowProfiles();
     };
     const showSession = () => {
@@ -1751,8 +1752,14 @@ document.addEventListener('DOMContentLoaded', function () {
             $('.adjust_btn').addClass('disabled');
             sub.off('click').on('click', function (ev) {
                 ev.preventDefault();
-
+                if ($('#resource_total').html() === '-') {
+                    showAlert('Please choose an Option');
+                    return;
+                }
                 if ($('#resource_remaining').html().includes('-')) {
+//                    console.log(p);
+//                    console.log(getWeight(p));
+
                     showAlert(`${p.name} is ${Math.abs(getWeight(p).remaining)}kg over capacity, please adjust resources`);
                 } else {
                     const inputValues = $('input[type="text"]').map((_, el) => parseInt($(el).val())).get();
@@ -1762,6 +1769,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         showAlert('you must pick an Option')
                     } else {
                         const r = $('#resource_remaining').find('div').length > 0 ? $('#resource_remaining').find('div').html() : $('#resource_remaining').html();
+//                        console.log($('#resource_remaining').find('.dyno').html())
                         if (zeroValues.length > 1) {
                             if (parseFloat(r) > 0) {
                                 const ok = showConfirm(`You have ${r}kg of remaining capacity and have not allocated any extra resources, are you sure you want to continue? You will not be able to change your mind later.`);
@@ -1876,6 +1884,10 @@ document.addEventListener('DOMContentLoaded', function () {
         const w = {};
         const c = gameData.constants;
         const t = p.type < 0 ? p.temptype : p.type;
+        if (t === undefined) {
+//            alert('please choose an option');
+            return;
+        }
         w.total = p[OX] * c[OX].weight;
         w.total += p[SUS] * c[SUS].weight;
         w.total += p[RP] * c[RP].weight;
@@ -2022,6 +2034,10 @@ document.addEventListener('DOMContentLoaded', function () {
 //                        console.log('uo', uo);
                         onSubmitResouces(p, uo);
                     });
+                } else {
+//                    resOptionselect(0, 0);
+//                    resOptionselect(1, 0);
+//                    resOptionselect(2, 0);
                 }
             })
         });
@@ -2238,7 +2254,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     };
     const allClimbersFinished = () => {
-        console.log('END');
+        console.log('GOOD END');
         const eOb = {
             template: 'climb-complete'
         };
@@ -2268,6 +2284,17 @@ document.addEventListener('DOMContentLoaded', function () {
     $.easing.easeOutQuad = function (x) {
         return 1 - (1 - x) * (1 - x);
     };
+    const allCloudsDone = () => {
+        pauseSession();
+        console.log('BAD END');
+        const eOb = {
+            template: 'climb-incomplete'
+        };
+//        cheating = false;
+        setTimeout(() => {
+            showModalEvent(eOb);
+        }, 2000);
+    };
     const resetClouds = () => {
         const cl = $('.cloudleft');
         const cr = $('.cloudright');
@@ -2283,6 +2310,42 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     };
     const startClouds = () => {
+        const cl = $('.cloudleft');
+        const cr = $('.cloudright');
+        let t, l, r;
+
+        resetClouds();
+
+        let totalClouds = cl.length + cr.length; // Count total animations
+        let completedClouds = 0; // Track finished animations
+
+        const checkAllDone = () => {
+            completedClouds++;
+            if (completedClouds === totalClouds) {
+                allCloudsDone(); // Call when last cloud finishes
+            }
+        };
+
+        cl.each((i, c) => {
+            t = getCloudTime();
+            l = getCloudEndPos(c);
+            $(c).stop(true, true)
+                .removeClass('cloudleftInit')
+                .delay(Math.random() * 5000)
+                .animate({ left: `${l}px` }, t, 'easeOutQuad', checkAllDone);
+        });
+
+        cr.each((i, c) => {
+            t = getCloudTime();
+            r = getCloudEndPos(c);
+            $(c).stop(true, true)
+                .removeClass('cloudrightInit')
+                .delay(Math.random() * 5000)
+                .animate({ right: `${r}px` }, t, 'easeOutQuad', checkAllDone);
+        });
+    };
+
+    const startCloudsV1 = () => {
         const cl = $('.cloudleft');
         const cr = $('.cloudright');
 //        cr.hide();
@@ -2307,14 +2370,16 @@ document.addEventListener('DOMContentLoaded', function () {
     };
     const goDarkSky = () => {
         const sb = $('.stormbg');
+
+        console.log('goDarkSky', sb);
         sb.css('opacity', 0);
         sb.animate({'opacity': 1}, {
             duration: stormTime.max,
             step: function(now) {
-                //
+//                console.log(now)
             },
             complete: function() {
-//                console.log("Animation complete!");
+                console.log("Animation complete!");
             }
         });
     };
@@ -2371,6 +2436,7 @@ document.addEventListener('DOMContentLoaded', function () {
     };
     const startStorm = () => {
         $('#lightningzone1').addClass('lightninglight');
+        unpauseSession();
 //        debugger;
         goDarkSky();
         scheduleNextLightning();

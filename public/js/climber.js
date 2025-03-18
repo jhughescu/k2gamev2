@@ -412,7 +412,7 @@ class Climber {
         // add an item to the resupplies string if it doesn't already contain it (use initials only)
         const sm = this.getSummaryMap();
         const str = `${s}${v}`;
-        console.log(str);
+//        console.log(str);
         if (s.length > 1) {
             // if a full string has been passed in, convert to an initial
             s = sm[s]
@@ -442,7 +442,7 @@ class Climber {
                 this.resupplies += s;
             }
         }
-        console.log(`${this.name} resupplies = ${this.resupplies}`);
+//        console.log(`${this.name} resupplies = ${this.resupplies}`);
     }
     setPosition(n) {
         this.setProperty('position', n);
@@ -640,14 +640,14 @@ class Climber {
     resupply() {
         // this method runs at the end of the resupply delay, and completes all pending resupplies.
         if (this.resupplies !== '') {
-            console.log(`${this.name} resupply:`);
+//            console.log(`${this.name} resupply:`);
 //            const ra = [...this.resupplies.matchAll(/([a-zA-Z])(\d+)/g)].map(match => [match[1], Number(match[2])]);
             const ra = this.getResupplyDetail();
 //            console.log('we will resupply');
 //            console.log(ra);
             const sm = this.getSummaryMap();
             ra.forEach(r => {
-                console.log(`hoping to adjust ${sm[r[0]]} by ${r[1]}`);
+//                console.log(`hoping to adjust ${sm[r[0]]} by ${r[1]}`);
                 const p = r[0];
                 const v = r[1];
                 this.adjustProperty(sm[p], v);

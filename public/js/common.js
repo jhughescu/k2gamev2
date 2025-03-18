@@ -304,7 +304,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (cb) {
             cb();
         } else {
-            console.warn('no callback provided for removeTemplate method');
+//            console.warn('no callback provided for removeTemplate method');
         }
     };
     const renderToClassOrID = (targ, targType, ob, compiledTemplate) => {

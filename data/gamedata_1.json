@@ -342,7 +342,7 @@
     },
     "route": {"ratio": [50, 50]},
     "activeEventRange": [-10, -18],
-    "activeEventRange": [0, 15],
+    "activeEventRange": [0, 16],
     "events": [
         {
             "time": 0.5,
@@ -510,14 +510,21 @@
             }
         },
         {
-            "time": 35,
+            "timeNO": 35,
             "event": "ai1",
             "active": false
         },
         {
+            "time": 35,
+            "event": "photo",
+            "active": true,
+            "asset": "photoimages_photo-view.png",
+            "msg": "A climber has sent you a photo of their view"
+        },
+        {
             "time": 40,
             "event": "photo",
-            "type": "view",
+            "type": "storm",
             "asset": "PhotoImages_Photo-A.png",
             "msg": "Camp IV has received reports of an incoming storm. They will monitor the situation closely and provide further reports once its impact is confirmed."
         },
@@ -594,8 +601,8 @@
         {
             "time": 62,
             "event": "photo",
-            "type": "view",
-            "asset": "PhotoImages_Photo-A.pngCHANGE THIS",
+            "type": "storm",
+            "asset": "photoimages_photo-stormy.png",
             "msg": "A climber has sent you a photo of the incoming storm."
         },
         {
@@ -629,7 +636,7 @@
             }
         },
         {
-            "time": 65,
+            "time": 64,
             "event": "startstorm",
             "method": "startStorm",
             "noModal": true
