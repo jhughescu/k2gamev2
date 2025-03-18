@@ -51,6 +51,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const toggleDebug = $('#b_toggle');
     const clearConsole = $('#b_clear');
     const stormStarter = $('#b_storm');
+    const stormResetter = $('#b_stormreset');
 
     let timeDisplay = $('#time_display');
 
@@ -2976,6 +2977,7 @@ document.addEventListener('DOMContentLoaded', function () {
     toggleDebug.on('click', toggleDebugPanels);
     clearConsole.on('click', clearBrowserConsole);
     stormStarter.on('click', startStorm);
+    stormResetter.on('click', resetStorm);
     const onUnload = () => {
         snapshot();
         theState.storeTime(gTimer.elapsedTime);
