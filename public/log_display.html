@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>K2 Game Lo Display</title>
+    <script src="https://code.jquery.com/jquery-3.7.0.js" integrity="sha256-JlqSTELeR4TLqP0OG9dxM7yDPqX1ox/HfgiSLBj8+kM=" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/ui/1.14.1/jquery-ui.min.js" integrity="sha256-AlTido85uXPlSyyaZNsjJXeCs07eSv3r43kyCVc8ChI=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/handlebars@latest/dist/handlebars.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src='../js/common.js'></script>
+    <script src='../js/dev/logDisplay.js'></script>
+
+    <link rel='stylesheet' href='../css/basics.css'>
+    <link rel='stylesheet' href='../css/dev.logdisplay.css'>
+
+</head>
+
+<body>
+
+    <div id='insertion'>
+        <h1>Log Display</h1>
+        <div>
+            <button id='clear'>Clear logs</button>
+            <button id='archive'>Archive logs</button>
+        </div>
+        <div>
+            <button id='filter_session'>session</button>
+            <button id='filter_trigger'>trigger</button>
+            <button id='filter_completion'>completion</button>
+            <button id='filter_result'>result</button>
+            <button id='filter_resupply'>resupply</button>
+        </div>
+        <div id='menuzone'></div>
+        <div id='updatezone'></div>
+    </div>
+</body>
+
+</html>

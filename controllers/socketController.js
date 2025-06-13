@@ -19,10 +19,10 @@ const showRoomSize = (id) => {
     if (room) {
         const numSockets = room.size;
 //        console.log(room);
-        log(`Number of sockets in room ${roomName}: ${numSockets}`);
+        console.log(`Number of sockets in room ${roomName}: ${numSockets}`);
         return room.size;
     } else {
-        log(`Room ${roomName} does not exist or has no sockets.`);
+        console.log(`Room ${roomName} does not exist or has no sockets.`);
         return null;
     }
 };
@@ -63,7 +63,7 @@ function initSocket(server) {
                 console.log(`no callback provided`);
             }
         });
-        console.log('emitting socketConnect')
+//        console.log('emitting socketConnect');
         socket.emit('socketConnect', {
             port: process.env.PORT,
             testID: process.env.TEST_ID
@@ -83,14 +83,24 @@ function initSocket(server) {
             // game clients
             if (sType === 'player') {
                 console.log('player enters');
+//                console.log('handshakeCheck', getPlayerHandshake());
+//                console.log(Q);
+                socket.join('players');
                 socket.emit('handshakeCheck', getPlayerHandshake());
+                socket.on('joinRoom', (r) => {
+                    const rid = `s-${r}`;
+                    socket.join(rid);
+                    console.log(`join room ${rid} ${showRoomSize(rid)}`);
+                });
                 socket.on('disconnect', () => {
 //                    console.log('gone');
                 });
                 socket.on('newSession', (cb) => {
+//                    console.log('new session');
                     sessionController.newSession(cb);
                 });
                 socket.on('restoreSession', (sOb, cb) => {
+//                    console.log('restored session');
                     sessionController.restoreSession(sOb, cb);
                 });
                 socket.on('getSession', (sOb, cb) => {
@@ -100,8 +110,9 @@ function initSocket(server) {
                     sessionController.updateSession(sOb, cb);
                 });
                 socket.on('deleteSession', (sOb, cb) => {
-                    console.log(`try to delete`);
+//                    console.log(`try to delete`);
                     sessionController.deleteSession(sOb, cb);
+
                 });
                 socket.on('getGameData', cb => {
                     sessionController.getGameData(cb);
@@ -114,9 +125,37 @@ function initSocket(server) {
                     logController.writeBeautifiedJson(dir, f, o);
                 });
                 socket.on('createQR', (loc, cb) => {
-                    console.log('create a QR');
+//                    console.log('create a QR');
                     gfxController.generateLocationQR(loc, cb);
                 });
+                socket.on('logUpdate', o => {
+                    logController.addUpdate({update: JSON.stringify(o)});
+                });
+                socket.on('logUpdateNO', msg => {
+                    logController.addUpdate({update: JSON.stringify({msg: msg})});
+                });
+                socket.on('resetUpdates', msg => {
+                    logController.resetUpdates();
+                });
+                socket.on('toggleAutoResourceResult', (data) => {
+                    io.to(data.to).emit('toggleAutoResourceResponse', data.result);
+                });
+                socket.on('toggleCheatingResult', (data) => {
+                    io.to(data.to).emit('toggleCheatingResponse', data.result);
+                });
+                socket.on('changeSupportTeam', (sid, cb) => {
+                    sessionController.changeSupportTeam(sid, cb);
+                });
+                socket.on('finalReport', (ob) => {
+                    logController.writeFinalReport(ob);
+                });
+                socket.on('writeClimberLog', (ob) => {
+                    logController.writeClimberLog(ob);
+                });
+                socket.on('deleteSessionLogs', (id) => {
+                    logController.deleteSessionLogs(id);
+                });
+
             }
             // end game clients
             // admin clients
@@ -164,6 +203,92 @@ function initSocket(server) {
                 });
             }
             // end profile builder clients
+            // log display client
+            if (sType === 'logdisplay') {
+                socket.on('getUpdateLogs', (cb) => {
+                    logController.getUpdateLog(cb);
+                });
+                socket.on('resetUpdates', (cb) => {
+                    logController.resetUpdates(cb);
+                });
+                socket.on('archiveUpdates', (cb) => {
+                    logController.archiveUpdates(cb);
+                });
+            }
+            // end log display client
+            // toolkit client
+            if (sType === 'toolkit') {
+                io.to('players').emit('requestGame', Q.gameID);
+                socket.on('gameFound', (g) => {
+                    socket.emit('returnGame', g);
+                });
+                socket.on('toolkitClosed', (data) => {
+//                    console.log('toolkitClosed');
+                    io.to(`s-${data.gameID}`).emit('toolkitClosed');
+                });
+                socket.on('startNew', (data) => {
+                    const r = `s-${data.gameID}`;
+//                    console.log(`startNew to ${r} which has ${showRoomSize(r)} room`);
+                    io.to(r).emit('toolkitStartNew');
+                });
+                socket.on('idGame', (data) => {
+                    const r = `s-${data.gameID}`;
+//                    console.log(`idGame to ${r} which has ${showRoomSize(r)} room`);
+                    io.to(r).emit('idGame');
+                });
+                socket.on('toggleAutoResource', (data) => {
+                    // Include the originator's socket ID so client 2 can reply
+                    const targetSocketId = socket.id;
+                    const payload = {
+                        Q: { gameID: data.gameID },
+                        from: targetSocketId,
+                    };
+                    const room = `s-${data.gameID}`;
+                    io.to(room).emit('toggleAutoResource', payload);
+                });
+                socket.on('toggleCheating', (data) => {
+                    // Include the originator's socket ID so client 2 can reply
+                    const targetSocketId = socket.id;
+                    const payload = {
+                        Q: { gameID: data.gameID },
+                        from: targetSocketId,
+                    };
+                    const room = `s-${data.gameID}`;
+//                    console.log(`emit toggleCheating to ${room} (${showRoomSize(room)})`);
+                    io.to(room).emit('toggleCheating', payload);
+                });
+                socket.on('playPause', (data) => {
+                    const r = `s-${data.gameID}`;
+//                    console.log(`playPause to ${r} which has ${showRoomSize(r)} room`);
+                    io.to(r).emit('playPause');
+                });
+                socket.on('resetTime', (data) => {
+                    const r = `s-${data.gameID}`;
+//                    console.log(`resetTime to ${r} which has ${showRoomSize(r)} room`);
+                    io.to(r).emit('resetTime');
+                });
+                socket.on('startStorm', (data) => {
+                    const r = `s-${data.gameID}`;
+//                    console.log(`startStorm to ${r} which has ${showRoomSize(r)} room`);
+                    io.to(r).emit('startStorm');
+                });
+                socket.on('resetStorm', (data) => {
+                    const r = `s-${data.gameID}`;
+//                    console.log(`resetStorm to ${r} which has ${showRoomSize(r)} room`);
+                    io.to(r).emit('resetStorm');
+                });
+                socket.on('toggleDebug', (data) => {
+                    const r = `s-${data.gameID}`;
+//                    console.log(`toggleDebug to ${r} which has ${showRoomSize(r)} room`);
+                    io.to(r).emit('toggleDebug');
+                });
+                socket.on('clearConsole', (data) => {
+                    const r = `s-${data.gameID}`;
+//                    console.log(`clearConsole to ${r} which has ${showRoomSize(r)} room`);
+                    io.to(r).emit('clearConsole');
+                });
+            }
+            // end toolkit client
         }
     });
 

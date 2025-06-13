@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>K2 Game</title>
+    <script src="https://code.jquery.com/jquery-3.7.0.js" integrity="sha256-JlqSTELeR4TLqP0OG9dxM7yDPqX1ox/HfgiSLBj8+kM=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/handlebars@latest/dist/handlebars.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+    <script src='js/common.js'></script>
+    <script src='js/dev/toolkit.js'></script>
+
+    <link rel='stylesheet' href='css/basics.css'>
+    <link rel='stylesheet' href='css/timer.css'>
+    <link rel='stylesheet' href='css/debug.css'>
+    <link rel='stylesheet' href='css/dev.tools.css'>
+
+</head>
+
+<body>
+    <div class='button-grid'>
+        <button id='idGame'>ID game</button>
+        <button id='startNew'>start new game</button>
+        <button id='toggleAutoResource'>toggle autoResource</button>
+        <button id='toggleCheating'>toggle cheating</button>
+        <button id='playPause'>play / pause</button>
+        <button id='resetTime'>reset time</button>
+        <button id='startStorm'>start storm</button>
+        <button id='resetStorm'>reset storm</button>
+        <button id='toggleDebug'>toggle debug</button>
+        <button id='clearConsole'>clear console</button>
+    </div>
+    <div id='insertion'></div>
+</body>
+
+</html>

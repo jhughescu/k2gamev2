@@ -12,7 +12,7 @@
 }
 #insertion {
     position: absolute;
-    z-index: 10;
+    z-index: 9999999999;
 /*    display: none;*/
 }
 .fullscreen {
@@ -40,7 +40,7 @@
     height: 80px;
     background-color: rgba(255, 255, 255, 0.58);
     box-shadow: -2px 2px 3px rgba(28, 28, 28, 0.85);
-    z-index: 2000;
+    z-index: 9999999998;
     display: none;
 }
 #overlay #close {
@@ -77,6 +77,9 @@
 }
 .resop.disabled {
     cursor: default;
+/*    color: red;*/
+    background-color: #efefef;
+    color: grey;
 }
 .resop.abled:hover {
     background-color: #c7f2ff;
@@ -85,6 +88,7 @@
 .resop.selected {
     background-color: #89dff8;
 /*    opacity: 0.5;*/
+    color: black;
 }
 .noselect {
     -webkit-user-select: none; /* Safari */
@@ -414,4 +418,8 @@ p.resource_value {
     right: -100vw;
     top: 310px;
 /*    left: calc(100vw - 400px);*/
+}
+
+.blackout {
+    background-color: black;
 }

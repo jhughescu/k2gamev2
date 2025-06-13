@@ -10,6 +10,7 @@ const LOG_UPDATE = 'logs/updates.json';
 const LOGF_UPDATE = 'updates';
 const LOGF_ROUNDS = 'rounds';
 const LOG_FILE = 'all_logs';
+const LOG_CLIMBERS = 'logs/climbers';
 const updateList = [];
 const logList = [];
 let updateTime = null;
@@ -94,13 +95,16 @@ const writeBeautifiedJson = async (directoryPath, fileName, data) => {
     }
 };
 const updateUpdates = async () => {
-    console.log(`updateUpdates: ${isDev()}`);
+//    console.log(`updateUpdates: ${isDev()}`);
     if (isLocal()) {
         let uf = await fs.readFile(LOG_UPDATE);
         uf = JSON.parse(uf);
         let index = Object.keys(uf).length;
         while (updateList.length > 0) {
             const uo = updateList.shift();
+//            console.log(uo)
+//            console.log(JSON.stringify(uo))
+//            console.log(uo.update)
             const u = JSON.parse(uo.update);
             u.game = uo.game;
             u.timestamp = uo.timestamp;
@@ -111,6 +115,40 @@ const updateUpdates = async () => {
         const writer = beautify(uf, null, 2, 100);
         await fs.writeFile(LOG_UPDATE, writer);
         eventEmitter.emit('updateLogUpdated', writer);
+    }
+};
+const resetUpdatelog = () => {
+    if (isDev()) {
+        fs.writeFile(LOG_UPDATE, '{}');
+    }
+};
+const resetUpdates = () => {
+    updateList.length = 0;
+    resetUpdatelog();
+};
+const archiveUpdates = async (cb) => {
+    console.log(`ts: ${getFormattedTimestamp()}`);
+    try {
+        const ul = await fs.readFile(LOG_UPDATE, 'utf-8');
+        const parsedData = JSON.parse(ul);
+        if (Object.keys(parsedData).length === 0) {
+            console.log('ERROR: update file is empty, cannot duplicate');
+            if (cb) {
+                cb('ERROR: update file is empty, cannot duplicate');
+            }
+        } else {
+            const newFileName = LOG_UPDATE.replace('.json', `-${getFormattedTimestamp()}.json`);
+            await fs.copyFile(LOG_UPDATE, newFileName);
+            console.log(`File archived as ${newFileName}`);
+            if (cb) {
+                cb(`File archived as ${newFileName}`);
+            }
+        }
+    } catch (err) {
+        console.error('Error reading or copying file:', err);
+        if (cb) {
+            cb('Error reading or copying file:', err);
+        }
     }
 };
 const getFilePath = (f) => {
@@ -145,14 +183,53 @@ const writeMapFile = (o) => {
         fs.writeFile('data/routemap.json', beautify(o, null, 2, 100));
     //    writeBeautifiedJson('data', 'routemap.json', o);
     }
-}
+};
 const writeProfileFile = (o) => {
     if (isLocal()) {
         const n = o.name.replace(' ', '').toLowerCase();
         const c = o.country.replace(' ', '').toLowerCase();
         fs.writeFile(`data/profiles/profile_${c}_${n}.json`, beautify(o, null, 2, 100));
     }
-}
+};
+const writeFinalReport = (ob) => {
+    if (isLocal()) {
+        const o = {sessionID: ob.sessionID, climbers: []};
+        ob.climbers.forEach(c => {
+            o.climbers.push({
+                name: c.name,
+                finishTime: c.finishTime,
+                lbFirst: c.lbFirst,
+                lbPlace: c.lbPlace,
+                lbTime: c.lbTime,
+                allDelays: c.allDelays
+            });
+        });
+        fs.writeFile(`logs/reports/game_${ob.sessionID}.json`, beautify(o, null, 2, 100));
+    }
+};
+const writeClimberLog = async (o) => {
+    if (isLocal()) {
+        try {
+            await fs.mkdir(LOG_CLIMBERS, {recursive: true});
+            const logPath = `${LOG_CLIMBERS}/${o.sessionID}-${o.climberID}.json`;
+            await fs.writeFile(logPath, beautify(o, null, 2, 100));
+//            console.log(`log written for ${logPath}`);
+        } catch (err) {
+            console.log('Error writing climber log', err);
+        }
+    }
+};
+const deleteSessionLogs = async (id) => {
+//    console.log(`################################## delete logs: ${id}`);
+    try {
+        const files = await fs.readdir(LOG_CLIMBERS);
+        const matchingFiles = files.filter(file => file.includes(id));
+        await Promise.all(matchingFiles.map(file => fs.unlink(path.join(LOG_CLIMBERS, file))));
+        console.log(`✅ Deleted ${matchingFiles.length} file(s) matching sID: ${id}`);
+    } catch (err) {
+        console.error(`❌ Error deleting files for sID "${id}":`, err);
+    }
+};
 const getProfileFiles = async (dir, cb) => {
     if (isLocal()) {
         try {
@@ -229,6 +306,8 @@ const getUpdateLog = async (cb) => {
 const addUpdate = async (ob) => {
     ob.timestamp = getFormattedTimestamp();
     updateList.push(ob);
+//    console.log(`addUpdate`);
+//    console.log(ob);
     clearTimeout(updateTime);
     updateTime = setTimeout(updateUpdates, 500);
 };
@@ -241,9 +320,7 @@ const addLog = async (id, ob) => {
 };
 const init = () => {
     console.log(`init: ${isDev()}`);
-    if (isDev()) {
-        fs.writeFile(LOG_UPDATE, '{}');
-    }
+    resetUpdatelog();
 };
 
 init();
@@ -251,9 +328,14 @@ module.exports = {
     emptyFolder,
     writeBeautifiedJson,
     addUpdate,
+    resetUpdates,
+    archiveUpdates,
     getUpdateLog,
     addLog,
     writeMapFile,
     writeProfileFile,
+    writeClimberLog,
+    writeFinalReport,
+    deleteSessionLogs,
     getProfileFiles
 };

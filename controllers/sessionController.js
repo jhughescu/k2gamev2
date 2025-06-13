@@ -15,11 +15,15 @@ const developData = (d) => {
 };
 const developSession = (s) => {
     // converts & expands the raw session model
-    const sn = s.toObject();
-    const act = persistentData.activeTeams;
-    sn.team = act[sn.teamRef];
-    sn.supportTeam = act[sn.supportTeamRef];
-    return sn;
+    if (s) {
+        const sn = s.toObject();
+        const act = persistentData.activeTeams;
+        sn.team = act[sn.teamRef];
+        sn.supportTeam = act[sn.supportTeamRef];
+        return sn;
+    } else {
+        console.log(`ERROR: no session provided`);
+    }
 };
 const processData = async () => {
     const type = 1;
@@ -59,11 +63,6 @@ const newSession = async (cb) => {
         st = Math.floor(at.length * Math.random());
     } while (st === cc);
     console.log(`newSession, cc: ${cc}, st: ${st}`);
-//    const ot = at.filter(t => t.id !== at[cc].id);
-//    const st = ot[Math.floor(ot.length * Math.random())].id;
-//    console.log(`newSession, ot.length: ${ot.length}, st: ${st}`);
-//    console.log('newSession', cc, at.length, ot.length);
-//    console.log(`choose from ${persistentData.activeTeams.length} countries, choosing ${cc}`);
     const s = new Session({
         uniqueID: `1${tools.padNum(sN, 100000)}${1000 + Math.round(Math.random() * 1000)}`,
         name: sID,
@@ -80,7 +79,8 @@ const newSession = async (cb) => {
 
     s.save();
     console.log('NEW SESSION');
-    console.log(s);
+    console.log(developSession(s));
+//    eventEmitter.emit();
     cb(developSession(s));
 };
 const restoreSession = async (sOb, cb) => {
@@ -92,6 +92,36 @@ const restoreSession = async (sOb, cb) => {
         cb(developSession(session));
     } else {
         cb(`session not found`);
+    }
+};
+const updateSession = async (sOb, cb) => {
+    try {
+        const filter = { uniqueID: sOb.uniqueID };
+        const update = {};
+
+        for (const [key, value] of Object.entries(sOb)) {
+            update[key] = value;
+        }
+
+        const result = await Session.updateOne(filter, { $set: update });
+
+        if (result.matchedCount === 0) {
+            throw new Error(`No document found for uniqueID ${sOb.uniqueID}`);
+        }
+
+        // Log or comment if nothing changed, but don't throw
+        if (result.modifiedCount === 0) {
+//            console.log(`No update needed for uniqueID ${sOb.uniqueID} (data was identical).`);
+        }
+
+        if (cb) {
+            const updatedSession = await Session.findOne(filter);
+            cb(updatedSession);
+        }
+    } catch (err) {
+        console.error(`Error in updateSession: ${err.message}`);
+        console.log(sOb);
+        if (cb) cb(null, err);
     }
 };
 
@@ -140,10 +170,10 @@ const updateSessionV2 = async (sOb, cb) => {
         if (cb) cb(null, err);
     }
 };
-const updateSession = async (sOb, cb) => {
+const updateSessionV3 = async (sOb, cb) => {
     try {
-//        console.log(`updateSession:`);
-//        console.log(sOb);
+        /*console.log(`updateSession:`);
+        console.log(sOb);*/
         const filter = { uniqueID: sOb.uniqueID };
         const update = {};
         for (const [key, value] of Object.entries(sOb)) {
@@ -160,7 +190,7 @@ const updateSession = async (sOb, cb) => {
         if (result.modifiedCount === 0) {
             throw new Error(`No document was updated for uniqueID ${sOb.uniqueID}`);
         }
-        console.log(`Document with uniqueID ${sOb.uniqueID} successfully updated.`);
+//        console.log(`Document with uniqueID ${sOb.uniqueID} successfully updated.`);
         if (cb) {
             // Fetch the updated document and pass it to the callback
             const updatedSession = await Session.findOne(filter);
@@ -168,10 +198,55 @@ const updateSession = async (sOb, cb) => {
         }
     } catch (err) {
         console.error(`Error in updateSession: ${err.message}`);
+        console.log(sOb);
         if (cb) cb(null, err);
     }
 };
 
+const getTeamNotMe = (id) => {
+
+    const T = persistentData.activeTeams.filter(t => t.id !== id);
+    const ref = T.map(t => t = t.id);
+    const t = T[Math.floor(Math.random() * T.length)];
+//    console.log(t.id, t.country);
+
+//    console.log(`ID: ${id}, array: ${ref.toString()}, is in? ${ref.includes(id)}, old: ${id} new: ${t.id}`);
+    return t.id;
+};
+const changeSupportTeam = async (id, cb) => {
+    if (persistentData) {
+        const s = await Session.findOne({uniqueID: id});
+        if (s) {
+            const newT = getTeamNotMe(s.supportTeamRef);
+            const ob = {uniqueID: id, supportTeamRef: newT};
+            updateSession(ob, (rs) => {
+//                console.log(`rs null?`, rs === null);
+                const rsc = rs === null ? s : rs;
+                if (cb) {
+                    cb(developSession(rsc));
+                }
+            });
+        }
+    }
+};
+const changeSupportTeamV1 = async (id, cb) => {
+//    console.log('change support team', id);
+    const s = await Session.findOne({uniqueID: id});
+    if (s) {
+//        console.log(s);
+        const newT = getTeamNotMe(s.teamRef);
+        const ob = {uniqueID: id, supportTeamRef: newT};
+        updateSession(ob, (rs) => {
+            console.log(rs === null)
+            if (cb && rs !== null) {
+                cb(developSession(rs));
+            }
+        });
+    } else {
+        console.log(`no session found with ID ${id}`);
+    }
+
+};
 
 
 const getSession = async (sOb, cb) => {
@@ -240,4 +315,5 @@ module.exports = {
     deleteSessions,
     getSessions,
     getGameData,
+    changeSupportTeam
 };
