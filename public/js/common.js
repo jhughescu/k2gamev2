@@ -629,6 +629,14 @@ document.addEventListener('DOMContentLoaded', function () {
             return 0;
         });
     };
+    const shuffle = (array) => {
+        // sorts array randomly
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    }
     const containsEmail = (s) => {
         const e = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/;
         return e.test(s);
@@ -1131,6 +1139,7 @@ document.addEventListener('DOMContentLoaded', function () {
     window.checkDevMode = checkDevMode;
     window.sortBy = sortBy;
     window.sortNumber = sortNumber;
+    window.shuffle = shuffle;
     window.filterScorePackets = filterScorePackets;
     window.mapSessionToGame = mapSessionToGame;
 });

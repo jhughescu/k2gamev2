@@ -1,5 +1,5 @@
 <div class="leaderboard-runnersup" id="{{lbPlace}}">
-    <h3>{{lbPlace}}</h3>
+    <h3>{{#if finished}}{{lbPlace}}{{/if}}</h3>
     <div class="runnersup-info">
         <div class='imgstack'>
             {{#if finished}}{{else}}
@@ -23,10 +23,10 @@
         </div>
         <div>
             <h3>{{name}}</h3>
-            <p>Profile {{OPTION}}</p>
+            <p>{{allDelaysSumFormat}} penalties</p>
         </div>
 
-        <p>{{#if finished}}{{lbTime}}{{/if}}</p>
+        <p>{{lbTime}}</p>
 
     </div>
 </div>

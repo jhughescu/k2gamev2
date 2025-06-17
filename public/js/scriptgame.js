@@ -138,6 +138,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const SUS = 'sustenance';
     const RP = 'rope';
 
+    const supportTeamType = 2;
+
     const versionControl = new VersionControl();
 
     const sessionPlayPause = $('#b_playpause');
@@ -182,6 +184,7 @@ document.addEventListener('DOMContentLoaded', function () {
     let mArray = [];
     let toyClimbers = null;
     let currentHash = null;
+    let quiz = null;
 
     // bg gradient change
     const gradientStops = [
@@ -698,7 +701,11 @@ document.addEventListener('DOMContentLoaded', function () {
                             dv.find('.choice_option_content').html(response);
                             //                            console.log(response);
                             // change the support team after each profile event (so the new team will be ready when the next event occurs)
-                            changeSupportTeam();
+                            if (supportTeamType === 1) {
+                                changeSupportTeamV1();
+                            } else {
+                                changeSupportTeam();
+                            }
                             completeEvent();
                             setupModalClose(m, true);
                         }
@@ -1094,7 +1101,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             }
         }
-        buildSupportTeam();
+        if (supportTeamType === 1) {
+            buildSupportTeamV1();
+        } else {
+            changeSupportTeam();
+        }
         //            console.log('attempt to init');
         //            console.log(toyClimbers);
         //            console.log(window.clone(session));
@@ -1142,9 +1153,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 setInterval(() => {
                     const current = JSON.stringify(session.profile0);
                     if (current !== lastState) {
-//                        console.log("profile0 changed");
-//                        console.log(session.profile0);
-//                        console.log(window.clone(session).profile0);
                         lastState = current;
                     }
                 }, 100); // 100 ms check
@@ -1165,21 +1173,46 @@ document.addEventListener('DOMContentLoaded', function () {
         return a;
     };
     const changeSupportTeam = () => {
+        // Build a support team drawn from any of the national teams that is not the main game team
+        // Support teams only need exist for the duration of a given event, hence no need to store them or make a socket call to derive them
         if (!$.isEmptyObject(window.clone(session))) {
-//            console.log('it is true');
+            delete session.supportTeam;
+            const T = session.team;
+            const others = window.shuffle(gameData.teams.filter(t => t.id != T.id)).slice(0, 3);
+//            console.log(session);
+//            console.log(T);
+//            console.log(others);
+            session.supportTeam = {climbers: {}};
+            others.forEach((t, i) => {
+                const clOb = {
+//                    profile: Math.floor(Math.random() * Object.keys(t.profiles).length),
+                    profile: i,
+                    type: -9999,
+                    team: t,
+                    teamID: t.id,
+                    gameData: gameData
+                }
+                const c = createClimber(clOb);
+                delete c.gameData;
+                session.supportTeam.climbers[`p${i}`] = c;
+            });
+        }
+    };
+    const changeSupportTeamV1 = () => {
+        // socket call fetches supportTeamRef & team is built from that.
+        // returned team will be all of the same country
+        if (!$.isEmptyObject(window.clone(session))) {
+//            console.log(`changeSupportTeamV1`);
+//            console.log(session);
             socket.emit('changeSupportTeam', session.uniqueID, (sesh) => {
-//                console.log(`old: ${session.supportTeamRef}, new: ${sesh.supportTeamRef}`)
                 if (session.supportTeamRef === sesh.supportTeamRef) {
                     console.warn(`same team; shouldn't happen, call the method again`);
-                    setTimeout(changeSupportTeam, 100);
+                    setTimeout(changeSupportTeamV1, 100);
                 } else {
-//                    console.log(sesh.supportTeamRef, getStoredSTL().reverse()[0]);
                     const stl = getStoredSTL();
                     if (sesh.supportTeamRef === stl.reverse()[0]) {
                         console.warn('match with previous, try again');
-//                        console.log(sesh.supportTeamRef, stl.slice(stl.length - 5, stl.length));
-//                        console.log(stl);
-                        setTimeout(changeSupportTeam, 100);
+                        setTimeout(changeSupportTeamV1, 100);
                     } else {
                         session.supportTeamRef = sesh.supportTeamRef;
                         if (sesh.supportTeam) {
@@ -1187,10 +1220,9 @@ document.addEventListener('DOMContentLoaded', function () {
                             if (session.supportTeam.climbers) {
                                 delete session.supportTeam.climbers;
                             }
-                            buildSupportTeam();
+                            buildSupportTeamV1();
                         } else {
-    //                        console.warn(`returned session has no supportTeam; supportTeam will not be updated - trying again`);
-                            setTimeout(changeSupportTeam, 100);
+                            setTimeout(changeSupportTeamV1, 100);
                         }
                     }
                 }
@@ -1201,10 +1233,13 @@ document.addEventListener('DOMContentLoaded', function () {
     };
 //    console.log($.isEmptyObject(window.clone(session)));
 //    console.log(window.clone(session));
-//    window.changeSupportTeam = changeSupportTeam;
+    window.changeSupportTeam = changeSupportTeam;
+    window.changeSupportTeamV1 = changeSupportTeamV1;
     let supportTeamList = [];
 
-    const buildSupportTeam = () => {
+
+    const buildSupportTeamV1 = () => {
+        // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! NOTE works only with changeSupportTeamV1 !!!!!!!!!!!!!!!!!!!!!!!!!!!
         // sets up a support team for interations
         // support team is currently stored in the session object
         // the support team members need only be simple climber objects - no view required etc. And they need not be stored in locaslStorage/DB. Only supportTeamRef is stored
@@ -1213,7 +1248,6 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
         if (!session.supportTeam.hasOwnProperty('climbers')) {
-//            console.log('the code will run');
             session.supportTeam.climbers = {};
             const P = session.supportTeam.profiles;
             Object.keys(P).forEach(p => {
@@ -1224,29 +1258,20 @@ document.addEventListener('DOMContentLoaded', function () {
                     teamID: session.supportTeam.id,
                     gameData: gameData
                 };
-                //                console.log(ob);
-
-//                const c = new Climber(ob);
                 const c = createClimber(ob);
                 // remove gameData from all support climbers - can cause circularity later
                 delete c.gameData;
                 session.supportTeam.climbers[p] = c;
-
-//                return window.clone(window.clone(session).supportTeam).country;
             });
-//            console.log(`buildSupportTeam: ${window.clone(window.clone(session).supportTeam).country}`);
             supportTeamList = getStoredSTL();
-//            supportTeamList.push(session.supportTeam.id);
             supportTeamList.push(session.supportTeamRef);
-//            console.log(session.supportTeamRef, supportTeamList.slice(supportTeamList.length - 5, supportTeamList.length));
-//            console.log(session.supportTeamRef, supportTeamList.slice(supportTeamList.length - 10));
             localStorage.setItem('supportTeamList', supportTeamList.join(','));
         }
     };
     let stChecker;
     const goStCheck = () => {
         clearInterval(stChecker);
-        stChecker = setInterval(changeSupportTeam, 1000);
+        stChecker = setInterval(changeSupportTeamV1, 1000);
         return 'started';
     }
     const stopStCheck = () => {
@@ -1399,11 +1424,13 @@ document.addEventListener('DOMContentLoaded', function () {
         p.forEach(pf => console.log(pf));
     };
     const playPauseSession = () => {
+//        console.log('playPauseSession');
         if (!checkCompletion().allFinished) {
             toggleTimer();
         }
     };
     const pauseSession = () => {
+//        console.log('pauseSession');
         if (gTimer.hasStarted) {
             if (gTimer.isRunning) {
                 gTimer.pauseTimer();
@@ -1770,7 +1797,7 @@ document.addEventListener('DOMContentLoaded', function () {
         return r;
     };
     // timing
-    const formatTime = (ms) => {
+    const formatTime = (ms, level = 'hour') => {
         // Calculate hours, minutes, and seconds
         //        console.log(ms);
         const hours = Math.floor(ms / 3600000); // 1 hour = 3600000 ms
@@ -1778,12 +1805,12 @@ document.addEventListener('DOMContentLoaded', function () {
         const seconds = Math.floor((ms % 60000) / 1000); // 1 second = 1000 ms
 
         // Format each as a 2-digit string
-        const hoursStr = String(hours).padStart(2, '0');
-        const minutesStr = String(minutes).padStart(2, '0');
+        const hoursStr = String(hours).padStart(1, '0');
+        const minutesStr = String(minutes).padStart(hours > 0 ? 2 : 1, '0');
         const secondsStr = String(seconds).padStart(2, '0');
 
-        // Concatenate to HH:MM:SS format
-        return `${hoursStr}:${minutesStr}:${secondsStr}`;
+        const str = `${level === 'hour' && hours > 0 ? hoursStr + ':' : ''}${minutesStr}:${secondsStr}`;
+        return str;
     }
     const addTimesToData = () => {
         if (gameData) {
@@ -2531,6 +2558,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             }
         }
+        ev.noPause = ev.noPause || false;
         if (ev.hasOwnProperty('delay')) {
             if (ev.hasOwnProperty('profiles')) {
                 ev.profiles.forEach(p => {
@@ -2543,7 +2571,6 @@ document.addEventListener('DOMContentLoaded', function () {
     };
     const eventTrigger = (ev) => {
         // EventStack calls this method when a new event is to be triggered
-        //        console.log(`eventTrigger`, ev);
         if (eventStack.eventSummary[ev.n] === 0) {
             logUpdate(`${ev.eventTitle}`, 'trigger');
         }
@@ -2562,9 +2589,16 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             }
         }
-        pauseSession();
-        ev = prepEvent(ev);
+//        console.log('event trigger causes pauses');
 
+        ev = prepEvent(ev);
+//        console.log(`eventTrigger`, ev);
+        if (!ev.noPause) {
+//            console.log(`noPause is not true, pausing`);
+            pauseSession();
+        } else {
+//            console.log(`noPause is true, I will not pause`);
+        }
 //        console.log('trigger', ev);
         if (ev.hasOwnProperty('video')) {
             //            console.log('render the cinema, yes');
@@ -2696,7 +2730,9 @@ document.addEventListener('DOMContentLoaded', function () {
     const ender = (good) => {
         logUpdate('ending', `${good ? 'good' : 'bad'} ending`);
         if (good) {
-
+            setTimeout(() => {
+                endgame();
+            }, 3000);
         } else {
             fadeToBlack();
         }
@@ -2877,7 +2913,7 @@ document.addEventListener('DOMContentLoaded', function () {
     };
 
     const scheduleNextLightning = () => {
-        console.log(`scheduleNextLightning`);
+//        console.log(`scheduleNextLightning`);
         const nextInterval = Math.random() * 9000 + 1000;
         const timeout = setTimeout(flashLightning, nextInterval);
         lightningTimeouts.push(timeout); // Store timeout reference
@@ -2899,7 +2935,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     };
     const startStorm = () => {
-        console.log(`startStorm`);
+//        console.log(`startStorm !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!`);
         $('#lightningzone1').addClass('lightninglight');
         //        unpauseSession();
         //        debugger;
@@ -3080,20 +3116,39 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     };
     const renderLeaderboardClimber = () => {
-        console.log(`renderLeaderboardClimber`);
+//        console.log(`renderLeaderboardClimber`);
         const C = window.clone(Climber.getClimbers());
         window.sortBy(C, 'currentTime');
-        const P = ['1st', '2nd', '3rd']
+        const P = ['1st', '2nd', '3rd'];
+        const rOb = {
+            totalTime: new Array(3).fill(0)
+        };
         C.forEach((c, i) => {
+            const et = c.finishTime || c.currentTime;
+
             c.lbFirst = i === 0;
             c.lbPlace = P[i];
-            c.lbTime = formatTime(c.finishTime * 1000);
-            console.log(c);
+            c.lbTime = formatTime(et * 1000);
+            c.allDelaysSum = c.allDelays.split('|').map(e => e = parseFloat(e)).filter(e => !isNaN(e)).reduce((a, b) => a + b, 0);
+            c.allDelaysSumFormat = formatTime(c.allDelaysSum * 60000);
+            c.totalSplit = c.lbTime.split(':').map(e => e = parseFloat(e));
+            if (c.totalSplit.length === 2) {
+                c.totalSplit.unshift(0);
+            }
+            // to avoid rounding errors, make the total time a summary of the three formatted climber times
+            c.totalSplit.forEach((e, i) => {
+                rOb.totalTime[i] += e;
+                if (rOb.totalTime[i] > 60) {
+                    rOb.totalTime[i] -= 60;
+                    rOb.totalTime[i - 1] += 1;
+                }
+            });
+
         });
+        rOb.totalTimeFormat = rOb.totalTime.join(':');
         socket.emit('finalReport', {sessionID: session.uniqueID, climbers: C});
-        const rOb = {
-            profiles: C
-        };
+        rOb.profiles = C;
+        console.log(rOb);
         renderNone(() => {
             renderTemplate('theatre', 'leaderboard.climber', rOb, () => {
                 updateAddress('leaderboardclimber');
@@ -3102,7 +3157,7 @@ document.addEventListener('DOMContentLoaded', function () {
     };
     const renderClimberProfiles = () => {
         console.log(Climber.getClimbers());
-        console.log(Climber.getClimbers().map(c => c = getClimberObject(c, ['filename', 'allDelays'])));
+        console.log(Climber.getClimbers().map(c => c = getClimberObject(c, ['filename', 'allDelays', 'allLandmarks'])));
     };
     window.renderClimberProfiles = renderClimberProfiles;
     window.renderLeaderboardClimber = renderLeaderboardClimber;
@@ -3125,6 +3180,40 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     };
 
+    // quiz
+    const getQuestionV1 = () => {
+        if (quiz === null) {
+            quiz = new Quiz(socket);
+        }
+        quiz.getQuestion((q) => {
+            console.log(q.question);
+            q.options.forEach((o, i) => console.log(`${window.getAlph(i)}) ${o}`));
+        });
+    };
+    const getQuestion = () => {
+        if (quiz === null) {
+            quiz = new Quiz(socket);
+        }
+        quiz.getQuestion((q) => {
+            console.log(`%c${q.question}`, 'font-weight: bold; color: yellow;');
+            q.options.forEach((o, i) => console.log(`${i}) ${o}`));
+
+            // Create a temporary global submit function
+            window.submit = (index) => {
+                quiz.submitAnswer(q._id, index, (res) => {
+                    console.log(res.correct ? '✅ Correct!' : '❌ Incorrect!');
+                    if (!res.correct) {
+                        console.log(`Correct answer was: ${res.correctAnswerText}`);
+                    }
+//                    console.log(res);
+                    delete window.submit;
+                });
+            };
+
+            console.log('%cType submit(<optionIndex>) to answer.', 'color: green; font-style: italic;');
+        });
+    };
+    window.getQuestion = getQuestion;
 
     // cinema (video player)
     const getVidID = () => {

@@ -342,7 +342,8 @@
     },
     "route": {"ratio": [50, 50]},
     "activeEventRange": [-10, -18],
-    "activeEventRange": [0, 56],
+    "activeEventRangeNO": [0, 56],
+    "activeEventRangeNO": [10, 56],
     "events": [
         {
             "time": 0.5,
@@ -603,7 +604,9 @@
             "event": "photo",
             "type": "storm",
             "asset": "photoimages_photo-stormy.png",
-            "msg": "A climber has sent you a photo of the incoming storm."
+            "msg": "A climber has sent you a photo of the incoming storm.",
+            "NOTES": "CHANGE THIS TO VIDEO",
+            "video": "https://cranfield.cloud.panopto.eu/Panopto/Pages/Viewer.aspx?id=5dd21441-4bd0-4350-a77c-b2020099dd78"
         },
         {
             "time": 65,
@@ -639,7 +642,8 @@
             "time": 64,
             "event": "startstorm",
             "method": "startStorm",
-            "noModal": true
+            "noModal": true,
+            "noPause": true
         },
         {
             "time": 70,

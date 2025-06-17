@@ -1,0 +1,62 @@
+[
+  {
+    "question": "Which mathematical concept did Georg Cantor develop?",
+    "options": ["Set theory", "Topology", "Number theory", "Calculus"],
+    "correctAnswerIndex": 0,
+    "difficulty": 6
+  },
+  {
+    "question": "Which element has the highest melting point?",
+    "options": ["Rhenium", "Carbon", "Tungsten", "Osmium"],
+    "correctAnswerIndex": 2,
+    "difficulty": 6
+  },
+  {
+    "question": "What is the main function of mitochondria in cells?",
+    "options": ["Digest cellular waste", "Synthesize proteins", "Store genetic information", "Produce energy (ATP)"],
+    "correctAnswerIndex": 3,
+    "difficulty": 6
+  },
+  {
+    "question": "In economics, what does the Gini coefficient measure?",
+    "options": ["Gross Domestic Product", "Consumer confidence", "Income inequality", "Inflation rate"],
+    "correctAnswerIndex": 2,
+    "difficulty": 6
+  },
+  {
+    "question": "Which philosopher is most closely associated with the 'categorical imperative'?",
+    "options": ["John Stuart Mill", "Immanuel Kant", "David Hume", "René Descartes"],
+    "correctAnswerIndex": 1,
+    "difficulty": 6
+  },
+  {
+    "question": "What is Schrödinger’s cat a thought experiment about?",
+    "options": ["Entropy", "Quantum superposition", "Wave-particle duality", "Time dilation"],
+    "correctAnswerIndex": 1,
+    "difficulty": 6
+  },
+  {
+    "question": "Which of these languages is considered a synthetic language?",
+    "options": ["English", "Latin", "Swahili", "Chinese"],
+    "correctAnswerIndex": 1,
+    "difficulty": 6
+  },
+  {
+    "question": "What was the primary purpose of the Bretton Woods Conference in 1944?",
+    "options": ["To create NATO", "To establish a global financial system", "To sign peace treaties after WWII", "To form the United Nations"],
+    "correctAnswerIndex": 1,
+    "difficulty": 6
+  },
+  {
+    "question": "Which novel is considered the first work of modern Western literature?",
+    "options": ["Don Quixote", "The Canterbury Tales", "Paradise Lost", "The Divine Comedy"],
+    "correctAnswerIndex": 0,
+    "difficulty": 6
+  },
+  {
+    "question": "What phenomenon explains why the sky appears blue during the day?",
+    "options": ["Absorption", "Reflection", "Rayleigh scattering", "Diffraction"],
+    "correctAnswerIndex": 2,
+    "difficulty": 6
+  }
+]

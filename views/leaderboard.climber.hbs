@@ -86,6 +86,17 @@
         z-index: 1;
     }
 
+	.leaderboard-runnersup {
+        margin-right: 50px;
+    }
+	.leaderboard-runnersup h3 {
+        min-width: 40px;
+        margin-left: 0px;
+/*        background-color: red;*/
+    }
+	.leaderboard-runnersup p {
+/*        background-color: red;*/
+    }
 	.leaderboard-runnersup .runnersup-info{
 		display: flex;
 		flex-direction: row;
@@ -153,6 +164,24 @@
 
 
 	}
+    #totalDisplay {
+        margin: 25px auto;
+        padding: 8px 0px;
+        width: 300px;
+        height: 70px;
+        min-width: 300px;
+        max-width: 300px;
+        min-height: 70px;
+        border-radius: 20px;
+        background-color: #ff5c81;
+        color: white;
+        font-size: 1.2em;
+        box-shadow: 3px 3px 5px 0px rgba(0,0,0,0.5);
+    }
+    #totalDisplay p {
+/*        background-color: blue;*/
+        margin: 2px;
+    }
 
 
 </style>
@@ -176,6 +205,7 @@
 
 
 	</div>
-	<a class="k2-modal-btn-link" style="max-width: 300px; margin-top: 50px;" href="#home">Done</a>
+<!--    <div class="k2-modal-btn-link" style="max-width: 300px; margin-top: 50px;" href="#home">{{totalTimeFormat}}</div>-->
+	<div id='totalDisplay'><p>Total Team Time</p><p>{{totalTimeFormat}}</p></div>
 
 </div>

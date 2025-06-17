@@ -6,6 +6,7 @@ const downloadController = require('./../controllers/downloadController');
 const logController = require('./../controllers/logController');
 const databaseController = require('./../controllers/databaseController');
 const gfxController = require('./../controllers/gfxController');
+const quizController = require('./../controllers/quizController');
 
 const tools = require('./../controllers/tools');
 
@@ -155,6 +156,24 @@ function initSocket(server) {
                 socket.on('deleteSessionLogs', (id) => {
                     logController.deleteSessionLogs(id);
                 });
+                socket.on('getQuizQuestion', async ({ bank, excludeIds }, cb) => {
+                    try {
+                        const question = await quizController.getQuestion(bank, excludeIds);
+                        cb(question);
+                    } catch (err) {
+                        console.error('Error in getQuizQuestion:', err);
+                        cb(null);
+                    }
+                });
+                socket.on('submitAnswer', async ({ bank, questionId, selectedIndex }, callback) => {
+                    try {
+                        const result = await quizController.checkAnswer(bank, questionId, selectedIndex);
+                        callback(result); // returns { correct: true/false }
+                    } catch (err) {
+                        callback({ error: err.message });
+                    }
+                });
+
 
             }
             // end game clients

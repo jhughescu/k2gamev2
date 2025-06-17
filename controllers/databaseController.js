@@ -8,9 +8,12 @@ const dbEvents = new EventEmitter();
 require('dotenv').config();
 
 const uri = process.env.MONGODB_URI;
+const QUIZ_URI = process.env.QUIZ_MONGODB_URI;
 const dbName = "k2gamedevv2local";
 const collectionName = "sessions";
 const documentId = new ObjectId('6763417558a5471d1c0f12ea');
+
+let quizMongoose = null;
 
 // Connect to MongoDB and start change stream with resilience
 async function dbConnect() {
@@ -183,9 +186,26 @@ async function validateConnection() {
     }
 }
 
+async function getQuizDbConnection() {
+    if (quizMongoose && quizMongoose.readyState === 1) {
+        return quizMongoose;
+    }
+
+    const mongooseAlt = require('mongoose'); // new mongoose instance (can be the same package)
+    try {
+        quizMongoose = await mongooseAlt.createConnection(QUIZ_URI);
+        console.log('✅ Quiz DB connected');
+        return quizMongoose;
+    } catch (err) {
+        console.error('❌ Quiz DB connection failed:', err.message);
+        throw err;
+    }
+}
+
 module.exports = {
     dbConnect,
     dbEvents,
     getAllSessions,
     deleteSession,
+    getQuizDbConnection,
 };
