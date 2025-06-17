@@ -32,8 +32,8 @@
 }
 #overlay {
     position: absolute;
-    top: 20px;
-    right: 30px;
+    top: 70px;
+    right: 32px;
     width: 250px;
     width: 150px;
     height: 100px;
@@ -148,6 +148,22 @@ p.resource_value {
     pointer-events: none;
 }
 
+#menu {
+    position: absolute;
+    right: 30px;
+    top: 22px;
+    width: 32px;
+    height: 32px;
+    z-index: 99999999;
+/*    background-color: rgba(255, 255, 255, 0.46);*/
+
+    cursor: pointer;
+}
+#menu img {
+    width: 28px;
+    float: right;
+/*    height: 30px;*/
+}
 
 .adjust_btn {
     width: 20px; /* Set width of the buttons */

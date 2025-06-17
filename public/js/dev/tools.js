@@ -2,6 +2,16 @@ document.addEventListener('DOMContentLoaded', function () {
     let session;
     let devtoolsWin;
     let devtoolsCheck;
+    const launchToolkit = () => {
+        devtoolsWin = window.open(
+            `devtools?uniqueID=${session.uniqueID}&name=${session.name}`,
+            `devtools`,
+            'width=600,height=400'
+        );
+        sessionStorage.setItem('devtoolsWindow', 'devTools');
+        clearInterval(devtoolsCheck);
+        devtoolsCheck = setInterval(checkForToolkit, 1000);
+    };
     const setup = (sesh) => {
 //        console.log(`setup`, sesh);
         session = sesh;
@@ -19,17 +29,23 @@ document.addEventListener('DOMContentLoaded', function () {
             if (isMouseDownOnElement && !$(e.target).closest($el).length) {
                 const t = ((Date.now() - T) / 1000) > 2;
                 if (t) {
-                    devtoolsWin = window.open(
-                        `devtools?uniqueID=${session.uniqueID}&name=${session.name}`,
-                        `devtools`,
-                        'width=600,height=400'
-                    );
-                    sessionStorage.setItem('devtoolsWindow', 'devTools');
-                    clearInterval(devtoolsCheck);
-                    devtoolsCheck = setInterval(checkForToolkit, 1000);
+                    launchToolkit();
                 }
             }
             isMouseDownOnElement = false; // always reset
+        });
+
+        // Keyboard listener: Ctrl + T + K
+        const pressedKeys = new Set();
+
+        document.addEventListener('keydown', (e) => {
+            if (e.altKey && e.key.toLowerCase() === 't') {
+                e.preventDefault(); // Optional: prevent any default behavior
+                launchToolkit();
+            }
+        });
+        document.addEventListener('keyup', (e) => {
+            pressedKeys.delete(e.key.toLowerCase());
         });
         devtoolsOnInit();
     };

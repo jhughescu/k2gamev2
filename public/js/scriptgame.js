@@ -307,6 +307,7 @@ document.addEventListener('DOMContentLoaded', function () {
         return o;
     };
     const showOverlay = (msg, ob) => {
+//        console.log(`showOverlay`);
         const o = $('#overlay');
         const m = o.find('#msg');
         const b = o.find('button');
@@ -326,6 +327,18 @@ document.addEventListener('DOMContentLoaded', function () {
     const hideOverlay = () => {
         const o = $('#overlay');
         o.fadeOut();
+    };
+    const toggleOverlay = () => {
+        const o = $('#overlay');
+//        console.log('new click');
+        if (o.is(':visible')) {
+            hideOverlay();
+        } else {
+            showOverlay(`Start new game?`, {
+                button: 'yes',
+                action: startNew
+            });
+        }
     };
     const showAlert = (s) => {
         alert(s);
@@ -825,7 +838,11 @@ document.addEventListener('DOMContentLoaded', function () {
         })
     };
     const showModalEvent = (ev) => {
-
+        if (ev.noModal) {
+            console.log('noModal condition - just unpause?');
+            unpauseSession();
+            return;
+        }
         if (ev.hasOwnProperty('supportTeam') && !cheating) {
             // duplicate the support team to break linkage with origin, randomise the list for display
             ev.supportTeam = window.clone(ev.supportTeam);
@@ -1283,10 +1300,10 @@ document.addEventListener('DOMContentLoaded', function () {
     // Main init method:
     const checkSession = () => {
         //        console.log(`checkSession, newconnect? ${newconnect}`);
-        showOverlay(`Start new game?`, {
-            button: 'yes',
-            action: startNew
-        });
+//        showOverlay(`Start new game?`, {
+//            button: 'yes',
+//            action: startNew
+//        });
         const gid = getStoreID();
         const lid = localStorage.getItem(gid);
         logUpdate(`${lid ? 'restore' : 'new'}`, `session`);
@@ -1299,10 +1316,10 @@ document.addEventListener('DOMContentLoaded', function () {
             gameflow(`newconnect? ${newconnect}`)
             if (newconnect) {
                 gameflow(`You can choose to start a new game [confirm1]`);
-                showOverlay(`Start new game?`, {
-                    button: 'yes',
-                    action: startNew
-                });
+//                showOverlay(`Start new game?`, {
+//                    button: 'yes',
+//                    action: startNew
+//                });
                 let reset = false;
                 if (reset) {
                     clearSession();
@@ -1911,8 +1928,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // key page setup
 
+    const setupBasics = () => {
+//        console.log(`setupBasics`);
+        const bMenu = $('#menu');
+//        console.log(bMenu);
+        bMenu.off('click').on('click', toggleOverlay);
+    };
     const setupHome = () => {
-        //        console.log(`setupHome`);
+//        console.log(`setupHome`);
         let checkInt = null;
         const bClimb = $(`#btn-start`);
         const bTeam = $(`#btn-team`);
@@ -1963,31 +1986,6 @@ document.addEventListener('DOMContentLoaded', function () {
         //            bClimb.addClass('disabled');
         //            bClimb.prop('disabled', true);
         //        }
-
-    };
-    const setupHomeV1 = () => {
-        const bClimb = $(`#btn-start`);
-        const bTeam = $(`#btn-team`);
-        const bResources = $(`#btn-resources`);
-        const all = [bClimb, bTeam, bResources];
-        const cReady = climbersReady();
-        const cCreated = climbersCreated();
-        console.log(`setupHome, cReady: ${cReady}`);
-
-        const checkInt = setInterval(() => {
-            const cReady = climbersReady();
-            const cCreated = climbersCreated();
-        }, 100)
-        enableButton('btn-resources', cReady);
-        if (!cReady) {
-            bClimb.addClass('disabled');
-            bClimb.prop('disabled', true);
-        }
-        if (cReady) {
-            bClimb.off('click').on('click', () => {
-                renderMap();
-            });
-        }
 
     };
 
@@ -2622,10 +2620,11 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
         if (!ev.noModal) {
-            //            console.log('eventTrigger calls showModalEvent');
+                        console.log('eventTrigger calls showModalEvent');
             //            console.log(ev);
             showModalEvent(ev);
         } else {
+//            console.log(`noModal condition`);
             //            unpauseSession();
             if (ev.hasOwnProperty('method')) {
                 //                ev.method
@@ -2675,6 +2674,10 @@ document.addEventListener('DOMContentLoaded', function () {
         console.log(`rope: ${c.rope} (${c.quantumRope})`);
     }
     const climberDepletionEvent = (ob) => {
+        if (stormUnderway()) {
+            console.log('resupply runs not possible in storm conditions');
+            return;
+        }
         // Usually called by the Climber class (publically exposed method)
         const rem = Math.ceil(ob[ob.resource]);
         //        console.log(`depletion of ${ob.resource} for ${ob.name}, remaining: ${rem}`);
@@ -3103,7 +3106,9 @@ document.addEventListener('DOMContentLoaded', function () {
                         allClimbersFinished();
                         pauseSession();
                     } else {
-                        //                        unpauseSession(true);
+                        setTimeout(() => {
+//                            unpauseSession(true);
+                        }, 1000);
                     }
                 });
             })
@@ -3243,7 +3248,8 @@ document.addEventListener('DOMContentLoaded', function () {
         return 0;
     };
     const setupCinema = () => {
-        //        console.log(`setupCinema`);
+//        console.log(`setupCinema`);
+
         const i = $('#cinema').find('iframe');
         const cl = $('#cinemaControls').find('.close');
         cl.show();
@@ -3293,15 +3299,23 @@ document.addEventListener('DOMContentLoaded', function () {
                 let evModal = false;
                 const ev = eventStack.getCurrentEvent();
                 if (ev) {
+//                    console.log(`vid end`, ev.noModal, ev);
                     if (ev.hasOwnProperty('event')) {
-                        //                        console.log(`video end calls showModalEvent once`);
-                        //                        showModalEvent(ev);
+//                        console.log(`video end calls showModalEvent once`);
+//                        showModalEvent(ev);
                         evModal = true;
                     }
                 }
+
                 if (evModal) {
-                    //                    console.log(`video end calls showModalEvent twice`);
-                    showModalEvent(ev);
+                    console.log(`video end calls showModalEvent twice`);
+                    if (ev.noModal) {
+//                        console.log('noModal condition, complete and unpause')
+//                        completeEvent();
+//                        unpauseSession();
+                    } else {
+                        showModalEvent(ev);
+                    }
                 } else {
                     unpauseSession(true);
                 }
@@ -3622,6 +3636,7 @@ document.addEventListener('DOMContentLoaded', function () {
             default:
                 renderHome();
         }
+        setupBasics();
     };
     const init = () => {
         gameflow('script init');

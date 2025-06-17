@@ -601,12 +601,20 @@
         },
         {
             "time": 62,
+            "timeNO": 3,
+            "event": "nomodal",
+            "event": "announcestorm",
+            "video": "5dd21441-4bd0-4350-a77c-b2020099dd78",
+            "noModal": false
+        },
+        {
+            "timeNO": 62,
             "event": "photo",
             "type": "storm",
             "asset": "photoimages_photo-stormy.png",
             "msg": "A climber has sent you a photo of the incoming storm.",
             "NOTES": "CHANGE THIS TO VIDEO",
-            "videoNO": "https://cranfield.cloud.panopto.eu/Panopto/Pages/Viewer.aspx?id=5dd21441-4bd0-4350-a77c-b2020099dd78"
+            "video": "5dd21441-4bd0-4350-a77c-b2020099dd78"
         },
         {
             "time": 65,

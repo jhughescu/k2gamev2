@@ -1,6 +1,6 @@
 {
-  "timestamp": "2025-06-17T11:25:49+01:00",
-  "commitHash": "e26310d8cb1e63120a0ed764d71bcf47823d2fbf",
-  "commitMessage": "Final leaderboard completed",
+  "timestamp": "2025-06-17T17:05:58+01:00",
+  "commitHash": "fb745c71bf1eeab3d257e801c46e5bafe4f5c645",
+  "commitMessage": "Checked endgame for both successful & failed missions. Events can no longer occur once storm has started (no resupplies etc)",
   "branch": "master"
 }
