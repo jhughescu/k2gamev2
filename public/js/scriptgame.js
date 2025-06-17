@@ -2571,6 +2571,10 @@ document.addEventListener('DOMContentLoaded', function () {
     };
     const eventTrigger = (ev) => {
         // EventStack calls this method when a new event is to be triggered
+        if (stormUnderway()) {
+            // no events can occur after the storm has started
+            return;
+        }
         if (eventStack.eventSummary[ev.n] === 0) {
             logUpdate(`${ev.eventTitle}`, 'trigger');
         }
@@ -2937,8 +2941,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const startStorm = () => {
 //        console.log(`startStorm !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!`);
         $('#lightningzone1').addClass('lightninglight');
-        //        unpauseSession();
-        //        debugger;
         goDarkSky();
         scheduleNextLightning();
         clearTimeout(cloudDelay);
@@ -2947,6 +2949,11 @@ document.addEventListener('DOMContentLoaded', function () {
             $('#lightningzone1').removeClass('lightninglight');
         }, 9000);
     };
+    const stormUnderway = () => {
+        const sb = $('.stormbg');
+        return sb.css('opacity') > 0;
+    };
+    window.stormUnderway = stormUnderway;
     const resetStorm = () => {
         resetClouds();
         clearSky();
@@ -3148,7 +3155,7 @@ document.addEventListener('DOMContentLoaded', function () {
         rOb.totalTimeFormat = rOb.totalTime.join(':');
         socket.emit('finalReport', {sessionID: session.uniqueID, climbers: C});
         rOb.profiles = C;
-        console.log(rOb);
+//        console.log(rOb);
         renderNone(() => {
             renderTemplate('theatre', 'leaderboard.climber', rOb, () => {
                 updateAddress('leaderboardclimber');
