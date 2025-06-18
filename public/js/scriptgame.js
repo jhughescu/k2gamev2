@@ -105,10 +105,12 @@ document.addEventListener('DOMContentLoaded', function () {
     const getCheatState = () => {
         //        return false;
         let cs = window.isLocal() || window.getQuery('cheating') ? true : false;
-        if (sessionStorage.getItem('cheating') !== null) {
-            cs = sessionStorage.getItem('cheating');
+        const sc = sessionStorage.getItem('cheating');
+        if (sc !== null) {
+            cs = sc;
         }
-        console.log(`request cheat state, window.isLocal? ${window.isLocal()}, query cheating? ${window.getQuery('cheating')}, returning ${cs}`);
+        cs = window.procVal(cs);
+        console.log(`request cheat state, window.isLocal? ${window.isLocal()}, query cheating? ${window.getQuery('cheating')}, stored: ${sc} returning ${cs}`);
         return cs;
     };
 
@@ -3348,7 +3350,7 @@ document.addEventListener('DOMContentLoaded', function () {
             renderTemplate('theatre', 'home', session, () => {
                 setupHome();
                 updateAddress('home');
-                window.tools.setup(session);
+                window.tools.setup(session, gameData);
             })
         });
     };

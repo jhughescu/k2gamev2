@@ -14,6 +14,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const bResetStorm = $('#resetStorm');
     const bToggleDebug = $('#toggleDebug');
     const bClearConsole = $('#clearConsole');
+    const bTestClimbers = $('#testClimbers');
     //
     const setupSocket = () => {
         socket.on('gameFound', (g) => {
@@ -31,6 +32,7 @@ document.addEventListener('DOMContentLoaded', function () {
         bResetStorm.off('click').on('click', resetStorm);
         bToggleDebug.off('click').on('click', toggleDebug);
         bClearConsole.off('click').on('click', clearConsole);
+        bTestClimbers.off('click').on('click', testClimbers);
     };
     const closedown = () => {
 //        socket.emit('toolkitClosed', { gameID: initObj.uniqueID });
@@ -53,8 +55,8 @@ document.addEventListener('DOMContentLoaded', function () {
             console.log(ev);
         });
         window.addEventListener('load', () => {
-//            console.log('loaded');
             info = window.opener.requestToolkitInfo(window.getQueries().uniqueID);
+            console.log('loaded', info);
             if (info.hasOwnProperty('autoResource')) {
                 renderArButton(info.autoResource);
             }
@@ -63,7 +65,52 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         })
     };
-
+    const testClimbers = () => {
+        // create climbers for testing (do not store, i.e. set type to -9999)
+//        console.log('testClimbers');
+//        console.log(info.gameData.teams);
+        if (info.gameData) {
+            let cCount = 0;
+            let str = '<div class="grid-container">';
+            info.gameData.teams.forEach(t => {
+                console.log(`${t.adjective} team:`)
+                Object.values(t.profiles).forEach((p, i) => {
+//                    console.log(p);
+                    const clOb = {
+                        profile: i,
+                        type: -9999,
+                        team: t,
+                        teamID: t.id,
+                        gameData: info.gameData
+                    }
+                    const c = new Climber(clOb);
+//                    console.log(clOb);
+//                    console.log(c);
+                    cCount++;
+                    str += `<div class="grid-item">`;
+                    str += `<img src='assets/profiles/profileimages_${c.filename}.png'>`;
+                    str += `<p>${c.name}</p>`;
+                    str += `<p>${c.filename}.png</p>`;
+                    str += `<p>${c.team.country}</p>`;
+                    str += `</div>`;
+                });
+            });
+            str += '</div>';
+            $('#insertion').html(str);
+//            console.log(`${cCount} climbers created`);
+        }
+        /*
+        const clOb = {
+            profile: i,
+            type: -9999,
+            team: t,
+            teamID: t.id,
+            gameData: gameData
+        }
+        const c = createClimber(clOb);
+        */
+    };
+    window.testClimbers = testClimbers;
 //    control actions
     const renderArButton = (res) => {
         const b = bToggleAutoRes;
@@ -114,6 +161,9 @@ document.addEventListener('DOMContentLoaded', function () {
     };
     const clearConsole = () => {
         socket.emit('clearConsole', { gameID: initObj.uniqueID });
+    };
+    window.showInfo = () => {
+        console.log(info);
     };
     init();
 });

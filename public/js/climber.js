@@ -25,7 +25,8 @@ class Climber {
         this.pronouns = init.team.profiles[`p${init.profile}`].gender === 'm' ? {p1: 'he', p2: 'his', p3: 'him'} : {p1: 'she', p2: 'her', p3: 'her'};
         Object.values(this.pronouns).forEach((p, i) => this.pronouns[`P${(i + 1)}`] = window.stringToCamelCase(p));
 //        this.filename = this.name.replace(' ', '').replace(/[^a-zA-Z0-9]/g, '');
-        this.filename = window.stringToCamelCase(this.name).normalize('NFD').replace(' ', '').replace(/[^a-zA-Z0-9]/g, '').toLocaleLowerCase();
+//        this.filename = window.stringToCamelCase(this.name).normalize('NFD').replace(' ', '').replace(/[^a-zA-Z0-9]/g, '').toLocaleLowerCase();
+        this.filename = window.stringToCamelCase(this.name.normalize('NFD')).replace(' ', '').toLocaleLowerCase();
         //
         const stored = Object.assign({position: init.position, currentTime: 0, delayExpiry: 0}, this.unpackStorageSummary(this.getStoredSummary()));
 

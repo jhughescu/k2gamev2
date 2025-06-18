@@ -1,5 +1,6 @@
 document.addEventListener('DOMContentLoaded', function () {
     let session;
+    let gameData;
     let devtoolsWin;
     let devtoolsCheck;
     const launchToolkit = () => {
@@ -12,9 +13,11 @@ document.addEventListener('DOMContentLoaded', function () {
         clearInterval(devtoolsCheck);
         devtoolsCheck = setInterval(checkForToolkit, 1000);
     };
-    const setup = (sesh) => {
+    const setup = (sesh, gData) => {
 //        console.log(`setup`, sesh);
+//        console.log(`gameData`, gameData);
         session = sesh;
+        gameData = gData;
         let isMouseDownOnElement = false;
         let T;
         const $el = $('#teamflag');
@@ -98,8 +101,11 @@ document.addEventListener('DOMContentLoaded', function () {
         let r = {};
         if (session) {
             r = id === session.uniqueID ? session : {};
+
             Object.assign(r, window.getToolkitInfo());
+            r.gameData = gameData;
         }
+        console.log(r);
         return r;
     };
     window.requestToolkitInfo = onToolkitRequest;
