@@ -418,7 +418,6 @@
         },
         {
             "time": 16,
-            "time": 1,
             "ref": "quiz2",
             "event": "quiz",
             "question": 1,

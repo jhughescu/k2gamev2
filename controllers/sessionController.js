@@ -3,6 +3,7 @@ const Session = require('../models/session');
 const tools = require('./tools');
 const { getEventEmitter } = require('./../controllers/eventController');
 //const gameController = require('./controllers/gameController');
+//const dateController = require('./controllers/dateController');
 const eventEmitter = getEventEmitter();
 
 let persistentData = null;
@@ -62,11 +63,12 @@ const newSession = async (cb) => {
     do {
         st = Math.floor(at.length * Math.random());
     } while (st === cc);
-    console.log(`newSession, cc: ${cc}, st: ${st}`);
+//    console.log(`newSession, cc: ${cc}, st: ${st}`);
+//    console.log(tools.getTimeNumber());
     const s = new Session({
         uniqueID: `1${tools.padNum(sN, 100000)}${1000 + Math.round(Math.random() * 1000)}`,
         name: sID,
-        dateID: 0,
+        dateID: tools.getTimeNumber(),
         type: 1,
         teamRef: cc,
         supportTeamRef: st,
@@ -78,8 +80,8 @@ const newSession = async (cb) => {
     });
 
     s.save();
-    console.log('NEW SESSION');
-    console.log(developSession(s));
+//    console.log('NEW SESSION');
+//    console.log(developSession(s));
 //    eventEmitter.emit();
     cb(developSession(s));
 };
@@ -95,8 +97,8 @@ const restoreSession = async (sOb, cb) => {
     }
 };
 const updateSession = async (sOb, cb) => {
-    console.log('updateSession called:');
-    console.log(sOb);
+//    console.log('updateSession called:');
+//    console.log(sOb);
     try {
         const filter = { uniqueID: sOb.uniqueID };
         const update = { $set: {}, $push: {} };

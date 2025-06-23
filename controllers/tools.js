@@ -80,6 +80,12 @@ const getTimeStamp = () => {
     const ts = `timestamp: ${d.getFullYear()}${padNum(d.getMonth())}${padNum(d.getDay())} ${padNum(d.getHours())}:${padNum(d.getMinutes())}:${padNum(d.getSeconds())}`;
     return ts;
 };
+const getTimeNumber = () => {
+    const d = new Date();
+    const t = `${d.getFullYear()}${padNum(d.getMonth())}${padNum(d.getDay())}${padNum(d.getHours())}${padNum(d.getMinutes())}${padNum(d.getSeconds())}`;
+    const n = parseInt(t);
+    return n;
+};
 module.exports = {
     procVal,
     toCamelCase,
@@ -88,5 +94,6 @@ module.exports = {
     roundNumber,
     isValidJSON,
     getIPv4Address,
-    getTimeStamp
+    getTimeStamp,
+    getTimeNumber
 }

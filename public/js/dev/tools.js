@@ -14,8 +14,8 @@ document.addEventListener('DOMContentLoaded', function () {
         devtoolsCheck = setInterval(checkForToolkit, 1000);
     };
     const setup = (sesh, gData) => {
-//        console.log(`setup`, sesh);
-//        console.log(`gameData`, gameData);
+        console.log(`setup`, sesh);
+        console.log(`gameData`, gameData);
         session = sesh;
         gameData = gData;
         let isMouseDownOnElement = false;
@@ -42,7 +42,9 @@ document.addEventListener('DOMContentLoaded', function () {
         const pressedKeys = new Set();
 
         document.addEventListener('keydown', (e) => {
-            if (e.altKey && e.key.toLowerCase() === 't') {
+            console.log(e.shiftKey);
+            console.log(e.key.toLowerCase());
+            if (e.shiftKey && e.key.toLowerCase() === 't') {
                 e.preventDefault(); // Optional: prevent any default behavior
                 launchToolkit();
             }

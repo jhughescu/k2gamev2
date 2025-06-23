@@ -168,10 +168,10 @@
         margin: 25px auto;
         padding: 8px 0px;
         width: 300px;
-        height: 70px;
+        height: 80px;
         min-width: 300px;
         max-width: 300px;
-        min-height: 70px;
+        min-height: 80px;
         border-radius: 20px;
         background-color: #ff5c81;
         color: white;
@@ -182,11 +182,15 @@
 /*        background-color: blue;*/
         margin: 2px;
     }
+    #totalDisplay .mini {
+        font-size: 0.5em;
+    }
     .note {
         margin: 50px;
         color: white;
         font-size: 1.2em;
     }
+
 
 </style>
 <div class="center">
@@ -210,6 +214,6 @@
 
 	</div>
 <!--    <div class="k2-modal-btn-link" style="max-width: 300px; margin-top: 50px;" href="#home">{{totalTimeFormat}}</div>-->
-	<div id='totalDisplay'><p>Total Team Time</p><p>{{totalTimeFormat}}</p></div>
+    <div id='totalDisplay'><p>Total Team Time</p><p>{{totalTimeFormat}}</p><p class='mini'>sessionID: {{sessionID}}</p></div>
     <p class='note'>Screenshot this page and share in the chat so you can find out who wins!</p>
 </div>

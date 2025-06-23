@@ -21,6 +21,7 @@ class Quiz {
     setupInterface(q) {
         const self = this;
 //        console.log('ol', window.clone(q).optionsAllowed);
+        console.log(q);
         const optionsAllowed = q.optionsAllowed < 0 ? q.options.length : q.optionsAllowed;
 
         $('.bQuizAnswer').off('click').on('click', function () {

@@ -34,7 +34,7 @@ const QuestionSchema = new mongoose.Schema({
     },
     optionsAllowed: {
         type: Number,
-        default: 3,
+        default: 1,
         required: false
     },
     feedback: {

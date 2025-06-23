@@ -1569,12 +1569,12 @@ document.addEventListener('DOMContentLoaded', function () {
     };
     const setupDieRoll = (btn) => {
         return;
-        const b = $(btn);
-        const r = b.parent().find('.dieres');
-        console.log(r);
-        b.off('click').on('click', () => {
-            console.log(dieRoll());
-        });
+//        const b = $(btn);
+//        const r = b.parent().find('.dieres');
+//        console.log(r);
+//        b.off('click').on('click', () => {
+//            console.log(dieRoll());
+//        });
     };
 
 
@@ -2728,7 +2728,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         ender(true);
         return;
-
+        /*
         const eOb = {
             template: 'climb-complete'
         };
@@ -2736,7 +2736,7 @@ document.addEventListener('DOMContentLoaded', function () {
         setTimeout(() => {
             showModalEvent(eOb);
         }, 2000);
-
+        */
     };
     const fadeToBlack = () => {
         $('#theatre').prepend(`<div class='fullscreen blackout'></div>`);
@@ -2761,10 +2761,12 @@ document.addEventListener('DOMContentLoaded', function () {
         } else {
             fadeToBlack();
         }
+        /*
         return;
         resetSession();
         cheating = getCheatState();
         unpauseSession(true);
+        */
     };
     // storm
     const stormTime = {
@@ -2794,6 +2796,7 @@ document.addEventListener('DOMContentLoaded', function () {
         console.log('BAD END');
 
         ender(false);
+        /*
         return;
 
 
@@ -2804,6 +2807,7 @@ document.addEventListener('DOMContentLoaded', function () {
         setTimeout(() => {
             showModalEvent(eOb);
         }, 2000);
+        */
     };
     const resetClouds = () => {
         const cl = $('.cloudleft');
@@ -3132,7 +3136,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     } else {
                         setTimeout(() => {
 //                            console.log('renderMap triggers unpause');
-//                            unpauseSession(true);
+                            unpauseSession(true);
                         }, 1000);
                     }
                     showMapzone();
@@ -3186,6 +3190,7 @@ document.addEventListener('DOMContentLoaded', function () {
         rOb.totalTimeFormat = rOb.totalTime.join(':');
         socket.emit('finalReport', {sessionID: session.uniqueID, climbers: C});
         rOb.profiles = C;
+        rOb.sessionID = session.uniqueID;
 //        console.log(rOb);
         renderNone(() => {
             renderTemplate('theatre', 'leaderboard.climber', rOb, () => {
@@ -3653,7 +3658,9 @@ document.addEventListener('DOMContentLoaded', function () {
     stormResetter.on('click', resetStorm);
     const onUnload = () => {
         snapshot();
-        theState.storeTime(gTimer.elapsedTime);
+        if (theState !== null) {
+            theState.storeTime(gTimer.elapsedTime);
+        }
     };
     window.onbeforeunload = onUnload;
     window.addEventListener('hashchange', () => {
