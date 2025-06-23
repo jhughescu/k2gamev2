@@ -14,6 +14,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const bResetStorm = $('#resetStorm');
     const bToggleDebug = $('#toggleDebug');
     const bClearConsole = $('#clearConsole');
+    const bRefreshGame = $('#refreshGame');
     const bTestClimbers = $('#testClimbers');
     //
     const setupSocket = () => {
@@ -32,6 +33,7 @@ document.addEventListener('DOMContentLoaded', function () {
         bResetStorm.off('click').on('click', resetStorm);
         bToggleDebug.off('click').on('click', toggleDebug);
         bClearConsole.off('click').on('click', clearConsole);
+        bRefreshGame.off('click').on('click', refreshGameWin);
         bTestClimbers.off('click').on('click', testClimbers);
     };
     const closedown = () => {
@@ -161,6 +163,9 @@ document.addEventListener('DOMContentLoaded', function () {
     };
     const clearConsole = () => {
         socket.emit('clearConsole', { gameID: initObj.uniqueID });
+    };
+    const refreshGameWin = () => {
+        socket.emit('refreshWin', { gameID: initObj.uniqueID });
     };
     window.showInfo = () => {
         console.log(info);

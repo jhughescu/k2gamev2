@@ -344,6 +344,7 @@
     "activeEventRangeNO": [-10, -18],
     "activeEventRange": [0, 56],
     "activeEventRangeNO": [10, 56],
+    "activeEventRangeNO": [3, 3],
     "events": [
         {
             "time": 0.5,
@@ -407,6 +408,35 @@
                     }
                 ]
             }
+        },
+        {
+            "time": 7,
+            "ref": "quiz1",
+            "event": "quiz",
+            "question": 0,
+            "method": "getQuestionAndRender"
+        },
+        {
+            "time": 16,
+            "time": 1,
+            "ref": "quiz2",
+            "event": "quiz",
+            "question": 1,
+            "method": "getQuestionAndRender"
+        },
+        {
+            "time": 37,
+            "ref": "quiz3",
+            "event": "quiz",
+            "question": 2,
+            "method": "getQuestionAndRender"
+        },
+        {
+            "time": 51,
+            "ref": "quiz4",
+            "event": "quiz",
+            "question": 3,
+            "method": "getQuestionAndRender"
         },
         {
             "time": 15,

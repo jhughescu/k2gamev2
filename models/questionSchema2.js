@@ -12,14 +12,18 @@ const QuestionSchema = new mongoose.Schema({
         required: true,
         validate: [arrayLimit, 'Options must include at least two choices']
     },
-    correctAnswerIndex: {
-        type: Number,
+    correctAnswerIndexes: {
+        type: [Number],
         required: true,
         validate: {
-            validator: function (i) {
-                return i >= 0 && this.options && i < this.options.length;
+            validator: function (arr) {
+                return (
+                    Array.isArray(arr) &&
+                    arr.length > 0 &&
+                    arr.every(i => Number.isInteger(i) && i >= 0 && i < this.options.length)
+                );
             },
-            message: 'correctAnswerIndex must point to a valid option'
+            message: 'Each index must be a valid option index'
         }
     },
     difficulty: {
@@ -27,6 +31,15 @@ const QuestionSchema = new mongoose.Schema({
         default: 1,
         min: 1,
         max: 10
+    },
+    optionsAllowed: {
+        type: Number,
+        default: 3,
+        required: false
+    },
+    feedback: {
+        type: String,
+        required: false
     },
     tags: {
         type: [String],

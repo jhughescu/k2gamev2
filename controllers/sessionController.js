@@ -95,6 +95,42 @@ const restoreSession = async (sOb, cb) => {
     }
 };
 const updateSession = async (sOb, cb) => {
+    console.log('updateSession called:');
+    console.log(sOb);
+    try {
+        const filter = { uniqueID: sOb.uniqueID };
+        const update = { $set: {}, $push: {} };
+
+        for (const [key, value] of Object.entries(sOb)) {
+            if (key === 'quiz') {
+                update.$push.quiz = value;
+            } else {
+                update.$set[key] = value;
+            }
+        }
+
+        // Clean up empty operators if not used
+        if (Object.keys(update.$push).length === 0) delete update.$push;
+        if (Object.keys(update.$set).length === 0) delete update.$set;
+
+        const result = await Session.updateOne(filter, update);
+
+        if (result.matchedCount === 0) {
+            throw new Error(`No document found for uniqueID ${sOb.uniqueID}`);
+        }
+
+        if (cb) {
+            const updatedSession = await Session.findOne(filter);
+            cb(updatedSession);
+        }
+    } catch (err) {
+        console.error(`Error in updateSession: ${err.message}`);
+        console.log(sOb);
+        if (cb) cb(null, err);
+    }
+};
+
+const updateSessionV4 = async (sOb, cb) => {
     try {
         const filter = { uniqueID: sOb.uniqueID };
         const update = {};

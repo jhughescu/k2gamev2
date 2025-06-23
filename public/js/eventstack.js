@@ -99,7 +99,7 @@ class EventStack {
         // Uses the next event in the stack - removes it from the stack
         // Requires a callback, which sends the event to the calling object
         const e = this.events.shift();
-//        console.log(`event "${e.event}" used, ${this.events.length} events remaining`);
+        console.log(`event "${e.event}" used, ${this.events.length} events remaining`);
         if (cb) {
             cb(e);
         } else {

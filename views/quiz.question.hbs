@@ -1,0 +1,48 @@
+<style>
+    .bQuiz {
+        margin: 10px auto;
+        width: 300px;
+        height: 40px;
+        color: white;
+        text-align: left;
+        border-radius: 10px;
+        box-shadow: -2px 2px 3px rgba(28, 28, 28, 0.85);
+        padding: 12px;
+        cursor: pointer;
+    }
+    .bQuizAnswer {
+        background-color: #f54589;
+    }
+    .bQuizSubmit {
+        margin-top: 30px;
+        width: 150px;
+        text-align: center;
+        background-color: #747373;
+    }
+
+    .bQuiz.clicked {
+/*        cursor: default;*/
+    }
+    .bQuizAnswer.clicked {
+        background-color: #ea015b;
+/*        color: black;*/
+    }
+    .bQuiz.disabled {
+        cursor: default;
+    }
+    .bQuizAnswer.correct {
+/*        background-color: #0b9810;*/
+        box-shadow: -4px 4px 3px rgba(28, 28, 28, 0.95);
+    }
+    .bQuizAnswer.incorrect {
+/*        opacity: 0.5;*/
+        color: #deacbf;
+    }
+</style>
+Quiz question: <br>
+{{question}}
+{{#each options}}
+<div class='bQuiz bQuizAnswer' id='qa_{{this.id}}'>{{this.a}}</div>
+{{/each}}
+<!--<div class='bQuiz bQuizSubmit'>Submit</div>-->
+<p id='quizFeedback'></p>

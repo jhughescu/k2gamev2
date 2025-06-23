@@ -70,6 +70,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }, 2000);
     });
     socket.on('playPause', () => {
+//        console.log('socket calls playPauseSesison');
         playPauseSession();
     });
     socket.on('resetTime', () => {
@@ -86,6 +87,9 @@ document.addEventListener('DOMContentLoaded', function () {
     });
     socket.on('clearConsole', () => {
         clearBrowserConsole();
+    });
+    socket.on('refreshWin', () => {
+        window.location.reload();
     });
 
     // autoResource meane profiles will be set automatically on the resources screen
@@ -110,7 +114,7 @@ document.addEventListener('DOMContentLoaded', function () {
             cs = sc;
         }
         cs = window.procVal(cs);
-        console.log(`request cheat state, window.isLocal? ${window.isLocal()}, query cheating? ${window.getQuery('cheating')}, stored: ${sc} returning ${cs}`);
+//        console.log(`request cheat state, window.isLocal? ${window.isLocal()}, query cheating? ${window.getQuery('cheating')}, stored: ${sc} returning ${cs}`);
         return cs;
     };
 
@@ -772,14 +776,13 @@ document.addEventListener('DOMContentLoaded', function () {
                     //                isEventModal = !ob.noevent;
                     //                    console.log('CANNOT complete');
                 } else {
-                    //                    console.log('can complete');
                     completeEvent();
                 }
             } else {
-                //                console.log('no ob in arg, we can complete the event BUT check for issues with other calls');
+//                console.log('no ob in arg, we can complete the event BUT check for issues with other calls');
                 completeEvent();
             }
-
+            console.log(`closeModal calls playPauseSession`);
             playPauseSession();
         }
         removeFullscreenModalClick();
@@ -841,10 +844,15 @@ document.addEventListener('DOMContentLoaded', function () {
     };
     const showModalEvent = (ev) => {
         if (ev.noModal) {
-            console.log('noModal condition - just unpause?');
+//            console.warn('noModal condition - just unpause?');
             unpauseSession();
             return;
         }
+//        console.log(window.clone(ev));
+//        ev.current = true;
+//        if (ev.current) {
+//
+//            }
         if (ev.hasOwnProperty('supportTeam') && !cheating) {
             // duplicate the support team to break linkage with origin, randomise the list for display
             ev.supportTeam = window.clone(ev.supportTeam);
@@ -876,6 +884,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     //                    return;
                     setTimeout(() => {
                         closeModal();
+//                        console.warn('I doubt this is it');
                         unpauseSession();
                     }, 2000);
                 }
@@ -1164,6 +1173,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 }
                 initRender();
+//                console.log('goQuiz will be called', session);
+                goQuiz();
                 updateView();
                 clearInterval(i);
 
@@ -1422,6 +1433,7 @@ document.addEventListener('DOMContentLoaded', function () {
         resetClimbers();
         resetStorm();
         devShowProfiles();
+        quiz.resetAsked();
         logUpdate('reset', 'session')
     };
     const showSession = () => {
@@ -1443,15 +1455,19 @@ document.addEventListener('DOMContentLoaded', function () {
         p.forEach(pf => console.log(pf));
     };
     const playPauseSession = () => {
+//        return;
 //        console.log('playPauseSession');
         if (!checkCompletion().allFinished) {
             toggleTimer();
         }
     };
-    const pauseSession = () => {
-//        console.log('pauseSession');
+    const pauseSessionV1 = () => {
+        console.log('pauseSession');
+        console.log(window.clone(gTimer));
+//        gTimer.pauseTimer();
         if (gTimer.hasStarted) {
             if (gTimer.isRunning) {
+                console.log('success')
                 gTimer.pauseTimer();
                 storeLocal('time', gTimer.elapsedTime);
                 theState.storeTime(gTimer.elapsedTime);
@@ -1459,7 +1475,18 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
     };
+    const pauseSession = () => {
+//        console.log('NEW pauseSession');
+//        console.log(window.clone(gTimer));
+        gTimer.pauseTimer();
+        storeLocal('time', gTimer.elapsedTime);
+        theState.storeTime(gTimer.elapsedTime);
+        showtime();
+
+    };
     const unpauseSession = (force) => {
+//        console.log(`unpauseSession`);
+//        showMapzone();
         if (gTimer.hasStarted || force && !checkCompletion().allFinished) {
             //            if (gTimer.isRunning) {
             gTimer.resumeTimer();
@@ -2570,6 +2597,9 @@ document.addEventListener('DOMContentLoaded', function () {
         return ev;
     };
     const eventTrigger = (ev) => {
+//        console.log(`eventTrigger`, window.clone(ev));
+//        console.log(session.events);
+//        console.log(`should trigger: ${session.events[window.clone(ev).n] === 0}`);
         // EventStack calls this method when a new event is to be triggered
         if (stormUnderway()) {
             // no events can occur after the storm has started
@@ -2583,7 +2613,6 @@ document.addEventListener('DOMContentLoaded', function () {
             completeEvent();
             return;
         }
-
         if (ev.profiles) {
             if (ev.profiles.length === 1) {
                 // Profile event, only one climber
@@ -2593,28 +2622,17 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             }
         }
-//        console.log('event trigger causes pauses');
-
         ev = prepEvent(ev);
-//        console.log(`eventTrigger`, ev);
         if (!ev.noPause) {
-//            console.log(`noPause is not true, pausing`);
             pauseSession();
-        } else {
-//            console.log(`noPause is true, I will not pause`);
         }
-//        console.log('trigger', ev);
         if (ev.hasOwnProperty('video')) {
-            //            console.log('render the cinema, yes');
-            //            renderCinema(ev);
             showModalRadio(ev);
             return;
         }
         if (ev.event.includes('photo')) {
-            //            console.log('photo', ev);
             if (ev.type === 'selfie') {
                 showModalSelfie(ev);
-                //                console.log('photo (selfie) event');
             } else {
                 showModalPhoto(ev);
             }
@@ -2622,14 +2640,11 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
         if (!ev.noModal) {
-                        console.log('eventTrigger calls showModalEvent');
-            //            console.log(ev);
+            console.warn(`show modal event called here`, window.clone(ev));
             showModalEvent(ev);
         } else {
-//            console.log(`noModal condition`);
-            //            unpauseSession();
             if (ev.hasOwnProperty('method')) {
-                //                ev.method
+//                console.log(`this is the event method trigger`);
                 eval(ev.method)({}, ev);
             }
         }
@@ -2646,7 +2661,7 @@ document.addEventListener('DOMContentLoaded', function () {
     };
     const completeEvent = () => {
         const ev = eventStack.getCurrentEvent();
-        //        console.log('complete event', ev, eventStack.eventSummary[ev.n], eventStack.eventSummary[ev.n] === 2, eventStack.eventSummary[ev.n] === '2');
+//        console.log('complete event', ev, eventStack.eventSummary[ev.n], eventStack.eventSummary[ev.n] === 2, eventStack.eventSummary[ev.n] === '2');
         //        console.log(ev);
         if (ev) {
             if (eventStack.eventSummary[ev.n] === 1) {
@@ -2654,9 +2669,10 @@ document.addEventListener('DOMContentLoaded', function () {
             }
             const evSumm = eventStack.updateSummary(ev, 2);
             updateSession('events', evSumm);
+//            console.log(evSumm);
         }
-        //        console.log(evSumm);
-        //        console.log(`completeEvent:`, window.clone(session).events);
+
+//        console.log(`completeEvent:`, window.clone(session).events);
     };
     const showEvents = () => {
         eventStack.getEvents().forEach(e => console.log(e));
@@ -3076,6 +3092,12 @@ document.addEventListener('DOMContentLoaded', function () {
         console.clear();
     };
     // end dev stuff
+    const showMapzone = () => {
+        const mp = $('#mapzone');
+        if (!mp.is(':visible')) {
+            mp.show();
+        }
+    };
     const renderMap = () => {
         if (window.clone(gTimer).elapsedTime === 0) {
             renderCinema();
@@ -3109,9 +3131,11 @@ document.addEventListener('DOMContentLoaded', function () {
                         pauseSession();
                     } else {
                         setTimeout(() => {
+//                            console.log('renderMap triggers unpause');
 //                            unpauseSession(true);
                         }, 1000);
                     }
+                    showMapzone();
                 });
             })
         });
@@ -3195,6 +3219,40 @@ document.addEventListener('DOMContentLoaded', function () {
     };
 
     // quiz
+    const goQuiz = () => {
+        if (quiz === null) {
+            quiz = new Quiz(socket, { session, setupModalClose, completeEvent });
+        }
+    };
+    const getQuestionAndRender = () => {
+        // event method: retrieves question and renders to '#quizplaceholder'
+//        console.log(`getQuestionAndRender PAUSES ####################################################`);
+        if ($('.bQuiz').length === 0) {
+//            console.log('it will render!');
+//        console.log(ev);
+            const ev = window.clone(eventStack.getCurrentEvent());
+//            console.log(`should trigger: ${session.events[ev.n] === 0}`);
+//            console.log(ev);
+            pauseSession();
+
+            getQuestion(ev.question, (q) => {
+                if (q.optionsAllowed > 1 && q.optionsAllowed < q.options.length) {
+                    q.question += ` (select up to ${q.optionsAllowed})`;
+                }
+                window.renderTemplate('quizplaceholder', 'quiz.question', q, () => {
+                    quiz.setupInterface(q);
+                })
+            });
+        }
+    };
+    const getQuestion = (qId, cb) => {
+//        console.log(`getQuestion`);
+        quiz.getQuestion(qId, (q) => {
+            q.options = q.options.map((e, i) => e = {a: e, id: i});
+//            console.log(`quiz.getQuestion callback`, q);
+            if (cb) {cb(q)};
+        });
+    };
     const getQuestionV1 = () => {
         if (quiz === null) {
             quiz = new Quiz(socket);
@@ -3204,11 +3262,13 @@ document.addEventListener('DOMContentLoaded', function () {
             q.options.forEach((o, i) => console.log(`${window.getAlph(i)}) ${o}`));
         });
     };
-    const getQuestion = () => {
-        if (quiz === null) {
-            quiz = new Quiz(socket);
-        }
+    const getQuestionV2 = (cb) => {
+//        if (quiz === null) {
+//            quiz = new Quiz(socket);
+//        }
         quiz.getQuestion((q) => {
+            q.options = q.options.map((e, i) => e = {a: e, id: i});
+            if (cb) {cb(q)};
             console.log(`%c${q.question}`, 'font-weight: bold; color: yellow;');
             q.options.forEach((o, i) => console.log(`${i}) ${o}`));
 
@@ -3229,8 +3289,11 @@ document.addEventListener('DOMContentLoaded', function () {
     };
     window.getQuestion = getQuestion;
 
+
     // cinema (video player)
     const getVidID = () => {
+//        console.log('get vid');
+//        debugger;
         const hard = 'bc54f268-68c0-4fe4-ac80-b20200a14135';
         let id = hard;
         const ce = eventStack.getCurrentEvent();
@@ -3287,8 +3350,6 @@ document.addEventListener('DOMContentLoaded', function () {
                         cb()
                     }
                     c.find('iframe').remove();
-                    // by default, restart the timer
-                    //                    playPauseSession()
                 });
             }, 1000);
         }
@@ -3310,7 +3371,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
 
                 if (evModal) {
-                    console.log(`video end calls showModalEvent twice`);
+                    console.warn(`video end calls showModalEvent twice`);
                     if (ev.noModal) {
 //                        console.log('noModal condition, complete and unpause')
 //                        completeEvent();
@@ -3504,11 +3565,13 @@ document.addEventListener('DOMContentLoaded', function () {
         Climber.storeSummaries();
         if (gTimer.hasStarted) {
             if (gTimer.isRunning) {
+//                console.log(`toggleTimer pauses timer`);
                 gTimer.pauseTimer();
                 storeLocal('time', gTimer.elapsedTime);
                 theState.storeTime(gTimer.elapsedTime);
                 showtime();
             } else {
+//                console.log(`toggleTimer resumes timer`);
                 gTimer.resumeTimer();
             }
         } else {

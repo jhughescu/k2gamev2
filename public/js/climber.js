@@ -216,6 +216,11 @@ class Climber {
             }
         }
     }
+    logPos() {
+        if (this.view.length) {
+            console.log(this.view.position());
+        }
+    }
     console(s) {
         if (this.option === 'a') {
             console.log(s);
@@ -471,7 +476,7 @@ class Climber {
                     this.delayCurrentTotal += n;
                 }
 //                console.log(`time now: ${this.currentTimeObject.gametime.m}, delay expires at ${this.delayExpiry}`);
-                this.showPie(true);
+//                this.showPie(true);
             } else {
                 console.warn('cannot set delay; currentTimeObject not yet defined');
             }
@@ -492,7 +497,7 @@ class Climber {
             this.allDelays[this.currentStage] += `,${n}`;
         }
         this.allDelays = this.allDelays.join('|');
-        console.log(`${this.name} setDelay of ${n} minutes at stage ${this.currentStage}, allDelays: ${this.allDelays}`);
+//        console.log(`${this.name} setDelay of ${n} minutes at stage ${this.currentStage}, allDelays: ${this.allDelays}`);
         this.onClimberUpdate(`profile${this.profile}`, {summary: this.getStorageSummary()});
     }
     // storage/summarising
@@ -566,9 +571,11 @@ class Climber {
 
     // delay countdown chart
     showPie(boo) {
+//        debugger;
         const pie = this.view.find(`#countpie_${this.profile}`);
 //        console.log(`shoePie`, boo, pie);
         boo ? pie.show() : pie.hide();
+//        debugger;
     };
     describeArc(x, y, radius, startAngle, endAngle) {
         const start = this.polarToCartesian(x, y, radius, endAngle);
@@ -913,8 +920,9 @@ class Climber {
             const xAdj = (-50 + (this.profile * 50)) * (1 - div);
             const x = `${150 + (xFactor) + xAdj}px`;
             const y = `${pos}px`;
-            let str = `updateView : ${this.profile} ${this.view.attr('id')} visible? ${this.view.is(':visible')}, set y to ${y} at p=${this.position}`;
+            let str = `updateView : ${this.profile} ${this.view.attr('id')} visible? ${this.view.is(':visible')}, x: ${x} y: ${y} at p=${this.position}`;
             str += ` ${this.view.is(':visible') ? this.view.position().top : ''}`;
+//            this.log(str);
             // dev code: change colour of climbers based on their position on the expedition
             if (this.gameData.isDev) {
                 ///*
@@ -947,6 +955,11 @@ class Climber {
     setView(jq) {
 //        console.log(jq);
         this.view = $(jq[this.profile]);
+        if (this.view.length && this.view.position().top === 0 && this.view.position().left === 0) {
+            this.view.hide();
+        } else {
+            this.view.show();
+        }
         this.icon = this.view.find('.climber_icon');
         this.view.show();
         this.view.find('.type').html(this.type);

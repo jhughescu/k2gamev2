@@ -84,6 +84,7 @@
 }
 #mapzone {
     position: absolute;
+    display: none;
     z-index: 3; /* Ensure it overlays the mountain */
 /*    border: 2px solid rgba(154, 232, 255, 0.51);*/
 /*    background-color: rgba(255, 255, 255, 0.18);*/

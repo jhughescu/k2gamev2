@@ -41,9 +41,11 @@ class GameTimer {
             r.test = r.test / 1.01;
             if (r.test < (r.int - r.step)) {
                 // at an integer restart the interval with reduced value
-//                console.warn(`try to speed up the interval, change to ${Math.round(r.test)}`);
+//                console.log(`%ctry to speed up the interval, change to ${Math.round(r.test)}, ${this.isRunning}`, 'color: yellow;');
                 r.int = Math.round(r.test);
-                this.startIntervals();
+                if (this.isRunning) {
+                    this.startIntervals();
+                }
             }
         }
         if (r.diff < r.diffMin) {
@@ -64,7 +66,9 @@ class GameTimer {
             r.int = r.test = Math.round(r.int + r.step);
 //            console.warn(`average rate has dropped to ${r.diffAv}, adjust it by ${r.step} to ${r.int}`);
             r.diffHis.length = 0;
-            this.startIntervals();
+            if (this.isRunning) {
+                this.startIntervals();
+            }
 //            clearInterval(this.interval);
 //            this.interval = setInterval(() => {
 //                this.intervalMethod();
@@ -82,6 +86,7 @@ class GameTimer {
         this.assessInterval();
     }
     startIntervals() {
+//        console.warn(`startIntervals`);
         this.rate.test = this.rate.int;
         clearInterval(this.interval);
         this.interval = setInterval(() => {
@@ -100,13 +105,14 @@ class GameTimer {
         }, this.storageTimer.int);
     }
     stopIntervals() {
+//        console.warn(`stopIntervals`);
         clearInterval(this.interval);
         clearInterval(this.assessor.funk);
         clearInterval(this.storageTimer.funk);
     }
     startTimer() {
         if (this.isRunning) return; // Prevent multiple intervals
-//        console.log('####################### startTimer');
+//        console.log('%C####################### startTimer', 'color: yellow;');
         this.startTime = Date.now();
         this.elapsedTime = 0;
         this.hasStarted = true;
@@ -124,8 +130,10 @@ class GameTimer {
 
         const currentTime = Date.now();
         this.elapsedTime = currentTime - this.startTime;
+//        console.log('pause success', window.clone(this));
     }
     resumeTimer() {
+//        console.log('%cRESUME TIMER', 'color: yellow;');
         if (this.isRunning) return; // Prevent multiple intervals
 
         this.startTime = Date.now() - this.elapsedTime;

@@ -156,18 +156,42 @@ function initSocket(server) {
                 socket.on('deleteSessionLogs', (id) => {
                     logController.deleteSessionLogs(id);
                 });
-                socket.on('getQuizQuestion', async ({ bank, excludeIds }, cb) => {
+                socket.on('getQuestionRefs', async ({ bank }, cb) => {
                     try {
-                        const question = await quizController.getQuestion(bank, excludeIds);
+                        const questionRefs = await quizController.getQuestionRefs(bank);
+                        cb(questionRefs);
+                    } catch (err) {
+                        console.error('Error in getQuestionRefs:', err);
+                        cb(null);
+                    }
+                });
+                socket.on('getQuizQuestion', async ({ qId, bank, excludeIds }, cb) => {
+                    try {
+                        const question = await quizController.getQuestion(bank, qId, excludeIds);
                         cb(question);
                     } catch (err) {
                         console.error('Error in getQuizQuestion:', err);
                         cb(null);
                     }
                 });
-                socket.on('submitAnswer', async ({ bank, questionId, selectedIndex }, callback) => {
+                socket.on('submitAnswer', async ({ sessionID, bank, questionId, selectedIndexes }, callback) => {
                     try {
-                        const result = await quizController.checkAnswer(bank, questionId, selectedIndex);
+//                        console.log('selectedIndexes:', selectedIndexes)
+                        const result = await quizController.checkAnswer(bank, questionId, selectedIndexes);
+                        console.log(`submitAnswer result:`);
+                        console.log(result);
+                        console.log(`submitAnswer input:`);
+                        console.log(selectedIndexes);
+                        console.log(sessionID)
+
+                        const ob = {
+                            uniqueID: sessionID,
+                            quiz: selectedIndexes
+                        }
+                        sessionController.updateSession(ob, () => {
+                            console.log('update sent, check DB')
+                        });
+
                         callback(result); // returns { correct: true/false }
                     } catch (err) {
                         callback({ error: err.message });
@@ -305,6 +329,11 @@ function initSocket(server) {
                     const r = `s-${data.gameID}`;
 //                    console.log(`clearConsole to ${r} which has ${showRoomSize(r)} room`);
                     io.to(r).emit('clearConsole');
+                });
+                socket.on('refreshWin', (data) => {
+                    const r = `s-${data.gameID}`;
+//                    console.log(`clearConsole to ${r} which has ${showRoomSize(r)} room`);
+                    io.to(r).emit('refreshWin');
                 });
             }
             // end toolkit client

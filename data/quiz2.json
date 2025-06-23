@@ -1,0 +1,28 @@
+  [
+      {
+          "question": "Which complexity type was most prevalent in organising your climbers?",
+          "options": ["Emergent", "Socio-political", "Structural"],
+          "correctAnswerIndexes": [],
+          "feedback": "Note down your response and why, to discuss with the group.",
+          "difficulty": 6
+  }, {
+          "question": "How many planning stages did you complete before your climb?",
+          "options": ["Preparation and Ascent", "Risk assessment and Contingency", "Scope", "Budgeting and Resource Allocation", "Critical Path"],
+          "correctAnswerIndexes": [],
+        "optionsAllowed": -1,
+          "feedback": "Note down your response and why, to discuss with the group.",
+          "difficulty": 6
+  }, {
+          "question": "What is the most common complexity type that have you encountered so far?",
+          "options": ["Emergent", "Socio-political", "Structural"],
+          "correctAnswerIndexes": [],
+          "feedback": "Note down your response and why, to discuss with the group.",
+          "difficulty": 6
+  }, {
+          "question": "Which type of methodology do you think best suits a mountain climb?",
+          "options": ["Agile", "Waterfall", "Hybrid"],
+          "correctAnswerIndexes": [],
+          "feedback": "Note down your response and why, to discuss with the group.",
+          "difficulty": 6
+  }
+  ]

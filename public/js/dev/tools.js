@@ -105,7 +105,7 @@ document.addEventListener('DOMContentLoaded', function () {
             Object.assign(r, window.getToolkitInfo());
             r.gameData = gameData;
         }
-        console.log(r);
+//        console.log(r);
         return r;
     };
     window.requestToolkitInfo = onToolkitRequest;

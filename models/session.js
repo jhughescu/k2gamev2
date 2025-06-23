@@ -15,7 +15,8 @@ const sessionSchema = new Schema({
     events: Array,
     profile0: Object,
     profile1: Object,
-    profile2: Object
+    profile2: Object,
+    quiz: Array
 });
 
 module.exports = mongoose.model('Session', sessionSchema);
