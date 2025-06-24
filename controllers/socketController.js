@@ -178,18 +178,18 @@ function initSocket(server) {
                     try {
 //                        console.log('selectedIndexes:', selectedIndexes)
                         const result = await quizController.checkAnswer(bank, questionId, selectedIndexes);
-                        console.log(`submitAnswer result:`);
-                        console.log(result);
-                        console.log(`submitAnswer input:`);
-                        console.log(selectedIndexes);
-                        console.log(sessionID)
+//                        console.log(`submitAnswer result:`);
+//                        console.log(result);
+//                        console.log(`submitAnswer input:`);
+//                        console.log(selectedIndexes);
+//                        console.log(sessionID)
 
                         const ob = {
                             uniqueID: sessionID,
                             quiz: selectedIndexes
                         }
                         sessionController.updateSession(ob, () => {
-                            console.log('update sent, check DB')
+//                            console.log('update sent, check DB')
                         });
 
                         callback(result); // returns { correct: true/false }
@@ -202,17 +202,18 @@ function initSocket(server) {
             }
             // end game clients
             // admin clients
-            if (sType === 'admin') {
-                socket.on('deleteSessions', (sOb, cb) => {
-                    sessionController.deleteSessions(sOb, cb);
-                });
-            }
-            if (sType === 'session.admin') {
+            if (sType.includes('admin')) {
                 socket.on('getAllSessions', (dbName, collectionName, cb) => {
                     databaseController.getAllSessions(dbName, collectionName, cb);
                 });
+                socket.on('getSession', (dbName, collectionName, sessionID, cb) => {
+                    databaseController.getSession(dbName, collectionName, sessionID, cb);
+                });
                 socket.on('deleteSession', (dbName, collectionName, sessionID, cb) => {
                     databaseController.deleteSession(dbName, collectionName, sessionID, cb);
+                });
+                socket.on('deleteSessions', (sOb, cb) => {
+                    sessionController.deleteSessions(sOb, cb);
                 });
 //                socket.on('deleteSessions', (sOb, cb) => {
 //                    sessionController.deleteSessions(sOb, cb);

@@ -67,6 +67,9 @@ app.get('/dev/pbuilder', (req, res) => {
 app.get('/dev/admin', (req, res) => {
     res.sendFile(path.join(basePath, 'dev_admin.html'));
 });
+app.get('/admin/dashboard', (req, res) => {
+    res.sendFile(path.join(basePath, 'admin_dashboard.html'));
+});
 app.get('/devtools', (req, res) => {
     res.sendFile(path.join(basePath, 'dev.tools.html'));
 });

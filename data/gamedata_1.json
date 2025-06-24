@@ -377,6 +377,13 @@
             }
         },
         {
+            "time": 7,
+            "ref": "quiz1",
+            "event": "quiz",
+            "question": 0,
+            "method": "getQuestionAndRender"
+        },
+        {
             "time": 10,
             "ref": "A1PP",
             "event": "crampons",
@@ -408,34 +415,6 @@
                     }
                 ]
             }
-        },
-        {
-            "time": 7,
-            "ref": "quiz1",
-            "event": "quiz",
-            "question": 0,
-            "method": "getQuestionAndRender"
-        },
-        {
-            "time": 16,
-            "ref": "quiz2",
-            "event": "quiz",
-            "question": 1,
-            "method": "getQuestionAndRender"
-        },
-        {
-            "time": 37,
-            "ref": "quiz3",
-            "event": "quiz",
-            "question": 2,
-            "method": "getQuestionAndRender"
-        },
-        {
-            "time": 51,
-            "ref": "quiz4",
-            "event": "quiz",
-            "question": 3,
-            "method": "getQuestionAndRender"
         },
         {
             "time": 15,
@@ -476,6 +455,13 @@
                     ]
                 }
             }
+        },
+        {
+            "time": 16,
+            "ref": "quiz2",
+            "event": "quiz",
+            "question": 1,
+            "method": "getQuestionAndRender"
         },
         {
             "time": 20,
@@ -552,6 +538,13 @@
             "msg": "A climber has sent you a photo of their view"
         },
         {
+            "time": 37,
+            "ref": "quiz3",
+            "event": "quiz",
+            "question": 2,
+            "method": "getQuestionAndRender"
+        },
+        {
             "time": 40,
             "event": "photo",
             "type": "storm",
@@ -592,6 +585,13 @@
             "time": 50,
             "event": "foundoxygen",
             "active": false
+        },
+        {
+            "time": 51,
+            "ref": "quiz4",
+            "event": "quiz",
+            "question": 3,
+            "method": "getQuestionAndRender"
         },
         {
             "time": 55,
@@ -637,13 +637,20 @@
             "noModal": false
         },
         {
-            "timeNO": 62,
+            "timeNO": 63,
             "event": "photo",
             "type": "storm",
             "asset": "photoimages_photo-stormy.png",
             "msg": "A climber has sent you a photo of the incoming storm.",
             "NOTES": "CHANGE THIS TO VIDEO",
             "video": "5dd21441-4bd0-4350-a77c-b2020099dd78"
+        },
+        {
+            "time": 64,
+            "event": "startstorm",
+            "method": "startStorm",
+            "noModal": true,
+            "noPause": true
         },
         {
             "time": 65,
@@ -674,13 +681,6 @@
                     }
                 ]
             }
-        },
-        {
-            "time": 64,
-            "event": "startstorm",
-            "method": "startStorm",
-            "noModal": true,
-            "noPause": true
         },
         {
             "time": 70,

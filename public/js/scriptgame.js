@@ -1176,6 +1176,9 @@ document.addEventListener('DOMContentLoaded', function () {
 //                console.log('goQuiz will be called', session);
                 goQuiz();
                 updateView();
+                if (session.state === 'new') {
+                    updateSession('state', 'incomplete');
+                }
                 clearInterval(i);
 
                 let lastState = JSON.stringify(session.profile0);
@@ -1430,6 +1433,7 @@ document.addEventListener('DOMContentLoaded', function () {
         eventStack.initSessionEvents(0);
         const e = eventStack.resetEvents();
         updateSession('events', e);
+        updateSession('state', 'new');
         resetClimbers();
         resetStorm();
         devShowProfiles();
@@ -1487,13 +1491,18 @@ document.addEventListener('DOMContentLoaded', function () {
     const unpauseSession = (force) => {
 //        console.log(`unpauseSession`);
 //        showMapzone();
-        if (gTimer.hasStarted || force && !checkCompletion().allFinished) {
-            //            if (gTimer.isRunning) {
-            gTimer.resumeTimer();
-            storeLocal('time', gTimer.elapsedTime);
-            theState.storeTime(gTimer.elapsedTime);
-            showtime();
-            //            }
+        const cinemaOpen = $('#cinema').is(':visible');
+//        console.log(`cinemaOpen? ${cinemaOpen}`);
+        if (!cinemaOpen) {
+            // prevent unpausing if a video is playing
+            if (gTimer.hasStarted || force && !checkCompletion().allFinished) {
+                //            if (gTimer.isRunning) {
+                gTimer.resumeTimer();
+                storeLocal('time', gTimer.elapsedTime);
+                theState.storeTime(gTimer.elapsedTime);
+                showtime();
+                //            }
+            }
         }
     };
     const packState = () => {
@@ -1643,6 +1652,9 @@ document.addEventListener('DOMContentLoaded', function () {
         //        console.log(`climberUpdate`, c);
         devShowProfiles();
         if (c.finished) {
+            const cID = `profile${c.profile}`;
+//            const C = session[cID]
+            updateSession(cID, {summary: c.getStorageSummary()});
             const allFinished = checkCompletion().allFinished;
             if (allFinished) {
                 gTimer.pauseTimer();
@@ -2720,23 +2732,13 @@ document.addEventListener('DOMContentLoaded', function () {
             //            debugger;
         }
     };
-    const endgame = () => {
+    const endgame = (good) => {
+        updateSession('state', `completed:${good ? 'good' : 'bad'}`);
         renderLeaderboardClimber();
     };
     const allClimbersFinished = () => {
-        console.log('GOOD END');
-
+//        console.log('GOOD END');
         ender(true);
-        return;
-        /*
-        const eOb = {
-            template: 'climb-complete'
-        };
-        cheating = false;
-        setTimeout(() => {
-            showModalEvent(eOb);
-        }, 2000);
-        */
     };
     const fadeToBlack = () => {
         $('#theatre').prepend(`<div class='fullscreen blackout'></div>`);
@@ -2746,27 +2748,24 @@ document.addEventListener('DOMContentLoaded', function () {
           // Wait 4 more seconds after fadeIn completes
           setTimeout(function () {
               bo.hide();
-            endgame();
+            endgame(false);
           }, 4000);
         });
-
-//        $('div').animate({opacity: 0}, 3000);
     };
     const ender = (good) => {
+        // ender is called when a) all climbers finished (good=true) or b) storm has hit (good=false)
+        // timer stops in either case
+        pauseSession();
+        const t = gTimer.getSummary().elapsedTime;
+        console.log(`game ended at ${t}`);
         logUpdate('ending', `${good ? 'good' : 'bad'} ending`);
         if (good) {
             setTimeout(() => {
-                endgame();
+                endgame(good);
             }, 3000);
         } else {
             fadeToBlack();
         }
-        /*
-        return;
-        resetSession();
-        cheating = getCheatState();
-        unpauseSession(true);
-        */
     };
     // storm
     const stormTime = {
@@ -2792,22 +2791,7 @@ document.addEventListener('DOMContentLoaded', function () {
         return 1 - (1 - x) * (1 - x);
     };
     const allCloudsDone = () => {
-        pauseSession();
-        console.log('BAD END');
-
         ender(false);
-        /*
-        return;
-
-
-        const eOb = {
-            template: 'climb-incomplete'
-        };
-        cheating = false;
-        setTimeout(() => {
-            showModalEvent(eOb);
-        }, 2000);
-        */
     };
     const resetClouds = () => {
         const cl = $('.cloudleft');
@@ -3246,6 +3230,15 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
                 window.renderTemplate('quizplaceholder', 'quiz.question', q, () => {
                     quiz.setupInterface(q);
+                    if (cheating) {
+                        setTimeout(() => {
+                            // ADD CHEAT CONDITION FOR QUIZ QUESTIONS
+                            $('.bQuizAnswer')[Math.floor($('.bQuizAnswer').length * Math.random())].click();
+                            setTimeout(() => {
+                                $('.k2-modal-btn').click();
+                            }, 500);
+                        }, 1000);
+                    }
                 })
             });
         }
@@ -3346,6 +3339,7 @@ document.addEventListener('DOMContentLoaded', function () {
         //        return;
         const c = $('#cinema');
         if (boo) {
+            pauseSession();
             c.show();
         } else {
             setTimeout(() => {

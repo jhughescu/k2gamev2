@@ -114,6 +114,31 @@ async function getAllSessions(dbName, collectionName, cb) {
     }
 }
 
+// Get a session by ID
+async function getSession(dbName, collectionName, id, cb) {
+    const client = new MongoClient(uri);
+    try {
+        await client.connect();
+        const db = client.db(dbName);
+        const collection = db.collection(collectionName);
+
+        const result = await collection.find({
+            _id: new ObjectId(id)
+        });
+        console.log(result)
+        return;
+        if (result.deletedCount === 1) {
+
+        } else {
+            if (cb) cb(`No document found with _id: ${id}`, null);
+        }
+    } catch (err) {
+        console.error("Error deleting document:", err.message);
+        if (cb) cb(err, null);
+    } finally {
+        await client.close();
+    }
+}
 // Delete a session by ID
 async function deleteSession(dbName, collectionName, id, cb) {
     const client = new MongoClient(uri);
@@ -206,6 +231,7 @@ module.exports = {
     dbConnect,
     dbEvents,
     getAllSessions,
+    getSession,
     deleteSession,
     getQuizDbConnection,
 };

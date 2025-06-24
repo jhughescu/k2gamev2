@@ -13,7 +13,8 @@ overlay for showing videos - these will appear fullscreen above other content
     margin: 0px;
     border: 0px;
     pointer-events: auto;
-/*    display: none;*/
+/*    opacity: 0.5;*/
+    display: none;
 }
 #cinemaFrame {
     position: absolute;
@@ -24,6 +25,7 @@ overlay for showing videos - these will appear fullscreen above other content
     left: 0px;
     background-color: black;
     z-index: 1;
+/*    opacity: 0.3;*/
 }
 #cinemaControls {
     position: absolute;

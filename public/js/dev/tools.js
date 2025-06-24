@@ -42,8 +42,8 @@ document.addEventListener('DOMContentLoaded', function () {
         const pressedKeys = new Set();
 
         document.addEventListener('keydown', (e) => {
-            console.log(e.shiftKey);
-            console.log(e.key.toLowerCase());
+//            console.log(e.shiftKey);
+//            console.log(e.key.toLowerCase());
             if (e.shiftKey && e.key.toLowerCase() === 't') {
                 e.preventDefault(); // Optional: prevent any default behavior
                 launchToolkit();

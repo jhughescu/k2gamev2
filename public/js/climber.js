@@ -512,8 +512,10 @@ class Climber {
             const sid = this.getStorageID();
             const ss = this.getStorageSummary();
     //        const sid = `${this.gameData.storeID}-c${this.profile}-${this.filename}`;
-//            console.log(`storing climber with ID ${sid} - use filename? ${this.filename}`);
-//            console.log(ss);
+            if (this.finishTime > 0) {
+//                console.log(`storing climber with ID ${sid} - use filename? ${this.filename} finishTime: ${this.finishTime}`);
+//                console.log(ss);
+            }
             localStorage.setItem(sid, ss);
         }
     }
@@ -905,7 +907,7 @@ class Climber {
             if (this.position === 100 && !this.finished) {
                 this.showFinished();
                 this.finished = true;
-                this.finishTime = this.currentTime;
+                this.setProperty('finishTime', this.currentTime);
                 console.log(`${this.name} has finished, ct: ${this.currentTime}, ft: ${this.finishTime}`);
 //                console.log(this.currentTime);
 //                console.log(this.finishTime);
