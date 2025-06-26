@@ -550,7 +550,7 @@
             "time": 40,
             "event": "photo",
             "type": "photo",
-            "asset": "PhotoImages_photo-stormy.png",
+            "asset": "photoimages_photo-stormy.png",
             "msgOLD": "Camp IV has received reports of an incoming storm. They will monitor the situation closely and provide further reports once its impact is confirmed.",
             "msg": "Camp IV has received reports of an incoming storm. All climbers MUST reach the summit before descending. You have 30 minutes for all of your climbers to complete their climb."
         },
