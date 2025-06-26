@@ -143,6 +143,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const OX = 'oxygen';
     const SUS = 'sustenance';
     const RP = 'rope';
+    let storm;
 
     const supportTeamType = 2;
 
@@ -351,7 +352,7 @@ document.addEventListener('DOMContentLoaded', function () {
     };
     const showConfirm = (s) => {
         let ok = confirm(s);
-        ok = true;
+//        ok = true;
         return ok;
     };
     const enableButton = (b, a) => {
@@ -373,6 +374,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // modal-specifics
     // try to always send in the modal as an arg - makes modal closing easier
     const injury1Setup = (m) => {
+//        console.log(`injury1Setup`);
         const section = 0;
         const t = $('#treat');
         const l = $('#leave');
@@ -384,6 +386,7 @@ document.addEventListener('DOMContentLoaded', function () {
         let act = null;
         let results = null;
         let log = '';
+        $('.hOption').hide();
         both.off('click').on('click', function () {
             //            const die = $(this).parent().find('#die');
             const die = $($(this).parent().find('.die')[0]);
@@ -393,16 +396,22 @@ document.addEventListener('DOMContentLoaded', function () {
             both.prop('disabled', true);
             act = $(this).attr('id');
             results = ev.metrics[act].results;
+//            console.log(act);
+//            console.log(results);
+            $(`#h_${act}`).show();
             setupModalDiceButton((ob) => {
                 if (ob.state === 1) {
                     rollDisplay.html(`You rolled a ${ob.res}.`);
                     log += `${ob.res} rolled, time pens: `
                     const r = ob.res >= 3 ? 1 : 0;
                     const cl = Climber.getClimbers();
+                    let hasPens = false;
                     rollDisplay.append('<ul>');
                     results.forEach((c, i) => {
                         const prof = session[`profile${i}`];
+//                        console.log(i, c);
                         if (c[r] > 0) {
+                            hasPens = true;
 //                            rollDisplay.append(`<p><b>${cl[i].name.split(' ')[0]}</b> will be slowed by ${c[r]} minutes</p>`);
                             rollDisplay.append(`<li><b>${cl[i].name.split(' ')[0]}</b> will be slowed by ${c[r]} minutes</li>`);
                             log += `${cl[i].name.split(' ')[0]} ${c[r]} `;
@@ -414,6 +423,10 @@ document.addEventListener('DOMContentLoaded', function () {
                             devShowProfiles();
                         }
                     });
+                    rollDisplay.append('</ul>');
+                    if (!hasPens) {
+                        rollDisplay.append(`<p>No penalties.</p>`);
+                    }
                     logUpdate(log, 'result');
 //                    rollDisplay.append('.');
                     rollDisplay.append('</ul>');
@@ -768,6 +781,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // end modal-specifics
     const closeModal = (ob) => {
         const m = $('#overlay_modal');
+        let unpausing = false;
         let isEventModal = m.find('.modal-event').length > 0;
         //        console.log(`close the modal, isEventModal? ${isEventModal}`);
         if (isEventModal) {
@@ -782,14 +796,20 @@ document.addEventListener('DOMContentLoaded', function () {
 //                console.log('no ob in arg, we can complete the event BUT check for issues with other calls');
                 completeEvent();
             }
-            console.log(`closeModal calls playPauseSession`);
-            playPauseSession();
+//            console.log(`closeModal calls playPauseSession`);
+//            playPauseSession();
+            unpausing = true;
+            console.log(`closeModal calls unpauseSession`);
+
         }
         removeFullscreenModalClick();
         m.removeClass('clickable');
         const mContent = m.find('.modal');
         mContent.remove();
         m.hide();
+        if (unpausing) {
+            unpauseSession();
+        }
     };
     // note: unify the two methods below & kill one of them
     const setupCloseModal = (btn) => {
@@ -1174,6 +1194,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
                 initRender();
 //                console.log('goQuiz will be called', session);
+//                storm = new Storm({ ender });
                 goQuiz();
                 updateView();
                 if (session.state === 'new') {
@@ -1483,6 +1504,7 @@ document.addEventListener('DOMContentLoaded', function () {
 //        console.log('NEW pauseSession');
 //        console.log(window.clone(gTimer));
         gTimer.pauseTimer();
+//        pauseStorm();
         storeLocal('time', gTimer.elapsedTime);
         theState.storeTime(gTimer.elapsedTime);
         showtime();
@@ -1492,11 +1514,13 @@ document.addEventListener('DOMContentLoaded', function () {
 //        console.log(`unpauseSession`);
 //        showMapzone();
         const cinemaOpen = $('#cinema').is(':visible');
+        const modalOpen = $('#modal_content').is(':visible');
 //        console.log(`cinemaOpen? ${cinemaOpen}`);
-        if (!cinemaOpen) {
-            // prevent unpausing if a video is playing
+        if (!cinemaOpen && !modalOpen) {
+            // prevent unpausing if a video is playing or a modal open
             if (gTimer.hasStarted || force && !checkCompletion().allFinished) {
                 //            if (gTimer.isRunning) {
+//                resumeStorm();
                 gTimer.resumeTimer();
                 storeLocal('time', gTimer.elapsedTime);
                 theState.storeTime(gTimer.elapsedTime);
@@ -1946,7 +1970,17 @@ document.addEventListener('DOMContentLoaded', function () {
         if (devTimer) {
             devTimer.updateTime(cs);
         }
+//        console.log('hup date]', cs);
         showtime();
+        if (storm) {
+            storm.updateTime(cs.sec);
+        }
+    };
+    window.goStorm = () => {
+        storm.start(getCurrentState().sec);
+    };
+    window.stopStorm = () => {
+        storm.stop();
     };
     const updateDisplayV1 = () => {
         const cs = getCurrentState();
@@ -2053,8 +2087,8 @@ document.addEventListener('DOMContentLoaded', function () {
         const s = isNaN(parseInt($('#sustenance').val())) ? 0 : parseInt($('#sustenance').val());
         const r = isNaN(parseInt($('#rope').val())) ? 0 : parseInt($('#rope').val());
         //
-        //        console.log(`submitResources`);
-        //        console.log(o, s, r);
+                console.log(`submitResources`);
+                console.log(o, s, r);
         //        console.log(p);
         const uo = {
             o: o,
@@ -2199,6 +2233,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         } else if (getWeight(p).remaining > 0) {
                             const m = `${p.name} has ${getWeight(p).remaining}kg unused carrying capacity, are you sure you don't want to use it? You will not be able to change your mind later.`;
                             const ok = showConfirm(m);
+                            console.log(`OK is ${ok}`);
                             if (ok) {
                                 submitResources(p);
                             }
@@ -2608,15 +2643,19 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         return ev;
     };
+    //  # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # eventTrigger
     const eventTrigger = (ev) => {
-//        console.log(`eventTrigger`, window.clone(ev));
+        console.log(`eventTrigger`, ev.time, ev.event);
 //        console.log(session.events);
 //        console.log(`should trigger: ${session.events[window.clone(ev).n] === 0}`);
         // EventStack calls this method when a new event is to be triggered
+        /*
         if (stormUnderway()) {
             // no events can occur after the storm has started
+            console.warn(`storm prevents event from occuring`);
             return;
         }
+        */
         if (eventStack.eventSummary[ev.n] === 0) {
             logUpdate(`${ev.eventTitle}`, 'trigger');
         }
@@ -2703,10 +2742,12 @@ document.addEventListener('DOMContentLoaded', function () {
         console.log(`sustenance: ${c.sustenance} (${c.quantumSustenance})`);
         console.log(`rope: ${c.rope} (${c.quantumRope})`);
     }
+
+    //  # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # climberDepletionEvent
     const climberDepletionEvent = (ob) => {
         if (stormUnderway()) {
-            console.log('resupply runs not possible in storm conditions');
-            return;
+//            console.log('resupply runs not possible in storm conditions');
+//            return;
         }
         // Usually called by the Climber class (publically exposed method)
         const rem = Math.ceil(ob[ob.resource]);
@@ -2737,7 +2778,7 @@ document.addEventListener('DOMContentLoaded', function () {
         renderLeaderboardClimber();
     };
     const allClimbersFinished = () => {
-//        console.log('GOOD END');
+        console.log('GOOD END');
         ender(true);
     };
     const fadeToBlack = () => {
@@ -2791,6 +2832,7 @@ document.addEventListener('DOMContentLoaded', function () {
         return 1 - (1 - x) * (1 - x);
     };
     const allCloudsDone = () => {
+        console.log('allCloudsDone')
         ender(false);
     };
     const resetClouds = () => {
@@ -2829,7 +2871,7 @@ document.addEventListener('DOMContentLoaded', function () {
             l = getCloudEndPos(c);
             $(c).stop(true, true)
                 .removeClass('cloudleftInit')
-                .delay(Math.random() * 5000)
+//                .delay(Math.random() * 5000)
                 .animate({
                     left: `${l}px`
                 }, t, 'easeOutQuad', checkAllDone);
@@ -2840,7 +2882,7 @@ document.addEventListener('DOMContentLoaded', function () {
             r = getCloudEndPos(c);
             $(c).stop(true, true)
                 .removeClass('cloudrightInit')
-                .delay(Math.random() * 5000)
+//                .delay(Math.random() * 5000)
                 .animate({
                     right: `${r}px`
                 }, t, 'easeOutQuad', checkAllDone);
@@ -2906,7 +2948,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
         let flipped = false;
         let totalTime = 0;
-
         flashPattern.forEach((delayTime, index) => {
             totalTime += delayTime;
             const timeout = setTimeout(() => {
@@ -2926,10 +2967,11 @@ document.addEventListener('DOMContentLoaded', function () {
     };
 
     const scheduleNextLightning = () => {
+
 //        console.log(`scheduleNextLightning`);
-        const nextInterval = Math.random() * 9000 + 1000;
-        const timeout = setTimeout(flashLightning, nextInterval);
-        lightningTimeouts.push(timeout); // Store timeout reference
+            const nextInterval = Math.random() * 9000 + 1000;
+            const timeout = setTimeout(flashLightning, nextInterval);
+            lightningTimeouts.push(timeout); // Store timeout reference
     };
     const flashLightningV2 = () => {
         const l = $('.lightningzones');
@@ -2949,6 +2991,8 @@ document.addEventListener('DOMContentLoaded', function () {
     };
     const startStorm = () => {
 //        console.log(`startStorm !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!`);
+        storm.start(getCurrentState().sec);
+        return;
         $('#lightningzone1').addClass('lightninglight');
         goDarkSky();
         scheduleNextLightning();
@@ -2958,12 +3002,23 @@ document.addEventListener('DOMContentLoaded', function () {
             $('#lightningzone1').removeClass('lightninglight');
         }, 9000);
     };
+    const pauseStorm = () => {
+        $('.cloudleft, .cloudright').pause();
+        $('.stormbg').pause();
+    }
+    const resumeStorm = () => {
+        $('.cloudleft, .cloudright').resume();
+        $('.stormbg').resume();
+    }
     const stormUnderway = () => {
         const sb = $('.stormbg');
         return sb.css('opacity') > 0;
     };
     window.stormUnderway = stormUnderway;
     const resetStorm = () => {
+//        console.log('resetStorm');
+        storm.reset();
+        return;
         resetClouds();
         clearSky();
         // lightning:
@@ -3086,6 +3141,7 @@ document.addEventListener('DOMContentLoaded', function () {
             mp.show();
         }
     };
+    //  # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # renderMap
     const renderMap = () => {
         if (window.clone(gTimer).elapsedTime === 0) {
             renderCinema();
@@ -3098,13 +3154,15 @@ document.addEventListener('DOMContentLoaded', function () {
                 }))
             };
             renderTemplate('theatre', 'map', rOb, () => {
+
                 updateAddress('map');
                 $('body').addClass('body-map');
                 renderTemplateWithStyle('timerpanel', 'dev.timer.panel', gameData, () => {
                     devTimer = new DevTimer();
                 });
                 renderTemplate('cloudzone', 'storm', {}, () => {
-                    resetStorm();
+//                    resetStorm();
+                    storm = new Storm({ ender });
                 });
                 devShowProfiles();
                 Climber.getRouteMap(() => {
@@ -3121,9 +3179,10 @@ document.addEventListener('DOMContentLoaded', function () {
                         setTimeout(() => {
 //                            console.log('renderMap triggers unpause');
                             unpauseSession(true);
-                        }, 1000);
+                        }, 300);
                     }
                     showMapzone();
+
                 });
             })
         });
@@ -3561,6 +3620,29 @@ document.addEventListener('DOMContentLoaded', function () {
     gTimer.updateDisplay = updateDisplay;
     gTimer.storageUpdater = storageUpdater;
     const toggleTimer = () => {
+        Climber.storeSummaries();
+//        console.log(`toggleTimer`, gTimer);
+        if (gTimer.hasStarted) {
+            if (gTimer.isRunning) {
+                pauseSession();
+            } else {
+                unpauseSession();
+            }
+        } else {
+            if (gTimer.elapsedTime === 0 && !checkCompletion().allFinished) {
+                gTimer.startTimer();
+            } else {
+//                gTimer.resumeTimer();
+                if (gTimer.hasStarted) {
+                    unpauseSession();
+                } else {
+                    gTimer.resumeTimer();
+                }
+            }
+        }
+    };
+
+    const toggleTimerV1 = () => {
         Climber.storeSummaries();
         if (gTimer.hasStarted) {
             if (gTimer.isRunning) {

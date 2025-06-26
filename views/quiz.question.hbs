@@ -38,11 +38,19 @@
 /*        opacity: 0.5;*/
         color: #deacbf;
     }
+    p {
+        margin: 50px 30px;
+    }
+    #answers {
+        margin: 30px 0px;
+    }
 </style>
-Quiz question: <br>
-{{question}}
+<br><br>
+<p>{{question}}</p>
+<div id='answers'>
 {{#each options}}
 <div class='bQuiz bQuizAnswer' id='qa_{{this.id}}'>{{this.a}}</div>
 {{/each}}
+</div>
 <!--<div class='bQuiz bQuizSubmit'>Submit</div>-->
 <p id='quizFeedback'></p>

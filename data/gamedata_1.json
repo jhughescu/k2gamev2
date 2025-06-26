@@ -342,7 +342,8 @@
     },
     "route": {"ratio": [50, 50]},
     "activeEventRangeNO": [-10, -18],
-    "activeEventRange": [0, 56],
+    "activeEventRange": [0, 560000000000000000000000],
+    "activeEventRangeNO": [12, 56],
     "activeEventRangeNO": [10, 56],
     "activeEventRangeNO": [3, 3],
     "events": [
@@ -370,7 +371,8 @@
                 "threshold": 3,
                 "penalty": "t1",
                 "treat": {
-                    "results": [[7, 5], [7, 5], [5, 3]]},
+                    "results": [[7, 5], [7, 5], [5, 3]]
+                },
                 "leave": {
                     "results": [[0, 7], [0, 7], [0, 5]]
                 }
@@ -379,7 +381,7 @@
         {
             "time": 7,
             "ref": "quiz1",
-            "event": "quiz",
+            "event": "question",
             "question": 0,
             "method": "getQuestionAndRender"
         },
@@ -459,7 +461,7 @@
         {
             "time": 16,
             "ref": "quiz2",
-            "event": "quiz",
+            "event": "question",
             "question": 1,
             "method": "getQuestionAndRender"
         },
@@ -540,16 +542,25 @@
         {
             "time": 37,
             "ref": "quiz3",
-            "event": "quiz",
+            "event": "question",
             "question": 2,
             "method": "getQuestionAndRender"
         },
         {
             "time": 40,
             "event": "photo",
-            "type": "storm",
-            "asset": "PhotoImages_Photo-A.png",
-            "msg": "Camp IV has received reports of an incoming storm. They will monitor the situation closely and provide further reports once its impact is confirmed."
+            "type": "photo",
+            "asset": "PhotoImages_photo-stormy.png",
+            "msgOLD": "Camp IV has received reports of an incoming storm. They will monitor the situation closely and provide further reports once its impact is confirmed.",
+            "msg": "Camp IV has received reports of an incoming storm. All climbers MUST reach the summit before descending. You have 30 minutes for all of your climbers to complete their climb."
+        },
+        {
+            "time": 41,
+            "active": true,
+            "event": "startstorm",
+            "method": "startStorm",
+            "noModal": true,
+            "noPause": true
         },
         {
             "time": 45,
@@ -589,7 +600,7 @@
         {
             "time": 51,
             "ref": "quiz4",
-            "event": "quiz",
+            "event": "question",
             "question": 3,
             "method": "getQuestionAndRender"
         },
@@ -631,6 +642,7 @@
         {
             "time": 62,
             "timeNO": 3,
+            "active": false,
             "event": "nomodal",
             "event": "announcestorm",
             "video": "5dd21441-4bd0-4350-a77c-b2020099dd78",
@@ -644,13 +656,6 @@
             "msg": "A climber has sent you a photo of the incoming storm.",
             "NOTES": "CHANGE THIS TO VIDEO",
             "video": "5dd21441-4bd0-4350-a77c-b2020099dd78"
-        },
-        {
-            "time": 64,
-            "event": "startstorm",
-            "method": "startStorm",
-            "noModal": true,
-            "noPause": true
         },
         {
             "time": 65,
@@ -684,6 +689,7 @@
         },
         {
             "time": 70,
+            "active": false,
             "event": "killerstorm"
         }
     ]

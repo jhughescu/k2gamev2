@@ -27,6 +27,9 @@
 #msg {
     display: none;
 }
+.hidden {
+    display: none;
+}
 .wrong, p.wrong, .wrong .dyno {
     color: red;
 }
@@ -295,7 +298,13 @@ p.resource_value {
 }
 #rollresult {
 /*    position: absolute;*/
+    text-align: left;
+    margin: 0px 40px;
     margin-top: 130px;
+/*    background-color: yellow;*/
+}
+#rollresult p {
+    margin: 0px;
 }
 
 .preload {
@@ -385,6 +394,7 @@ p.resource_value {
 }
 .cloudright {
     transform-origin: right top;
+    display: none;
 /*    right: -100vw;*/
 }
 .cloudrightInit {

@@ -1,6 +1,6 @@
 {
-  "timestamp": "2025-06-24T10:25:02+01:00",
-  "commitHash": "cb81230113491fbcd43416a3175342900f6293ec",
-  "commitMessage": "Erroneous return statements removed for FireFox implementation. favicon added. Datestamp added to sessions, uniqueID added to final screen.",
+  "timestamp": "2025-06-26T17:22:47+01:00",
+  "commitHash": "8640cdf7ed513f96ae06f3d32500b6d3518e956a",
+  "commitMessage": "Endgame and event triggering tidied up.",
   "branch": "master"
 }

@@ -211,6 +211,22 @@ document.addEventListener('DOMContentLoaded', function () {
         localStorage.setItem(id, o);
     };
 
+    const tintImage = (imgEl, color) => {
+        const canvas = document.createElement('canvas');
+        canvas.width = imgEl.width;
+        canvas.height = imgEl.height;
+        const ctx = canvas.getContext('2d');
+
+        ctx.drawImage(imgEl, 0, 0);
+
+        ctx.globalCompositeOperation = 'source-in';
+        ctx.fillStyle = color;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        return canvas.toDataURL(); // or attach canvas to DOM
+    }
+
+    window.tintImage = tintImage;
     const getTemplate = (temp, ob, cb) => {
         // returns a compiled template, but does not render it
         if (templateStore.hasOwnProperty(temp)) {
