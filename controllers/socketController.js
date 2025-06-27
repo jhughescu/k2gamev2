@@ -204,10 +204,12 @@ function initSocket(server) {
             // admin clients
             if (sType.includes('admin')) {
                 socket.on('getAllSessions', (dbName, collectionName, cb) => {
-                    databaseController.getAllSessions(dbName, collectionName, cb);
+//                    databaseController.getAllSessions(dbName, collectionName, cb);
+                    sessionController.getSessions({}, cb    )
                 });
                 socket.on('getSession', (dbName, collectionName, sessionID, cb) => {
-                    databaseController.getSession(dbName, collectionName, sessionID, cb);
+//                    databaseController.getSession(dbName, collectionName, sessionID, cb);
+                    sessionController.getSession()
                 });
                 socket.on('deleteSession', (dbName, collectionName, sessionID, cb) => {
                     databaseController.deleteSession(dbName, collectionName, sessionID, cb);
