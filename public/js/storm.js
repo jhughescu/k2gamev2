@@ -35,6 +35,7 @@ class Storm {
         this.started = true;
         this.programLightning();
         this.setupClouds();
+        this.showClouds(true);
         this.updateView();
 //        console.log(window.clone(this.time));
     };
@@ -144,10 +145,16 @@ class Storm {
         this.viewCloudsLeft = $('.cloudleft');
         this.viewCloudsRight = $('.cloudright');
         this.viewSky.show();
+        this.showClouds(false);
 //        console.log(this.viewOverlay);
 //        console.log(this.viewSky);
 //        console.log(this.viewCloudsLeft);
 //        console.log(this.viewCloudsRight);
+    }
+    showClouds(boo) {
+        const op = boo ? 0.8 : 0;
+        this.viewCloudsLeft.css({opacity: op});
+        this.viewCloudsRight.css({opacity: op});
     }
     setupClouds() {
         if (!$.isEmptyObject(JSON.parse(sessionStorage.getItem(this.STORE_CLOUDS)))) {
