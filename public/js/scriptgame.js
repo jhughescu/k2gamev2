@@ -2993,6 +2993,7 @@ document.addEventListener('DOMContentLoaded', function () {
 //        console.log(`startStorm !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!`);
         storm.start(getCurrentState().sec);
         return;
+        /*
         $('#lightningzone1').addClass('lightninglight');
         goDarkSky();
         scheduleNextLightning();
@@ -3001,6 +3002,7 @@ document.addEventListener('DOMContentLoaded', function () {
             startClouds();
             $('#lightningzone1').removeClass('lightninglight');
         }, 9000);
+        */
     };
     const pauseStorm = () => {
         $('.cloudleft, .cloudright').pause();
@@ -3019,6 +3021,7 @@ document.addEventListener('DOMContentLoaded', function () {
 //        console.log('resetStorm');
         storm.reset();
         return;
+        /*
         resetClouds();
         clearSky();
         // lightning:
@@ -3027,6 +3030,7 @@ document.addEventListener('DOMContentLoaded', function () {
         lightningTimeouts = []; // Reset timeout storage
         $('.lightningzones').hide(); // Ensure the lightning visuals are off
         $('#lightninggfx').removeClass('flip-horizontal'); // Reset flip state
+        */
     };
 
     //    window.startClouds = startClouds;
