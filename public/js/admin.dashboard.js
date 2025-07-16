@@ -57,11 +57,7 @@ document.addEventListener('DOMContentLoaded', function () {
             .filter(Boolean) // remove nulls (the zeros)
             .join('');
 //        c.totalDelays = c.allDelays.flat().split('|').split(',').reduce((a, b) => a + b, 0);
-        c.totalDelays = c.allDelays.split('|')               // split by '|'
-            .filter(Boolean)          // remove empty strings
-            .flatMap(part => part.split(',').map(Number)) // split by ',' and convert to numbers
-            .reduce((a, b) => a + b, 0)
-//        console.log(c.totalDelays);
+        c.totalDelays = c.calculateDelayTotal();
         return c;
     };
     const prepValueForDisplay = (k, v) => {
@@ -131,7 +127,7 @@ document.addEventListener('DOMContentLoaded', function () {
             };
             const c = new Climber(conf);
             o.climbers.push(prepClimberForDisplay(c));
-
+            console.log(c);
         });
         // quiz stuff
         s.quiz.forEach((q, i) => {
@@ -154,7 +150,7 @@ document.addEventListener('DOMContentLoaded', function () {
         return o;
     }
     const showSession = (s) => {
-//        console.log(s);
+        console.log(s);
         const display = $('#session');
         display.show();
         window.renderTemplate('session', 'admin.dashboard.session', prepSessionForDisplay(s));

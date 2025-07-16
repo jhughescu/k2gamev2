@@ -6,6 +6,7 @@ class Climber {
         if (init.summaryString && init.summaryString !== undefined) {
                 const gd = init.gameData;
                 const tm = init.team;
+
                 init = this.unpackStorageSummary(init.summaryString);
                 init.gameData = gd;
                 init.team = tm;
@@ -305,6 +306,7 @@ class Climber {
     getBasicTeam(id) {
         const o = window.clone(this.gameData.teams[id]);
 //        console.log(this.gameData.teams[id]);
+//        console.log('deleting the profiles');
         delete o.profiles;
         return o;
     }
@@ -618,6 +620,15 @@ class Climber {
         });
         return oo;
     }
+    clone() {
+//        console.log('get the team from this?');
+//        console.log(this.gameData.teams[this.teamID]);
+        return new Climber({
+            gameData: this.gameData,
+            team: this.gameData.teams[this.teamID],
+            summaryString: this.getStorageSummary()
+        })
+    }
 
     // delay countdown chart
     showPie(boo) {
@@ -672,6 +683,14 @@ class Climber {
         return st;
     }
 
+    calculateDelayTotal() {
+        const totalDelays = this.allDelays.split('|')               // split by '|'
+            .filter(Boolean)          // remove empty strings
+            .flatMap(part => part.split(',').map(Number)) // split by ',' and convert to numbers
+            .reduce((a, b) => a + b, 0);
+        this.delayTotal = totalDelays;
+        return totalDelays;
+    }
 
     calculateClimbRate() {
         const before = window.clone(this);

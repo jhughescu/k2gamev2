@@ -3307,20 +3307,26 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     };
     const renderLeaderboardClimber = () => {
-//        console.log(`renderLeaderboardClimber`);
-        const C = window.clone(Climber.getClimbers());
+        console.log(`renderLeaderboardClimber`);
+//        const C = window.clone(Climber.getClimbers());
+        const C = Climber.getClimbers();
         window.sortBy(C, 'currentTime');
         const P = ['1st', '2nd', '3rd'];
         const rOb = {
             totalTime: new Array(3).fill(0)
         };
-        C.forEach((c, i) => {
+        C.forEach((co, i) => {
+            // work on a duplicate of the Climber
+            const c = co.clone();
             const et = c.finishTime || c.currentTime;
 
             c.lbFirst = i === 0;
             c.lbPlace = P[i];
             c.lbTime = window.formatTime(et * 1000);
             c.allDelaysSum = c.allDelays.split('|').map(e => e = parseFloat(e)).filter(e => !isNaN(e)).reduce((a, b) => a + b, 0);
+//            console.log(`c.allDelaysSum`);
+//            console.log(c.allDelaysSum);
+//            console.log(c.calculateDelayTotal());=
             c.allDelaysSumFormat = window.formatTime(c.allDelaysSum * 60000);
             c.totalSplit = c.lbTime.split(':').map(e => e = parseFloat(e));
             if (c.totalSplit.length === 2) {
@@ -3336,12 +3342,12 @@ document.addEventListener('DOMContentLoaded', function () {
             });
 
         });
-//        console.log(rOb.totalTime);
+        console.log(rOb.totalTime);
         rOb.totalTimeFormat = rOb.totalTime.map((n, i) => i === 0 ? n : (n < 10 ? `0${n}` : n)).join(':');
         socket.emit('finalReport', {sessionID: session.uniqueID, climbers: C});
         rOb.profiles = C;
         rOb.sessionID = session.uniqueID;
-//        console.log(rOb);
+        console.log(rOb);
         renderNone(() => {
             renderTemplate('theatre', 'leaderboard.climber', rOb, () => {
                 updateAddress('leaderboardclimber');

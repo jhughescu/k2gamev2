@@ -7,7 +7,7 @@
 /*    background-color: green;*/
     z-index: 99999;
     overflow-y: scroll;
-    overflow-y: hidden;
+/*    overflow-y: hidden;*/
 /*    pointer-events: none;*/
     z-index: 5;
 }
