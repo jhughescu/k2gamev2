@@ -2550,7 +2550,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }, 100);
     };
-    const renderResources = (n) => {
+    const renderResources = (n = 0) => {
 //                console.log(`renderResources ${n}`);
         renderNone(() => {
             const p = `profile${n === undefined || n === null? 0 : n}`;
@@ -2615,6 +2615,10 @@ document.addEventListener('DOMContentLoaded', function () {
                     });
                 } else {
                     const prof = window.clone(session)[`profile${n}`];
+//                    console.log(session);
+//                    console.log(window.clone(session));
+//                    console.log(window.clone(session));
+//                    console.log(`profile${n}`)
                     resOptionselect(n, prof.type > -1 ? prof.type : 0, {
                         showAlert: false
                     });

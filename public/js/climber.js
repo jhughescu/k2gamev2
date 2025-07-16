@@ -547,7 +547,9 @@ class Climber {
         }
         this.allDelays = this.allDelays.join('|');
 //        console.log(`${this.name} setDelay of ${n} minutes at stage ${this.currentStage}, allDelays: ${this.allDelays}`);
-        this.onClimberUpdate(`profile${this.profile}`, {summary: this.getStorageSummary()});
+        if (this.onClimberUpdate) {
+            this.onClimberUpdate(`profile${this.profile}`, {summary: this.getStorageSummary()});
+        }
     }
     // storage/summarising
     getStorageID() {
