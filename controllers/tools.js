@@ -77,15 +77,30 @@ const padNum = (n, r) => {
 };
 const getTimeStamp = () => {
     const d = new Date();
-    const ts = `timestamp: ${d.getFullYear()}${padNum(d.getMonth())}${padNum(d.getDay())} ${padNum(d.getHours())}:${padNum(d.getMinutes())}:${padNum(d.getSeconds())}`;
+    const ts = `timestamp: ${d.getFullYear()}${padNum(d.getMonth() + 1)}${padNum(d.getDate())} ${padNum(d.getHours())}:${padNum(d.getMinutes())}:${padNum(d.getSeconds())}`;
     return ts;
 };
 const getTimeNumber = () => {
     const d = new Date();
-    const t = `${d.getFullYear()}${padNum(d.getMonth())}${padNum(d.getDay())}${padNum(d.getHours())}${padNum(d.getMinutes())}${padNum(d.getSeconds())}`;
+    const t = `${d.getFullYear()}${padNum(d.getMonth() + 1)}${padNum(d.getDate())}${padNum(d.getHours())}${padNum(d.getMinutes())}${padNum(d.getSeconds())}`;
     const n = parseInt(t);
+//    console.log(`getTimeNumber: ${n}`);
+//    console.log(d.getMonth());
     return n;
 };
+const findSmallestMissingNumber = (arr) => {
+    let expected = 0;
+    for (const num of arr) {
+        if (num === expected) {
+            expected++;
+        } else if (num > expected) {
+            break;
+        }
+    // If num < expected, we skip it (it's a duplicate or out of order)
+    }
+    return expected;
+}
+
 module.exports = {
     procVal,
     toCamelCase,
@@ -95,5 +110,6 @@ module.exports = {
     isValidJSON,
     getIPv4Address,
     getTimeStamp,
-    getTimeNumber
+    getTimeNumber,
+    findSmallestMissingNumber
 }

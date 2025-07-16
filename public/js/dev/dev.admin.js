@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     const showSessions = () => {
         const display = $('#sessions');
-
+        console.log('##################')
         display.html('');
         sessions.forEach(s => {
             display.append(`<p class='sClick' id='${s._id}'>${s.name}</p>`);

@@ -528,11 +528,6 @@
             }
         },
         {
-            "timeNO": 35,
-            "event": "ai1",
-            "active": false
-        },
-        {
             "time": 35,
             "event": "photo",
             "active": true,
@@ -640,16 +635,8 @@
             "active": false
         },
         {
-            "time": 62,
-            "timeNO": 3,
-            "active": false,
-            "event": "nomodal",
-            "event": "announcestorm",
-            "video": "5dd21441-4bd0-4350-a77c-b2020099dd78",
-            "noModal": false
-        },
-        {
-            "timeNO": 63,
+            "time": 63,
+            "excludeFromGame": true,
             "event": "photo",
             "type": "storm",
             "asset": "photoimages_photo-stormy.png",

@@ -1,4 +1,5 @@
 const express = require('express');
+const ngrok = require('ngrok');
 const fs = require('fs');
 const handlebars = require('handlebars');
 const exphbs = require('express-handlebars');
@@ -20,6 +21,8 @@ const HOST = process.env.HOST || 'localhost';
 
 const databaseController = require('./controllers/databaseController');
 const versionController = require('./controllers/versionController');
+const localAccessController = require('./controllers/localAccessController');
+
 
 const padNum = (n) => {
     if (n < 10) {
@@ -30,9 +33,16 @@ const padNum = (n) => {
 }
 const getTimeStamp = () => {
     const d = new Date();
-    const ts = `timestamp: ${d.getFullYear()}${padNum(d.getMonth())}${padNum(d.getDay())} ${padNum(d.getHours())}:${padNum(d.getMinutes())}:${padNum(d.getSeconds())}`;
+    const ts = `timestamp: ${d.getFullYear()}${padNum(d.getMonth() + 1)}${padNum(d.getDate())} ${padNum(d.getHours())}:${padNum(d.getMinutes())}:${padNum(d.getSeconds())}`;
     return ts;
 };
+//global.ngrokUrl = 'https://singularly-glad-tortoise.ngrok-free.app';
+
+
+
+
+
+
 
 app.use('/public', express.static(path.join(__dirname, 'public')));
 app.use('/models', express.static(path.join(__dirname, 'models')));
@@ -51,12 +61,7 @@ databaseController.dbConnect();
 initSocket(server);
 if (Boolean(process.env.isDev)) {
     server.listen(PORT, HOST, () => {
-//        console.log(chalk.green(`local wifi connection available`), chalk.cyan(`use [cmd ipconfig IPv4 Address]:${PORT}`));
-//        const ip = tools.getIPv4Address();
-//        let isDev = Boolean(process.env.isDev);
-//        console.log(chalk.yellowBright(ip), Boolean(ip), tools.procVal(process.env.isDev), isDev);
         console.log(`Server running at http://${HOST}:${PORT} ${getTimeStamp()}`);
-//        console.log('test');
     });
 } else {
     server.listen(PORT, () => {

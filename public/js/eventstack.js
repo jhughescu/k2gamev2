@@ -73,23 +73,29 @@ class EventStack {
     }
     processEvents() {
         const r = this.gameData.activeEventRange;
+//        console.log('processEvents');
         if (this.allEvents) {
             this.allEvents.forEach((e, i) => {
-                e.active = e.hasOwnProperty('active') ? e.active : (i >= r[0] && i <= r[1]);
-                e.next = false;
-                e.current = false;
-                e.complete = false;
-                e.template = e.method === 'profileEvent' ? 'profile_event' : null;
-                e.noModal = !e.hasOwnProperty('noModal') ? false : e.noModal;
-                e.n = i;
-                e.eventTitle = e.hasOwnProperty('eventTitle') ? e.eventTitle : e.event.replace(/\d/g, '').replace(/^./, c => c.toUpperCase());
-                if (e.event === 'photo') {
-                    e.modalIcon = e.type === 'storm' ? 'KillerStorm' : 'Camera';
+                if (!e.hasOwnProperty('excludeFromGame')) {
+    //                console.log(i, e);
+                    e.active = e.hasOwnProperty('active') ? e.active : (i >= r[0] && i <= r[1]);
+                    e.next = false;
+                    e.current = false;
+                    e.complete = false;
+                    e.template = e.method === 'profileEvent' ? 'profile_event' : null;
+                    e.noModal = !e.hasOwnProperty('noModal') ? false : e.noModal;
+                    e.n = i;
+                    e.eventTitle = e.hasOwnProperty('eventTitle') ? e.eventTitle : e.event.replace(/\d/g, '').replace(/^./, c => c.toUpperCase());
+                    if (e.event === 'photo') {
+                        e.modalIcon = e.type === 'storm' ? 'KillerStorm' : 'Camera';
+                    }
+                    if (e.hasOwnProperty('metrics')) {
+                        e.metrics = this.processMetrics(e.metrics)
+                    }
+                    this.triggers[`t${e.time}`] = e;
+                } else {
+                    this.allEvents.splice(i, 1);
                 }
-                if (e.hasOwnProperty('metrics')) {
-                    e.metrics = this.processMetrics(e.metrics)
-                }
-                this.triggers[`t${e.time}`] = e;
             });
         } else {
             console.warn(`cannot process events; data model incomplete`);
@@ -109,8 +115,13 @@ class EventStack {
     }
     updateSummary(ev, v) {
         // called from main game code
-//        console.log(`updateSummary`, ev, v);
-        this.eventSummary[ev.n] = v;
+        if (parseInt(v) > parseInt(this.eventSummary[ev.n])) {
+            this.eventSummary[ev.n] = v;
+            console.log(`updateSummary`, ev.n, v, this.eventSummary.toString());
+        } else {
+            console.warn(`cannot decrease event value`);
+        }
+
 //        console.log(`eventSummary: ${this.eventSummary}`);
         return this.eventSummary;
     }

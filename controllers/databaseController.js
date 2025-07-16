@@ -1,4 +1,6 @@
 const mongoose = require('mongoose');
+
+const Session = require('../models/session');
 const {
     MongoClient,
     ObjectId
@@ -31,6 +33,14 @@ async function dbConnect() {
 
         await mongoose.connect(uri);
         console.log('DB connected');
+
+        try {
+    await Session.init();
+    console.log('Session indexes ensured.');
+} catch (err) {
+    console.error('Error initializing Session indexes:', err);
+}
+
 
         const db = mongoose.connection;
         const collection = db.collection(collectionName);

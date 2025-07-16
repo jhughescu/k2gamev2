@@ -11,7 +11,7 @@
     <div id='mapzone'>
 
         {{#each climbers}}
-        <div class='devClimberSummary' id='devClimberSummary{{profile}}'>
+        <div class='devClimberSummary {{filename}} {{nameFirst}} {{nameTruncated}}' id='devClimberSummary{{profile}}'>
         {{> map_climber_icon this}}
         </div>
         {{/each}}

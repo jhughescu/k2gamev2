@@ -111,7 +111,7 @@ function initSocket(server) {
                     sessionController.updateSession(sOb, cb);
                 });
                 socket.on('deleteSession', (sOb, cb) => {
-//                    console.log(`try to delete`);
+                    console.log(`try to delete`);
                     sessionController.deleteSession(sOb, cb);
 
                 });
@@ -128,6 +128,7 @@ function initSocket(server) {
                 socket.on('createQR', (loc, cb) => {
 //                    console.log('create a QR');
                     gfxController.generateLocationQR(loc, cb);
+//                    gfxController.generateLocalQR();
                 });
                 socket.on('logUpdate', o => {
                     logController.addUpdate({update: JSON.stringify(o)});
@@ -217,9 +218,27 @@ function initSocket(server) {
                 socket.on('deleteSessions', (sOb, cb) => {
                     sessionController.deleteSessions(sOb, cb);
                 });
+                socket.on('createQR', (cb) => {
+                    console.log('create a QR');
+//                    gfxController.generateLocationQR(loc, cb);
+                    gfxController.generateLocalQR(cb);
+                });
 //                socket.on('deleteSessions', (sOb, cb) => {
 //                    sessionController.deleteSessions(sOb, cb);
 //                });
+                socket.on('getData', (cb) => {
+                    console.log('data request admin')
+                    sessionController.getGameData(cb);
+                });
+                socket.on('getQuizQuestion', async ({ qId, bank, excludeIds }, cb) => {
+                    try {
+                        const question = await quizController.getQuestion(bank, qId, excludeIds);
+                        cb(question);
+                    } catch (err) {
+                        console.error('Error in getQuizQuestion:', err);
+                        cb(null);
+                    }
+                });
             }
             // end admin clients
             // mapper clients

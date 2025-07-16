@@ -25,6 +25,9 @@ body {
 	margin: 50px auto;
 	transition: 0.5s;
 }
+div {
+/*    background-color: rgba(0, 0, 255, 0.59);*/
+}
 .container.fullscreen1 {
     background-color: #545a54;
     background-image: url(../assets/forest.jpg);

@@ -3,19 +3,21 @@ document.addEventListener('DOMContentLoaded', function () {
     let gameData;
     let devtoolsWin;
     let devtoolsCheck;
+    let toolkitOpen = false;
     const launchToolkit = () => {
         devtoolsWin = window.open(
             `devtools?uniqueID=${session.uniqueID}&name=${session.name}`,
             `devtools`,
             'width=600,height=400'
         );
+        toolkitOpen = true;
         sessionStorage.setItem('devtoolsWindow', 'devTools');
         clearInterval(devtoolsCheck);
         devtoolsCheck = setInterval(checkForToolkit, 1000);
     };
     const setup = (sesh, gData) => {
-        console.log(`setup`, sesh);
-        console.log(`gameData`, gameData);
+//        console.log(`setup`, sesh);
+//        console.log(`gameData`, gameData);
         session = sesh;
         gameData = gData;
         let isMouseDownOnElement = false;
@@ -86,15 +88,52 @@ document.addEventListener('DOMContentLoaded', function () {
     };
     const toolkitClosed = () => {
 //        console.log('toolkit closed');
+        toolkitOpen = false;
         sessionStorage.removeItem('devtoolsWindow');
     };
-    const init = () => {
+    const bringToFront = (selector) => {
+        let maxZ = 0;
+        $('*').each(function() {
+            const z = parseInt($(this).css('z-index'), 10);
+            if (!isNaN(z)) {
+                maxZ = Math.max(maxZ, z);
+            }
+        });
+        $(selector).css('z-index', maxZ + 1);
+    };
 
+    const showSessionID = () => {
+        const panelName = 'idpanel';
+        if ($(`#${panelName}`).length === 0) {
+            $('body').append(`<div class='fullscreen debugPanel' id='idpanel' style='display: none;'>ID: ${session.uniqueID}<i class="fa fa-copy"></i></div>`);
+            $(`#${panelName}`).delay(2000).fadeIn();
+            bringToFront(`#${panelName}`);
+            $('.fa-copy').off('click').on('click', () => {
+                navigator.clipboard.writeText(session.uniqueID)
+                    .then(() => {
+                        const ret = $(`#${panelName}`).css('height');
+                        $(`#${panelName}`).animate({height: '55px'}, 300);
+                        setTimeout(() => {
+                            $(`#${panelName}`).append(`<div id='note'><p>Copied to clipboard</p></div>`);
+                            setTimeout(() => {
+                                $(`#${panelName}`).animate({height: ret}, 300);
+                                $(`#${panelName}`).find('#note').remove();
+                            }, 2000);
+                        }, 300);
+                    })
+                    .catch(err => {
+                        console.error('Could not copy text: ', err);
+                    });
+            });
+        }
+    };
+    const init = () => {
         window.tools = {
             setup: setup,
-            toolkitClosed: toolkitClosed
+            toolkitClosed: toolkitClosed,
+            toolkitOpen: toolkitOpen,
+            showSessionID: showSessionID
         };
-//        devtoolsOnInit();
     };
     const onToolkitRequest = (id) => {
 //        console.log(id);

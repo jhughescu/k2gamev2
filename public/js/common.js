@@ -148,16 +148,31 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         return nt;
     };
-    const roundAll = (o) => {
+    const formatTime = (ms, level = 'hour') => {
+        // Calculate hours, minutes, and seconds
+        //        console.log(ms);
+        const hours = Math.floor(ms / 3600000); // 1 hour = 3600000 ms
+        const minutes = Math.floor((ms % 3600000) / 60000); // 1 minute = 60000 ms
+        const seconds = Math.floor((ms % 60000) / 1000); // 1 second = 1000 ms
+
+        // Format each as a 2-digit string
+        const hoursStr = String(hours).padStart(1, '0');
+        const minutesStr = String(minutes).padStart(hours > 0 ? 2 : 1, '0');
+        const secondsStr = String(seconds).padStart(2, '0');
+
+        const str = `${level === 'hour' && hours > 0 ? hoursStr + ':' : ''}${minutesStr}:${secondsStr}`;
+        return str;
+    }
+    const roundAll = (o, r = 3) => {
         for (let i in o) {
 //            console.log(o[i]);
             if (!isNaN(o[i])) {
-                o[i] = roundNumber(o[i]);
+                o[i] = roundNumber(o[i], r);
             }
             if (typeof(o[i]) === 'object') {
                 for (let j in o[i]) {
                     if (!isNaN(o[i][j])) {
-                        o[i][j] = roundNumber(o[i][j]);
+                        o[i][j] = roundNumber(o[i][j], r);
                     }
                 }
             }
@@ -339,13 +354,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     };
     const renderTemplate = (targ, temp, ob, cb) => {
-        if (temp !== 'blank') {
-//            console.log(`renderTemplate`, targ, temp);
-//            console.log(ob);
-        }
         if (ob === undefined) {
-//            console.error('Error: Data object is undefined');
-//            return;
             ob = {}
         }
         if (targ.indexOf('#', 0) === 0) {
@@ -353,23 +362,67 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         const targType = targ.indexOf('.', 0) === 0 ? 'class' : 'id';
         const theTarg = targType === 'class' ? $($(`${targ}`)[0]) : $(`#${targ}`);
-//        console.log(targ, targType, theTarg);
         if (targType === 'class' && $(`${targ}`).length > 1) {
             console.warn('rendering template to a class with more than one member; may cause unexpected results');
         }
-//        console.log(`targ: ${targ}`);
         theTarg.css({opacity: 0});
         if (templateStore.hasOwnProperty(temp)) {
             // if this template has already been requested we can just serve it from the store
             const compiledTemplate = Handlebars.compile(templateStore[temp]);
             renderToClassOrID(targ, targType, ob, compiledTemplate);
-            /*
-            if (document.getElementById(targ)) {
-                document.getElementById(targ).innerHTML = compiledTemplate(ob);
-            } else {
-                console.warn(`target HTML not found: ${targ}`);
+            if (cb) {
+                cb();
             }
-            */
+            theTarg.css({opacity: 1});
+                } else {
+            // If this template is being requested for the first time we will have to fetch it from the server
+            (async () => {
+                try {
+//                    console.log(`renderTemplate`, targ, temp);
+                    const response = await fetch(`/getTemplate?template=${temp}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(ob)
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`Server responded with status ${response.status}`);
+                    }
+
+                    const uncompiledTemplate = await response.text();
+                    templateStore[temp] = uncompiledTemplate;
+                    const compiledTemplate = Handlebars.compile(uncompiledTemplate);
+                    renderToClassOrID(targ, targType, ob, compiledTemplate);
+                    if (cb) {
+                        cb();
+                    }
+                    theTarg.animate({opacity: 1});
+                } catch (error) {
+                    console.error('Error fetching or rendering template:', error);
+                }
+            })();
+        }
+
+    };
+    const renderTemplateV1 = (targ, temp, ob, cb) => {
+        if (ob === undefined) {
+            ob = {}
+        }
+        if (targ.indexOf('#', 0) === 0) {
+            targ = targ.replace('#', '');
+        }
+        const targType = targ.indexOf('.', 0) === 0 ? 'class' : 'id';
+        const theTarg = targType === 'class' ? $($(`${targ}`)[0]) : $(`#${targ}`);
+        if (targType === 'class' && $(`${targ}`).length > 1) {
+            console.warn('rendering template to a class with more than one member; may cause unexpected results');
+        }
+        theTarg.css({opacity: 0});
+        if (templateStore.hasOwnProperty(temp)) {
+            // if this template has already been requested we can just serve it from the store
+            const compiledTemplate = Handlebars.compile(templateStore[temp]);
+            renderToClassOrID(targ, targType, ob, compiledTemplate);
             if (cb) {
                 cb();
             }
@@ -389,21 +442,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     templateStore[temp] = uncompiledTemplate;
                     const compiledTemplate = Handlebars.compile(template);
                     renderToClassOrID(targ, targType, ob, compiledTemplate);
-                    /*
-                    if (targType === 'id') {
-                        if (document.getElementById(targ)) {
-                            document.getElementById(targ).innerHTML = compiledTemplate(ob);
-                        } else {
-                            console.warn(`target HTML not found: ${targ}`);
-                        }
-                    } else {
-                        if (document.getElementsByClassName(targ.replace('.', ''))) {
-                            document.getElementsByClassName(targ.replace('.', ''))[0].innerHTML = compiledTemplate(ob);
-                        } else {
-                            console.warn(`target HTML not found: ${targ}`);
-                        }
-                    }
-                    */
                     if (cb) {
                         cb();
                     }
@@ -431,7 +469,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     };
 
-//    console.log(`register it now!`);
     const getDyno = (name) => {
 //        console.log(`getDyno: ${name}`);
         const partial = Handlebars.partials[name];
@@ -666,6 +703,21 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
         return rg;
+    };
+    const getRouteStages = (d) => {
+        // develops the route.stages object of gameData
+        d.route.stages = [];
+        const s = d.route.stages;
+        const r = d.route.ratio;
+        if (r[0] + r[1] !== 100) {
+            console.warn(`the values of route.ratio must add up to 100`);
+        }
+        s[0] = 0;
+        s[1] = 50 / (r[0] + r[1]) * r[0];
+        s[2] = 50
+        s[3] = 50 + (50 / (r[0] + r[1]) * r[1]);
+        s[4] = 100;
+        return s
     };
     const reorderObject = (obj, firstKey) => {
         let reordered = { [firstKey]: obj[firstKey] };
@@ -1111,6 +1163,45 @@ document.addEventListener('DOMContentLoaded', function () {
 //        console.log('share it out; game');
 
     };
+
+    document.querySelectorAll('a').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault(); // Stop browser from navigating
+            const href = this.getAttribute('href');
+
+            // Instead of navigating, do something with `href`
+            console.log('Intercepted navigation to:', href);
+
+            // Optionally load content via AJAX, show a template, etc.
+            loadPage(href);
+        });
+    });
+//    const originalPushState = history.pushState;
+//    history.pushState = function (...args) {
+//        console.trace('📌 pushState called with:', args);
+//        return originalPushState.apply(this, args);
+//    };
+//
+//    const originalReplaceState = history.replaceState;
+//    history.replaceState = function (...args) {
+//        console.trace('📌 replaceState called with:', args);
+//        return originalReplaceState.apply(this, args);
+//    };
+//    window.addEventListener('popstate', (event) => {
+//        console.log('🔁 popstate event fired');
+//        console.log('Location:', window.location.href);
+//        console.log('State:', event.state);
+//    });
+
+    function loadPage(page) {
+        // Your SPA logic goes here
+        console.log('Loading page:', page);
+        location.replace(`/${page}`);
+
+        // No pushState → no popstate on back
+    }
+
+
     // NOTE: parials are currently set up each time the system admin connects, so the method call below is safe for now.
     // In case of problems getting partials, check the order of system architecture.
     getPartials();
@@ -1119,6 +1210,7 @@ document.addEventListener('DOMContentLoaded', function () {
     window.justNumber = justNumber;
     window.roundNumber = roundNumber;
     window.getNumberText = getNumberText;
+    window.formatTime = formatTime;
     window.roundAll = roundAll;
     window.emitWithPromise = emitWithPromise;
     window.reorderObject = reorderObject;
@@ -1158,4 +1250,5 @@ document.addEventListener('DOMContentLoaded', function () {
     window.shuffle = shuffle;
     window.filterScorePackets = filterScorePackets;
     window.mapSessionToGame = mapSessionToGame;
+    window.getRouteStages = getRouteStages
 });

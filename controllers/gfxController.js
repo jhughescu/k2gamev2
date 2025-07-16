@@ -27,16 +27,20 @@ const generateQR = (data, id, cb) => {
         QRCode.toFile(output, data, options, (err) => {
             if (err) {
                 console.error(err);
+                if (cb) {
+                    cb(err);
+                }
                 return;
             } else {
                 const tOb = {ID: id};
                 createTemplateQR(tOb);
+                if (cb) {
+                    cb(null, outOb);
+                }
             }
         });
     });
-    if (cb) {
-        cb(outOb);
-    }
+
 };
 const deleteQR = (id) => {
     deleteQRTem(id);
@@ -62,6 +66,17 @@ const deleteQRImg = (id) => {
         console.log(`File ${qr} deleted successfully`);
     });
 }
+const generateLocalQR = (cb) => {
+    // generates a QR code linking to the publically exposed local URL
+    if (global.ngrokUrl) {
+        generateQR(global.ngrokUrl, 'localURL', cb);
+    } else {
+        if (cb) {
+            cb('ngrok not established');
+        }
+        console.log('no ngrok');
+    }
+};
 const generateSessionQR = (session) => {
 //    console.log(`generateSessionQR`, session);
     generateQR(`${session.base}${session.address}`, session.uniqueID);
@@ -111,4 +126,5 @@ module.exports = {
     deleteQR,
     generateSessionQR,
     generateLocationQR,
+    generateLocalQR
 }

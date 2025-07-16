@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const bClearConsole = $('#clearConsole');
     const bRefreshGame = $('#refreshGame');
     const bTestClimbers = $('#testClimbers');
+    const bToggleLocal = $('#toggleLocal');
     //
     const setupSocket = () => {
         socket.on('gameFound', (g) => {
@@ -35,6 +36,7 @@ document.addEventListener('DOMContentLoaded', function () {
         bClearConsole.off('click').on('click', clearConsole);
         bRefreshGame.off('click').on('click', refreshGameWin);
         bTestClimbers.off('click').on('click', testClimbers);
+        bToggleLocal.off('click').on('click', toggleLocal);
     };
     const closedown = () => {
 //        socket.emit('toolkitClosed', { gameID: initObj.uniqueID });
@@ -139,6 +141,11 @@ document.addEventListener('DOMContentLoaded', function () {
             renderCheatButton(res);
         });
     };
+    const toggleLocal = () => {
+        socket.emit('toggleLocalAccess', () => {
+
+        });
+    }
     const startNew = () => {
         socket.emit('startNew', { gameID: initObj.uniqueID });
     };

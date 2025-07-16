@@ -112,7 +112,7 @@ class GameTimer {
     }
     startTimer() {
         if (this.isRunning) return; // Prevent multiple intervals
-//        console.log('%C####################### startTimer', 'color: yellow;');
+        console.log('%C####################### startTimer', 'color: yellow;');
         this.startTime = Date.now();
         this.elapsedTime = 0;
         this.hasStarted = true;
@@ -133,7 +133,7 @@ class GameTimer {
 //        console.log('pause success', window.clone(this));
     }
     resumeTimer() {
-//        console.log('%cRESUME TIMER', 'color: yellow;');
+        console.log('%c####################### RESUME TIMER', 'color: yellow;');
         if (this.isRunning) return; // Prevent multiple intervals
 
         this.startTime = Date.now() - this.elapsedTime;

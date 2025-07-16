@@ -1,0 +1,22 @@
+<table>
+{{#each session}}
+<tr>
+    <td>{{@key}}</td><td>{{this}}</td>
+</tr>
+{{/each}}
+</table>
+climbers:
+<table>
+
+<th>name</th><th>time</th><th>status</th><th>delays</th><th>total delay</th>
+{{#each climbers}}
+<tr>
+    <td>{{name}}</td><td>{{currentTime}}</td><td>{{status}}{{#if finished}} ({{finishTimeDisplay}}){{/if}}</td><td>{{allDelaysDisplay}}</td><td>{{totalDelays}}</td>
+</tr>
+{{/each}}
+</table>
+<table>
+{{#each answers}}
+<tr><td>{{this}}</td></tr>
+{{/each}}
+</table>

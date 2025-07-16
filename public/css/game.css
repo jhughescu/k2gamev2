@@ -7,6 +7,7 @@
 /*    background-color: green;*/
     z-index: 99999;
     overflow-y: scroll;
+    overflow-y: hidden;
 /*    pointer-events: none;*/
     z-index: 5;
 }
@@ -189,6 +190,72 @@ p.resource_value {
     opacity: 0.5;
     cursor: default;
 }
+
+/* Climber detail panel (click climber icon) */
+.map-pointer-label {
+/*    display: none;*/
+    position: absolute;
+    bottom: 90px;
+    width: 60px;
+/*    width: 130px;*/
+/*    height: 50px;*/
+    height: 79px;
+    border-radius: 6px;
+    background-color: rgba(255, 255, 255, 0.71);
+    box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.6);
+    color: black;
+    font-size: 11px;
+    padding: 2px 0px;
+    vertical-align: top;
+}
+.map-pointer-label p {
+    margin: 0px 4px;
+}
+.map-pointer-label .rAlign {
+    color: #012995;
+    position: absolute;
+/*    right: 40px;*/
+/*    left: 50px;*/
+}
+
+#climberDetailPanel {
+
+/*    background-color: red;*/
+}
+#climberDetailPanel .grid {
+    display: grid;
+    grid-template-columns: 25px 25px; /* left: fixed, right: flexible */
+    grid-template-rows: repeat(3, 25px); /* 3 rows, each 50px tall */
+/*    gap: 10px;*/
+    width: 50px;
+    height: 75px;
+    margin: 0px 5px;
+    font-family: sans-serif;
+    text-align: center;
+/*    background-color: black;*/
+}
+
+#climberDetailPanel .left {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#climberDetailPanel .graphic, #climberDetailPanel img {
+    width: 20px;
+    height: 20px;
+    margin: 0px auto;
+/*    background-color: steelblue;*/
+}
+
+#climberDetailPanel .right {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+/*    background-color: yellow;*/
+}
+
 
 /* modal */
 #overlay_modal {

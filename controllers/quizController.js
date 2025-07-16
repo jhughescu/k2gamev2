@@ -21,7 +21,7 @@ async function getQuestionRefs(bank) {
 async function getQuestion(bank, qId = false, excludeIds = [], includeAnswer = false) {
     const conn = await getQuizDbConnection();
     const questionSchema = require('../models/questionSchema2');
-    console.log(`getQuestion`, bank, qId);
+//    console.log(`getQuestion`, bank, qId);
 
     if (!conn.models['Question']) {
         Question = conn.model('Question', questionSchema, bank);
@@ -48,7 +48,7 @@ async function getQuestion(bank, qId = false, excludeIds = [], includeAnswer = f
         console.log(question);
     } else {
 
-        console.log('random question return');
+//        console.log('random question return');
         // Random fetch
         const pipeline = [
             { $match: { _id: { $nin: objectIds } } },

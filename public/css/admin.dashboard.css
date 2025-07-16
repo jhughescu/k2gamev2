@@ -1,0 +1,35 @@
+#qrCodes img {
+    width: 200px;
+}
+#session {
+    display: none;
+    font-size: 1.1em;
+    position: absolute;
+    right: 50px;
+    top: 50px;
+/*    width: 400px;*/
+/*    height: 300px;*/
+    background-color: black;
+    color: white;
+    padding: 20px;
+}
+#session table {
+    margin-bottom: 20px;
+}
+#session td {
+    padding: 0px 5px;
+}
+.sClick {
+    user-select: none;
+    cursor: pointer;
+    transition: color 0.5s ease;
+    width: fit-content;
+    color: #4a4a4a;
+}
+.sClick:hover {
+    color: #04062a;
+}
+.clicked {
+    font-weight: bold;
+    cursor: default;
+}

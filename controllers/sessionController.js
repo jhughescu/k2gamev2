@@ -27,6 +27,7 @@ const developSession = (s) => {
     }
 };
 const processData = async () => {
+//    console.log('processData');
     const type = 1;
     const filePath = `data/gamedata_${type}.json`;
     if (persistentData === null) {
@@ -53,18 +54,67 @@ const processData = async () => {
 };
 
 const newSession = async (cb) => {
+//    console.log(`newSession; let's call getSessions to see how many sessions there are`);
+    getSessions({}, async () => {
+        const sessions = await Session.find();
+        const data = await processData();
+        const list = [];
+        sessions.forEach(s => {
+            list.push(parseInt(s.name.split('_')[1]));
+        });
+        list.sort((a, b) => a - b);
+        const sN = tools.getTimeNumber().toString();
+        const sID = `k2session_${tools.findSmallestMissingNumber(list)}`;
+        const at = persistentData.activeTeams;
+        const cc = Math.floor(at.length * Math.random());
+//        console.log(`OK, let's create a session. There are ${sessions.length} sessions already in the system, the new ID will be ${sID}`);
+        let st;
+        do {
+            st = Math.floor(at.length * Math.random());
+        } while (st === cc);
+        try {
+//            const fakeDate = 20250707112532;
+            const s = await Session.create({
+                uniqueID: sN,
+                name: sID,
+                dateID: tools.getTimeNumber(),
+                dateAccessed: tools.getTimeNumber(),
+//                dateID: fakeDate,
+//                dateAccessed: fakeDate,
+                type: 1,
+                teamRef: cc,
+                supportTeamRef: st,
+                state: 'new',
+                time: 0,
+                profile0: {blank: true},
+                profile1: {blank: true},
+                profile2: {blank: true}
+            });
+            cb(developSession(s));
+        } catch (err) {
+            console.error(`error creating session`, err);
+        }
+    });
+};
+const newSessionV1 = async (cb) => {
     const sessions = await Session.find();
     const data = await processData();
-    const sN = sessions.length + 1;
+    const list = [];
+    sessions.forEach(s => {
+        list.push(parseInt(s.name.split('_')[1]));
+    });
+    list.sort((a, b) => a - b);
+//    const sN = sessions.length + 1;
+//    const sN = tools.findSmallestMissingNumber(list) || tools.roundNumber(Math.random(), 3) * 1000;
+    const sN = tools.roundNumber(Math.random(), 3) * 1000;
     const sID = `k2session_${sN}`;
     const at = persistentData.activeTeams;
     const cc = Math.floor(at.length * Math.random());
+    console.log(`OK, let's create a session. There are ${sessions.length} sessions already in the system, the next unused value is ${sN}, the new ID will be ${sID}`);
     let st;
     do {
         st = Math.floor(at.length * Math.random());
     } while (st === cc);
-//    console.log(`newSession, cc: ${cc}, st: ${st}`);
-//    console.log(tools.getTimeNumber());
     const s = new Session({
         uniqueID: `1${tools.padNum(sN, 100000)}${1000 + Math.round(Math.random() * 1000)}`,
         name: sID,
@@ -78,29 +128,28 @@ const newSession = async (cb) => {
         profile1: {blank: true},
         profile2: {blank: true}
     });
-
-    s.save();
-//    console.log('NEW SESSION');
-//    console.log(developSession(s));
-//    eventEmitter.emit();
+    await s.save();
+//    console.log('NEW SESSION', s._id, s.uniqueID);
     cb(developSession(s));
 };
 const restoreSession = async (sOb, cb) => {
-//    console.log(`restoreSession:`);
-//    console.log(sOb);
+    console.log(`restoreSession:`);
+    console.log(sOb);
     const session = await Session.findOne(sOb);
     const data = await processData();
     if (session) {
+        updateSession({uniqueID: sOb.uniqueID, dateAccessed: tools.getTimeNumber()})
         cb(developSession(session));
     } else {
         cb(`session not found`);
     }
 };
 const updateSession = async (sOb, cb) => {
-//    console.log('updateSession called:');
+//    console.log(`updateSession called for uniqueID: ${sOb.uniqueID} (${typeof(sOb.uniqueID)})`);
 //    console.log(sOb);
     try {
-        const filter = { uniqueID: sOb.uniqueID };
+        const filter = { uniqueID: String(sOb.uniqueID) };
+//        console.log(filter)
         const update = { $set: {}, $push: {} };
 
         for (const [key, value] of Object.entries(sOb)) {
@@ -115,19 +164,23 @@ const updateSession = async (sOb, cb) => {
         if (Object.keys(update.$push).length === 0) delete update.$push;
         if (Object.keys(update.$set).length === 0) delete update.$set;
 
+
         const result = await Session.updateOne(filter, update);
 
         if (result.matchedCount === 0) {
-            throw new Error(`No document found for uniqueID ${sOb.uniqueID}`);
+//            throw new Error(sOb);
+//            throw new Error(`No document found for uniqueID ${filter.uniqueID} ${JSON.stringify(sOb)}`);
+            throw new Error(`No document found for uniqueID ${filter.uniqueID} ${typeof(filter.uniqueID)}`);
         }
 
         if (cb) {
             const updatedSession = await Session.findOne(filter);
+//            console.log(`session ${updatedSession.name} updated successfully`);
             cb(updatedSession);
         }
     } catch (err) {
         console.error(`Error in updateSession: ${err.message}`);
-        console.log(sOb);
+//        console.log(sOb);
         if (cb) cb(null, err);
     }
 };
@@ -288,7 +341,7 @@ const changeSupportTeamV1 = async (id, cb) => {
 
 
 const getSession = async (sOb, cb) => {
-    const s = await Session.findOne({uniqueID: sOb.uniqueID});
+    const s = await Session.findOne({uniqueID: String(sOb.uniqueID)});
 //    console.log(`getSession`);
 //    console.log(sOb);
 //    console.log(s);
@@ -302,7 +355,7 @@ const getSession = async (sOb, cb) => {
     }
 };
 const deleteSession = async (sOb, cb) => {
-//    console.log('trying');
+//    console.log(`deleteSession`);
 //    console.log(sOb);
     const res = await Session.deleteOne(sOb);
     let del = false;
@@ -316,17 +369,23 @@ const deleteSession = async (sOb, cb) => {
 };
 const getGameData = (cb) => {
     // run interval in case persistentData not yet ready (crap approach, yes, but it works)
+//    console.log(`getGameData`);
     const i = setInterval(() => {
         if (persistentData !== null) {
             cb(persistentData);
+//            console.log('returning PD')
             clearInterval(i);
+        } else {
+//            console.log('no PD (so LOAD some)');
+            processData();
         }
-    }, 100);
+    }, 500);
 };
 
 const getSessions = async (sOb, cb) => {
     try {
         const s = await Session.find();
+//        console.log(`getSessions finds ${s.length} sessions`);
         if (cb) cb(null, s); // success: err is null
     } catch (err) {
         console.error('Error retrieving sessions:', err);

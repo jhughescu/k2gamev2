@@ -1,5 +1,8 @@
 <style>
-    .bQuiz {
+    .quizQuestion {
+/*        font-size: 18px;*/
+    }
+    .quizQuestion .bQuiz {
         margin: 10px auto;
         width: 300px;
         height: 40px;
@@ -10,47 +13,62 @@
         padding: 12px;
         cursor: pointer;
     }
-    .bQuizAnswer {
+    .quizQuestion .bQuizAnswer {
         background-color: #f54589;
     }
-    .bQuizSubmit {
+    .quizQuestion .bQuizSubmit {
         margin-top: 30px;
         width: 150px;
         text-align: center;
         background-color: #747373;
     }
 
-    .bQuiz.clicked {
+    .quizQuestion .bQuiz.clicked {
 /*        cursor: default;*/
     }
-    .bQuizAnswer.clicked {
+    .quizQuestion .bQuizAnswer.clicked {
         background-color: #ea015b;
 /*        color: black;*/
     }
-    .bQuiz.disabled {
+    .quizQuestion .bQuiz.disabled {
         cursor: default;
     }
-    .bQuizAnswer.correct {
+    .quizQuestion .bQuizAnswer.correct {
 /*        background-color: #0b9810;*/
         box-shadow: -4px 4px 3px rgba(28, 28, 28, 0.95);
     }
-    .bQuizAnswer.incorrect {
+    .quizQuestion .bQuizAnswer.incorrect {
 /*        opacity: 0.5;*/
         color: #deacbf;
     }
-    p {
-        margin: 50px 30px;
+    .quizQuestion form {
+        text-align: left;
+/*        background-color: blue;*/
+        margin: 0px 40px;
     }
-    #answers {
+    .quizQuestion input {
+        margin: 0px 20px 20px 0px;
+    }
+    .quizQuestion p {
+        margin: 0px 40px;
+        text-align: left;
+        font-size: 1rem;
+    }
+    .quizQuestion #answers {
         margin: 30px 0px;
     }
 </style>
 <br><br>
-<p>{{question}}</p>
-<div id='answers'>
-{{#each options}}
-<div class='bQuiz bQuizAnswer' id='qa_{{this.id}}'>{{this.a}}</div>
-{{/each}}
+
+<div class='quizQuestion'>
+   <p>{{question}}</p>
+    <div id='answers'>
+        <form>
+        {{#each options}}
+        {{dynamicPartial ../questionPartial this.parent}}
+        {{/each}}
+        </form>
+    </div>
+    <!--<div class='bQuiz bQuizSubmit'>Submit</div>-->
+    <p id='quizFeedback'></p>
 </div>
-<!--<div class='bQuiz bQuizSubmit'>Submit</div>-->
-<p id='quizFeedback'></p>

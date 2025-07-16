@@ -12,7 +12,7 @@ const templateController = require('./../controllers/templateController');
 
 const basePath = path.join(__dirname, '..', 'public');
 const routeAccessTimes = {};
-
+const connectedUsers = new Map();
 
 
 app.use(express.static(basePath));
@@ -50,7 +50,25 @@ app.get(`/game`, (req, res) => {
     res.sendFile(path.join(basePath, 'game.html'));
 });
 app.get(`/`, (req, res) => {
+    res.sendFile(path.join(basePath, 'flat', 'home.html'));
+//    res.sendFile('../public/flat/index.html');
+});
+app.get('/testuser', (req, res) => {
+    const username = req.query.user;
+    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+
+    if (!username) {
+        return res.status(400).send('Missing user ID');
+    }
+
+    connectedUsers.set(username, {
+        ip,
+        timestamp: new Date().toISOString(),
+    });
+
+    console.log(`User ${username} connected from ${ip}!!`);
     res.sendFile(path.join(basePath, 'game.html'));
+//    res.send(`Hello ${username}, you are now registered.`);
 });
 app.get('/data/routemap.json', (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'data', 'routemap.json'));
@@ -61,6 +79,19 @@ app.get('/test', (req, res) => {
 app.get('/map', (req, res) => {
     res.render('map');
 });
+app.get('/how1', (rq, res) => {
+    res.sendFile(path.join(basePath, 'flat', 'how-to-play-a.html'));
+});
+app.get('/how2', (rq, res) => {
+    res.sendFile(path.join(basePath, 'flat', 'how-to-play-b.html'));
+});
+app.get('/how3', (rq, res) => {
+    res.sendFile(path.join(basePath, 'flat', 'how-to-play-c.html'));
+});
+app.get('/how4', (rq, res) => {
+    res.sendFile(path.join(basePath, 'flat', 'how-to-play-d.html'));
+});
+
 app.get('/dev/pbuilder', (req, res) => {
     res.sendFile(path.join(basePath, 'dev_profile_builder.html'));
 });

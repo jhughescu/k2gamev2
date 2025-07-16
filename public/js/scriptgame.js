@@ -1,5 +1,9 @@
 document.addEventListener('DOMContentLoaded', function () {
     //    return;
+
+
+
+
     const socket = io('', {
         query: {
             role: 'player'
@@ -13,7 +17,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
     socket.on('handshakeCheck', (str) => {
-        //        console.log('please wait, checking connection', str);
+        console.log('please wait, checking connection', str);
         handshake = str;
         setTimeout(() => {
             getData()
@@ -43,7 +47,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
     socket.on('requestGame', (id) => {
-//        console.log(`req game`, session.uniqueID.toString() === id.toString());
+        console.log(`req game`, session.uniqueID.toString() === id.toString());
         if (session) {
             if (session.uniqueID.toString() === id.toString()) {
                 socket.emit('gameFound', gameData);
@@ -62,9 +66,9 @@ document.addEventListener('DOMContentLoaded', function () {
         window.tools.toolkitClosed();
     });
     socket.on('idGame', () => {
-        //        console.log('I want my');
         const t = document.title;
         document.title = session.name;
+        console.log('idGame', t);
         setTimeout(() => {
             document.title = t;
         }, 2000);
@@ -119,6 +123,7 @@ document.addEventListener('DOMContentLoaded', function () {
     };
 
     let cheating = getCheatState();
+    let autoPlay = false;
     //    const cheating = false;
     const cheatTimeout = 2500;
     const logUpdate = (msg, type) => {
@@ -210,7 +215,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const updateGradient = (value) => {
 
         value = value < 100 ? value : 100;
-        console.log(value)
+//        console.log(value)
         const totalStops = gradientStops.length - 1; // Number of transitions
         const normalizedValue = value / 100; // Normalize between 0 and 1
         const rangeIndex = Math.floor(normalizedValue * totalStops); // Determine current range
@@ -727,8 +732,8 @@ document.addEventListener('DOMContentLoaded', function () {
                                     //                                    console.log(`no reduction in ${p[0]}`);
                                 }
                             });
-                            const response = `You rolled a ${result}${boo ? ', ' + prof.responses.res + summary.join(' and ') : ' - no penalty'}`;
-                            log += `${result} rolled${boo ? ', ' + prof.responses.res + summary.join(' and ') : ' - no penalty'}`;
+                            const response = `You rolled a ${result}${boo ? ', ' + prof.responses.res + summary.join(' and ') : ', so nobody gets a penalty.'}`;
+                            log += `${result} rolled${boo ? ', ' + prof.responses.res + summary.join(' and ') : ', so nobody gets a penalty.'}`;
                             //                            console.log('log created', log);
                             dv.find('.choice_option_content').html(response);
                             //                            console.log(response);
@@ -1102,7 +1107,8 @@ document.addEventListener('DOMContentLoaded', function () {
         // store all required session data in local object for quick retrieval
         //        storeLocal('time', session.time);
         storeLocal('time', gTimer.elapsedTime);
-        console.log('this')
+        Climber.storeSummaries()
+//        console.log('this');
     };
     const clearSnapshot = () => {
         const kill = [];
@@ -1408,6 +1414,28 @@ document.addEventListener('DOMContentLoaded', function () {
         //
     };
     const clearSession = () => {
+        // 20250709 updated so this no lionger deletes the old session (sessions to be retained in the database)
+        const sId = getStoreID();
+        const lid = localStorage.getItem(sId);
+        socket.emit('restoreSession', {
+            uniqueID: lid
+        }, (sesh) => {
+            localStorage.removeItem(sId);
+            localStorage.clear();
+            delete session.profile0;
+            delete session.profile1;
+            delete session.profile2;
+            session.allProfiles = [];
+            socket.emit('deleteSessionLogs', session.uniqueID);
+            const cs = getCurrentState();
+            Climber.zeroAll(cs);
+            window.location.replace(window.location.origin);
+
+
+        });
+
+    };
+    const clearSessionV1 = () => {
         const sId = getStoreID();
         const lid = localStorage.getItem(sId);
 //        console.log(`%cclearSession`, 'color: yellow;');
@@ -1424,7 +1452,11 @@ document.addEventListener('DOMContentLoaded', function () {
 //                    console.log(`%cremoooved`, 'color: yellow;');
                     localStorage.removeItem(sId);
                     localStorage.clear();
-                    window.location.hash = 'home';
+
+
+//                    window.location.hash = 'home';
+
+
                     delete session.profile0;
                     delete session.profile1;
                     delete session.profile2;
@@ -1436,7 +1468,10 @@ document.addEventListener('DOMContentLoaded', function () {
                     //                    showSession();
                     //                    showProfiles();
 //                    debugger;
-                    window.location.reload();
+//                    window.location.reload();
+//                    console.log('window.location.origin:');
+//                    console.log(window.location.origin);
+                    window.location.replace(window.location.origin);
 
                 } else {
                     gameflow(`cannot delete game ${sId}`);
@@ -1459,7 +1494,10 @@ document.addEventListener('DOMContentLoaded', function () {
         resetStorm();
         devShowProfiles();
         quiz.resetAsked();
-        logUpdate('reset', 'session')
+        logUpdate('reset', 'session');
+//        console.log(`go to ${window.location.href}`);
+//        debugger;
+        window.location.assign(window.location.href);
     };
     const showSession = () => {
         console.log(session);
@@ -1511,21 +1549,31 @@ document.addEventListener('DOMContentLoaded', function () {
 
     };
     const unpauseSession = (force) => {
-//        console.log(`unpauseSession`);
+//        console.log(`unpauseSession method`);
 //        showMapzone();
         const cinemaOpen = $('#cinema').is(':visible');
         const modalOpen = $('#modal_content').is(':visible');
 //        console.log(`cinemaOpen? ${cinemaOpen}`);
+//        console.log(`modalOpen? ${modalOpen}`);
         if (!cinemaOpen && !modalOpen) {
+//            console.log('no cinema, no modal');
             // prevent unpausing if a video is playing or a modal open
-            if (gTimer.hasStarted || force && !checkCompletion().allFinished) {
+            if (gTimer.hasStarted || force && !checkCompletion().allFinished || gTimer.elapsedTime > 0) {
                 //            if (gTimer.isRunning) {
 //                resumeStorm();
+//                console.log(`gTimer hasStarted, we can go (elapsed: ${gTimer.elapsedTime})`)
                 gTimer.resumeTimer();
                 storeLocal('time', gTimer.elapsedTime);
                 theState.storeTime(gTimer.elapsedTime);
                 showtime();
                 //            }
+            } else {
+//                console.log(`can't do it...`);
+//                console.log(`...so I will force refresh (emergency)`);
+//                console.log(gTimer);
+                setTimeout(() => {
+                    window.location.reload();
+                }, 500);
             }
         }
     };
@@ -1586,7 +1634,7 @@ document.addEventListener('DOMContentLoaded', function () {
             realtime: realtime,
             sessiontime: sessiontime,
             gametime: gametime,
-            gametimeDisplay: formatTime((gTimer.elapsedTime * tAdj) + startTime)
+            gametimeDisplay: window.formatTime((gTimer.elapsedTime * tAdj) + startTime)
         };
         //        console.log(cs);
         return cs;
@@ -1613,6 +1661,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const processData = (d) => {
         if (d) {
+            d.route.stages = window.getRouteStages(d);
+            // below block moved to common, retained here in case of failure (20250710)
+            /*
             d.route.stages = [];
             const s = d.route.stages;
             const r = d.route.ratio;
@@ -1624,6 +1675,7 @@ document.addEventListener('DOMContentLoaded', function () {
             s[2] = 50
             s[3] = 50 + (50 / (r[0] + r[1]) * r[1]);
             s[4] = 100;
+            */
 
             d.storeID = getStoreID();
             d.timer = gTimer;
@@ -1673,7 +1725,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // consider combining two methods below
     const climberUpdate = (c, temp) => {
         // event to be called from Climber class
-        //        console.log(`climberUpdate`, c);
+//        console.log(`climberUpdate`, c);
         devShowProfiles();
         if (c.finished) {
             const cID = `profile${c.profile}`;
@@ -1879,7 +1931,8 @@ document.addEventListener('DOMContentLoaded', function () {
         return r;
     };
     // timing
-    const formatTime = (ms, level = 'hour') => {
+    const formatTimeGONEtoCommon = (ms, level = 'hour') => {
+        /*
         // Calculate hours, minutes, and seconds
         //        console.log(ms);
         const hours = Math.floor(ms / 3600000); // 1 hour = 3600000 ms
@@ -1893,12 +1946,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const str = `${level === 'hour' && hours > 0 ? hoursStr + ':' : ''}${minutesStr}:${secondsStr}`;
         return str;
+        */
     }
     const addTimesToData = () => {
         if (gameData) {
             gameData.timings = {};
-            gameData.timings.startTime = formatTime(startTime);
-            gameData.timings.endTime = formatTime(endTime);
+            gameData.timings.startTime = window.formatTime(startTime);
+            gameData.timings.endTime = window.formatTime(endTime);
             gameData.timings.runTime = runTime;
             gameData.timings.hours = gameHours;
             gameData.timings.minutes = gameMinutes;
@@ -1914,7 +1968,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const runTime = endTime - startTime;
     const gameHours = gTimer.getHoursFromMilli(runTime);
     const gameMinutes = gTimer.getMinutesFromMilli(runTime);
-    //    console.log(`startTime: ${formatTime(startTime)}, endTime: ${formatTime(endTime)}, runTime: ${gameHours} hours (${gameMinutes} minutes)`);
+    //    console.log(`startTime: ${window.formatTime(startTime)}, endTime: ${window.formatTime(endTime)}, runTime: ${gameHours} hours (${gameMinutes} minutes)`);
     addTimesToData();
     let sessionMax = null; /* total play time before game death in minutes. Set via gameData on startup */
     const setSessionMax = (n) => {
@@ -1934,10 +1988,11 @@ document.addEventListener('DOMContentLoaded', function () {
     //    console.log(`tAdj = ${tAdj}`);
 
     const showtime = () => {
+//        console.log('showtime');
         const gtime = gTimer.elapsedTime;
         const adj = gtime * tAdj;
         if ((adj + startTime) >= endTime) {
-            timeDisplay.html(formatTime(endTime));
+            timeDisplay.html(window.formatTime(endTime));
             gTimer.pauseTimer();
             gameflow(`time's up`);
             //            console.log(`time's up`);
@@ -1951,7 +2006,8 @@ document.addEventListener('DOMContentLoaded', function () {
         } else {
             //            storeLocal('time', gTimer.elapsedTime);
             //            console.log('poo');
-            timeDisplay.html(formatTime(adj + startTime));
+            timeDisplay.html(window.formatTime(adj + startTime));
+            sessionStorage.setItem('displayTime', window.formatTime(adj + startTime));
             if (colourBG) {
                 colourBG.style.background = updateGradient((adj / runTime) * 100);
             }
@@ -2181,10 +2237,12 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
     };
+
     const setupResources = async () => {
         const sub = $('.form-submit-btn');
         const p = session[sub.data('profile')];
         setupResourceExtras(false);
+        //
         if (p.type > -1) {
             sub.prop('disabled', true);
             sub.addClass('disabled');
@@ -2200,6 +2258,7 @@ document.addEventListener('DOMContentLoaded', function () {
         } else {
             sub.prop('disabled', false);
             sub.removeClass('disabled');
+            sub.removeAttr('disabled');
             $('.resop').removeClass('disabled');
             $('.resop').addClass('abled');
             $('.adjust_btn').addClass('disabled');
@@ -2249,12 +2308,27 @@ document.addEventListener('DOMContentLoaded', function () {
                         }
                     }
                 }
+                return false;
             });
         }
     };
     // rendering
     const updateAddress = (s) => {
+//        console.log('update the hash:');
+
+        // Get the current URL without the hash
+        const base = window.location.href.split('#')[0];
+
+        // Replace the current history entry with a new one (same state, just new hash)
+        history.replaceState(history.state, '', `${base}#${s}`);
+
+//        console.log('hash updated (via replaceState)');
+    };
+
+    const updateAddressV1 = (s) => {
+//        console.log('update the hash:');
         window.location.hash = s;
+//        console.log('hash updated')
     };
     const prepareAndRenderMap = () => {
         Climber.getRouteMap(() => {
@@ -2356,6 +2430,7 @@ document.addEventListener('DOMContentLoaded', function () {
     };
     // calculate required resources to complete expedition:
     const getRequirement = (prof) => {
+//        console.log(`getRequirement`);
         const p = typeof (prof) === 'string' || typeof (prof) === 'number' ? session[`profile${prof}`] : prof;
         const t = p.type > -1 ? p.type : p.temptype;
         const o = p.options[t];
@@ -2369,8 +2444,8 @@ document.addEventListener('DOMContentLoaded', function () {
             r.sustenance = Math.ceil(time / gameData.constants.sustenance.unitTime);
             r.rope = 0;
         } else {
-            r.oxygen = prof.oxygen;
-            r.sustenance = prof.sustenance;
+            r.oxygen = Math.ceil(prof.oxygen);
+            r.sustenance = Math.ceil(prof.sustenance);
             r.rope = prof.rope;
         }
 //        console.log('prof', prof);
@@ -2379,9 +2454,10 @@ document.addEventListener('DOMContentLoaded', function () {
     // update the resource screen with data from current profile:
     const updateResourceView = (profile) => {
         // method can take a profile identifier or full profile as arg
-        const p = typeof (profile) === 'string' || typeof (profile) === 'number' ? session[`profile${profile}`] : profile;
+        let p = typeof (profile) === 'string' || typeof (profile) === 'number' ? session[`profile${profile}`] : profile;
 //        console.log(`!!!!!!!!!!!!!!!!!!!!!!!!!!!! updateResourceView !!!!!!!!!!!!!!!!!!!!`);
 //        console.log(p);
+        p = window.roundAll(window.clone(p), 2);
 //        console.log(p.profile);
 //        console.log(window.clone(session)[`profile${p.profile}`]);
 //        console.log(getClimber(1))
@@ -2411,6 +2487,8 @@ document.addEventListener('DOMContentLoaded', function () {
         const dri = $(`#${RP}`);
         //
         dot.html(showDyno(`${req[OX]} (${p[OX]})`));
+//        console.log(`${req[OX]} (${p[OX]})`);
+//        console.log(showDyno(`${req[OX]} (${p[OX]})`));
         dow.html(showDyno(`${req[OX] * cOx.weight}kg (${p[OX] * cOx.weight}kg)`));
         //
         dst.html(showDyno(`${req[SUS]} (${p[SUS]})`));
@@ -2426,6 +2504,9 @@ document.addEventListener('DOMContentLoaded', function () {
         doi.prop('value', p[OX]);
         dsi.prop('value', p[SUS]);
         dri.prop('value', p[RP]);
+//        console.log(p[OX]);
+//        console.log(p[SUS]);
+//        console.log(p[RP]);
         //
         w.remaining < 0 ? dr.addClass('wrong') : dr.removeClass('wrong');
     };
@@ -2474,7 +2555,7 @@ document.addEventListener('DOMContentLoaded', function () {
         renderNone(() => {
             const p = `profile${n === undefined || n === null? 0 : n}`;
             const rOb = session[p];
-//                        console.log(rOb);
+//            console.log(rOb);
             renderTemplate('theatre', 'resources', rOb, () => {
                 updateAddress('resources');
                 $(`#resop_${rOb.profile}_${rOb.type}`).addClass('selected');
@@ -2661,7 +2742,8 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         const C = Climber.getClimbers();
         if (!ev.active) {
-            completeEvent();
+            console.log(`inactive event to auto-complete`);
+            completeEvent({auto: true});
             return;
         }
         if (ev.profiles) {
@@ -2669,6 +2751,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 // Profile event, only one climber
                 if (C[ev.profiles[0]].finished) {
                     // profile has finished, do not run this event
+                    console.log(`profile finish, event will not occur (autocomplete)`);
+                    completeEvent({auto: true});
                     return;
                 }
             }
@@ -2687,7 +2771,8 @@ document.addEventListener('DOMContentLoaded', function () {
             } else {
                 showModalPhoto(ev);
             }
-            completeEvent();
+            console.log(`photo event (autocomplete)`);
+            completeEvent({auto: true});
             return;
         }
         if (!ev.noModal) {
@@ -2697,6 +2782,9 @@ document.addEventListener('DOMContentLoaded', function () {
             if (ev.hasOwnProperty('method')) {
 //                console.log(`this is the event method trigger`);
                 eval(ev.method)({}, ev);
+                // force autocomplete if the ev.method does not do this
+                console.log(`non-modal event (autocomplete)`);
+                completeEvent({auto: true});
             }
         }
     };
@@ -2706,11 +2794,11 @@ document.addEventListener('DOMContentLoaded', function () {
         if (ev) {
             const evSumm = eventStack.updateSummary(ev, 1);
             updateSession('events', evSumm);
-            //            console.log(`event summary updated ${evSumm}, ev:`);
+//            console.log(`event summary updated (${ev.n} to 1) ${evSumm}`);
             //            console.log(ev);
         }
     };
-    const completeEvent = () => {
+    const completeEvent = (ob = {auto: false}) => {
         const ev = eventStack.getCurrentEvent();
 //        console.log('complete event', ev, eventStack.eventSummary[ev.n], eventStack.eventSummary[ev.n] === 2, eventStack.eventSummary[ev.n] === '2');
         //        console.log(ev);
@@ -2718,7 +2806,8 @@ document.addEventListener('DOMContentLoaded', function () {
             if (eventStack.eventSummary[ev.n] === 1) {
                 logUpdate(`${ev.eventTitle}`, 'completion');
             }
-            const evSumm = eventStack.updateSummary(ev, 2);
+            const evSumm = eventStack.updateSummary(ev, ob.auto ? 9 : 2);
+//            console.log(`on event completion (${ev.n} to 2): ${evSumm}`);
             updateSession('events', evSumm);
 //            console.log(evSumm);
         }
@@ -3066,6 +3155,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 e.nameTruncated = e.name.substr(0, 10) + (e.name.length > 10 ? '..' : '');
             }
         });
+//        console.log(`prepProfilesForDisplay`, p);
         return p;
     };
     // dev stuff
@@ -3083,7 +3173,7 @@ document.addEventListener('DOMContentLoaded', function () {
             //            console.log(p[i]);
 
             //            console.log($(d).parent())
-            window.renderPartial(targ, 'dev_climber_summary', p[i]);
+//            window.renderPartial(targ, 'dev_climber_summary', p[i]);
         })
     };
     const updateDevLog = (s) => {
@@ -3151,14 +3241,20 @@ document.addEventListener('DOMContentLoaded', function () {
             renderCinema();
         }
         renderNone(() => {
-            const rOb = {
+            const rOb1 = {
                 climbers: Climber.getClimbers().map((climber, index) => ({
                     ...climber, // Spread the original properties of the climber object
                     initx: 10 + (index * 5)
                 }))
             };
-            renderTemplate('theatre', 'map', rOb, () => {
 
+            const rOb = {climbers: Climber.getClimbers()};
+//            console.log(rOb);
+//            console.log(rOb1);
+            prepProfilesForDisplay();
+//            console.log('renderMap now');
+            renderTemplate('theatre', 'map', rOb, () => {
+//                console.log(rOb);
                 updateAddress('map');
                 $('body').addClass('body-map');
                 renderTemplateWithStyle('timerpanel', 'dev.timer.panel', gameData, () => {
@@ -3180,10 +3276,16 @@ document.addEventListener('DOMContentLoaded', function () {
                         allClimbersFinished();
                         pauseSession();
                     } else {
-                        setTimeout(() => {
-//                            console.log('renderMap triggers unpause');
-                            unpauseSession(true);
-                        }, 300);
+//                        console.log(gameData.isDev);
+                        ///*
+                        if (autoPlay || !gameData.isDev) {
+//                            console.log(`renderMap will unpause...`);
+                            setTimeout(() => {
+//                                console.log(`...renderMap haxs unpaused`)
+                                unpauseSession(true);
+                            }, 300);
+                        }
+                        //*/
                     }
                     showMapzone();
 
@@ -3217,9 +3319,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
             c.lbFirst = i === 0;
             c.lbPlace = P[i];
-            c.lbTime = formatTime(et * 1000);
+            c.lbTime = window.formatTime(et * 1000);
             c.allDelaysSum = c.allDelays.split('|').map(e => e = parseFloat(e)).filter(e => !isNaN(e)).reduce((a, b) => a + b, 0);
-            c.allDelaysSumFormat = formatTime(c.allDelaysSum * 60000);
+            c.allDelaysSumFormat = window.formatTime(c.allDelaysSum * 60000);
             c.totalSplit = c.lbTime.split(':').map(e => e = parseFloat(e));
             if (c.totalSplit.length === 2) {
                 c.totalSplit.unshift(0);
@@ -3234,7 +3336,8 @@ document.addEventListener('DOMContentLoaded', function () {
             });
 
         });
-        rOb.totalTimeFormat = rOb.totalTime.join(':');
+//        console.log(rOb.totalTime);
+        rOb.totalTimeFormat = rOb.totalTime.map((n, i) => i === 0 ? n : (n < 10 ? `0${n}` : n)).join(':');
         socket.emit('finalReport', {sessionID: session.uniqueID, climbers: C});
         rOb.profiles = C;
         rOb.sessionID = session.uniqueID;
@@ -3273,7 +3376,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // quiz
     const goQuiz = () => {
         if (quiz === null) {
-            quiz = new Quiz(socket, { session, setupModalClose, completeEvent });
+            quiz = new Quiz(socket, { session, setupModalClose, completeEvent, getCheatState });
         }
     };
     const getQuestionAndRender = () => {
@@ -3290,12 +3393,23 @@ document.addEventListener('DOMContentLoaded', function () {
             getQuestion(ev.question, (q) => {
                 if (q.optionsAllowed > 1 && q.optionsAllowed < q.options.length) {
                     q.question += ` (select up to ${q.optionsAllowed})`;
+
+                    q.type = 'checkbox';
+                    q.questionPartial = 'question_checkbox';
+                } else if (q.optionsAllowed < 0) {
+                    q.type = 'checkbox';
+                    q.questionPartial = 'question_checkbox';
+                } else {
+                    q.type = 'radio';
+                    q.questionPartial = 'question_radio';
                 }
+//                console.log(`rendering question`, q);
                 window.renderTemplate('quizplaceholder', 'quiz.question', q, () => {
                     quiz.setupInterface(q);
                     if (cheating) {
                         setTimeout(() => {
                             // ADD CHEAT CONDITION FOR QUIZ QUESTIONS
+                            return;
                             $('.bQuizAnswer')[Math.floor($('.bQuizAnswer').length * Math.random())].click();
                             setTimeout(() => {
                                 $('.k2-modal-btn').click();
@@ -3473,7 +3587,8 @@ document.addEventListener('DOMContentLoaded', function () {
             renderTemplate('theatre', 'home', session, () => {
                 setupHome();
                 updateAddress('home');
-                window.tools.setup(session, gameData);
+//                console.log('setup tools');
+//                window.tools.setup(session, gameData);
             })
         });
     };
@@ -3611,12 +3726,43 @@ document.addEventListener('DOMContentLoaded', function () {
         return versionControl.updateVersion();
     }
 
+    const onUnload = () => {
+        snapshot();
+        if (theState !== null) {
+            theState.storeTime(gTimer.elapsedTime);
+        }
+    };
     // publically exposed methods - keep
     window.getSessionID = getSessionID;
     window.climberUpdate = climberUpdate;
     window.updateDevLog = updateDevLog;
     window.climberDepletionEvent = climberDepletionEvent;
     window.getToolkitInfo = getToolkitInfo;
+    window.onbeforeunload = onUnload;
+    window.addEventListener('hashchange', () => {
+        //        myMethod();
+        if (window.location.hash !== currentHash) {
+//            console.log('hash change triggers render');
+            initRender();
+            currentHash = window.location.hash;
+            const appArea = currentHash.replace('#', '');
+            switch (appArea) {
+                case 'map':
+                    // no need to unpause, renderMap will handle that
+                    /*
+                    console.log(`Hash changed: ${window.location.hash}, unpauseSession (delay)`);
+                    setTimeout(() => {
+                        console.log(`... and hash change unpaused`)
+                        unpauseSession();
+                    }, 2000);
+                    */
+                    break;
+                default:
+                    console.log(`Hash changed: ${window.location.hash}, pauseSession (immediate)`)
+                    pauseSession();
+            }
+        }
+    });
 
     //
     //    test();
@@ -3675,6 +3821,7 @@ document.addEventListener('DOMContentLoaded', function () {
         mutationsList.forEach((mutation) => {
             // Check added nodes for the target selector
             mutation.addedNodes.forEach((node) => {
+//                return;
                 let bId = '.back-btn';
                 if ($(node).is(bId)) {
                     setupBackButton(node);
@@ -3736,26 +3883,21 @@ document.addEventListener('DOMContentLoaded', function () {
     clearConsole.on('click', clearBrowserConsole);
     stormStarter.on('click', startStorm);
     stormResetter.on('click', resetStorm);
-    const onUnload = () => {
-        snapshot();
-        if (theState !== null) {
-            theState.storeTime(gTimer.elapsedTime);
-        }
+
+    const contentCheck = () => {
+        // Self-calling function which stops when any useful content is rendered to the screen
+        // Will clear localStorage / sessionStorage if no content rendered after [n] seconds
+//        console.log('content check');
+//        console.log($('div').length);
+        setTimeout(() => {
+            contentCheck();
+        }, 500);
     };
-    window.onbeforeunload = onUnload;
-    window.addEventListener('hashchange', () => {
-//        console.log('Hash changed:', window.location.hash);
-        //        myMethod();
-        if (window.location.hash !== currentHash) {
-//            console.log('hash change triggers render');
-            initRender();
-            currentHash = window.location.hash;
-        }
-    });
     const initRender = () => {
         // do not run init on DOM load, checkSession must run first
         //        console.log(`initRender, do we have a session?`);
         //        console.log(window.clone(session));
+        contentCheck();
         closeModal();
         const cp = getCurrentPage();
         //        console.log(cp);
@@ -3789,6 +3931,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 renderHome();
         }
         setupBasics();
+        console.log('setup tools');
+        window.tools.setup(session, gameData);
+        window.tools.showSessionID();
     };
     const init = () => {
         gameflow('script init');
