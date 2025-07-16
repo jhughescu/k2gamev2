@@ -3285,7 +3285,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         if (autoPlay || !gameData.isDev) {
 //                            console.log(`renderMap will unpause...`);
                             setTimeout(() => {
-//                                console.log(`...renderMap haxs unpaused`)
+//                                console.log(`...renderMap has unpaused`)
                                 unpauseSession(true);
                             }, 300);
                         }

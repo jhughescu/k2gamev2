@@ -311,6 +311,7 @@ class Climber {
         return o;
     }
 
+
     // sets
     setProperty(p, v, cb) {
 //        this.log(`setProperty: ${p} to ${v}`);
@@ -375,7 +376,8 @@ class Climber {
 //        this.log(`adjusting ${p}, ${window.clone(this)[p]}, ${this[p]}`, this.displayProps.includes(p), av);
         if (this.displayProps.includes(p)) {
             if (Math.ceil(this[p]) !== Math.ceil(this[p] + av)) {
-                const cdp = this.view.find('#climberDetailPanel');
+//                const cdp = this.view.find('#climberDetailPanel');
+                const cdp = this.getView().find('#climberDetailPanel');
                 if (cdp.length > 0) {
                     if (cdp.is(':visible')) {
                         // the detail panel is open and visible; update it.
@@ -634,11 +636,9 @@ class Climber {
 
     // delay countdown chart
     showPie(boo) {
-//        debugger;
-        const pie = this.view.find(`#countpie_${this.profile}`);
-//        console.log(`shoePie`, boo, pie);
+//      const pie = this.view.find(`#countpie_${this.profile}`);
+        const pie = this.getView().find(`#countpie_${this.profile}`);
         boo ? pie.show() : pie.hide();
-//        debugger;
     };
     describeArc(x, y, radius, startAngle, endAngle) {
         const start = this.polarToCartesian(x, y, radius, endAngle);
@@ -937,7 +937,8 @@ class Climber {
         // dev method, toggles climber detail display on/off
 //        console.log(`toggleInfo`, this);
 //        console.log(`toggleInfo`, window.clone(this));
-        const d = $(this.view.find('.map-pointer-label')[0]);
+//        const d = $(this.view.find('.map-pointer-label')[0]);
+        const d = $(this.getView().find('.map-pointer-label')[0]);
         if (d.is(':visible')) {
             d.hide();
         } else {
@@ -976,7 +977,8 @@ class Climber {
             if (this.gameData.isDev) {
                 ///*
                 const cs = this.currentStage;
-                const devInd = this.view.find('.climberDevIndicator');
+//                const devInd = this.view.find('.climberDevIndicator');
+                const devInd = this.getView().find('.climberDevIndicator');
                 const cols = ['red', '#ff5800', '#ff9300', '#ffe200', '#baff00'];
                 devInd.css({'background-color': cols[cs]});
                 if (this.finished) {
@@ -1006,9 +1008,11 @@ class Climber {
         } else {
             this.view.show();
         }
-        this.icon = this.view.find('.climber_icon');
+//        this.icon = this.view.find('.climber_icon');
+        this.icon = this.getView().find('.climber_icon');
         this.view.show();
-        this.view.find('.type').html(this.type);
+//        this.view.find('.type').html(this.type);
+        this.getView().find('.type').html(this.type);
         this.updateView();
         this.view.off('click').on('click', () => {
 //            jq.css({'z-index': 1});
@@ -1042,32 +1046,10 @@ class Climber {
             }
         }
     }
-    setViewV1(jq) {
-        this.view = $(jq[this.profile]);
-        this.icon = this.view.find('.climber_icon');
-        this.view.show();
-        this.view.find('.type').html(this.type);
-        this.updateView();
-        this.view.off('click').on('click', () => {
-//            jq.css({'z-index': 1});
-//            this.view.css({'z-index': 10});
-            this.toggleInfo();
-        });
-        let timer;
-        const timeout = 1000;
-        this.view.append(`<div class='climberDevIndicator'></div>`);
-        this.view
-            .on('mousedown touchstart', () => {
-                timer = setTimeout(() => {
-                    $('#output').text('Long-press action triggered!');
-                    jq.css({'z-index': 1});
-                    this.view.css({'z-index': 10});
-                }, timeout);
-            })
-            .on('mouseup touchend mouseleave', function () {
-                clearTimeout(timer); // Cancel the action if released early
-            });
+    getView() {
+        return this.view || $();
     }
+
     expandOptions() {
         this.options.forEach((o, n) => {
             o.n = n;
