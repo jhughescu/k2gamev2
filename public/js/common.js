@@ -148,6 +148,18 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         return nt;
     };
+    const padNum = (n) => {
+        if (n < 10) {
+            return `0${n.toString()}`
+        } else {
+            return n;
+        }
+    }
+    const getTimestamp = () => {
+        const d = new Date();
+        const ts = `${d.getFullYear()}${padNum(d.getMonth() + 1)}${padNum(d.getDate())} ${padNum(d.getHours())}:${padNum(d.getMinutes())}:${padNum(d.getSeconds())}`;
+        return ts;
+    };
     const formatTime = (ms, level = 'hour') => {
         // Calculate hours, minutes, and seconds
         //        console.log(ms);
@@ -163,6 +175,10 @@ document.addEventListener('DOMContentLoaded', function () {
         const str = `${level === 'hour' && hours > 0 ? hoursStr + ':' : ''}${minutesStr}:${secondsStr}`;
         return str;
     }
+    const formatSplitTime = (a) => {
+        // convert an array [1,7,23] to string 1:07:23
+        return a.map((n, i) => i === 0 ? n : (n < 10 ? `0${n}` : n)).join(':');
+    };
     const roundAll = (o, r = 3) => {
         for (let i in o) {
 //            console.log(o[i]);
@@ -1210,7 +1226,9 @@ document.addEventListener('DOMContentLoaded', function () {
     window.justNumber = justNumber;
     window.roundNumber = roundNumber;
     window.getNumberText = getNumberText;
+    window.getTimestamp = getTimestamp;
     window.formatTime = formatTime;
+    window.formatSplitTime = formatSplitTime;
     window.roundAll = roundAll;
     window.emitWithPromise = emitWithPromise;
     window.reorderObject = reorderObject;

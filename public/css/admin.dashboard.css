@@ -1,3 +1,7 @@
+html, body {
+    background-color: #1e1f21;
+    color: #dbdbdb;
+}
 #qrCodes img {
     width: 200px;
 }
@@ -24,12 +28,44 @@
     cursor: pointer;
     transition: color 0.5s ease;
     width: fit-content;
-    color: #4a4a4a;
+/*    color: #4a4a4a;*/
 }
 .sClick:hover {
     color: #04062a;
+    color: white;
 }
 .clicked {
     font-weight: bold;
     cursor: default;
+}
+#session #closer:hover {
+    background-color: #bab9b9;
+    color: black;
+}
+#session #closer {
+    position: absolute;
+    right: 10px;
+    top: 10px;
+    width: 30px;
+    height: 30px;
+    background-color: grey;
+    color: #1d1d1d;
+    cursor: pointer;
+    transition: background-color 1s;
+}
+#session #closer i {
+    color: black;
+    margin-left: 4px;
+    font-size: 28px;
+}
+#session #delete {
+    background-color: #cc0101;
+    width: fit-content;
+    padding: 2px 20px;
+    transition: background-color 1s;
+    cursor: pointer;
+}
+#session #delete:hover {
+    background-color: red;
+
 }

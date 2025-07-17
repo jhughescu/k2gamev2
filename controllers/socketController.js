@@ -2,7 +2,8 @@ const socketIo = require('socket.io');
 const { getEventEmitter } = require('./../controllers/eventController');
 const routeController = require('./../controllers/routeController');
 const sessionController = require('./../controllers/sessionController');
-const downloadController = require('./../controllers/downloadController');
+//const downloadController = require('./../controllers/downloadController');
+const { saveCSVLocally, convertToCSV } = require('./../controllers/downloadController');
 const logController = require('./../controllers/logController');
 const databaseController = require('./../controllers/databaseController');
 const gfxController = require('./../controllers/gfxController');
@@ -204,16 +205,15 @@ function initSocket(server) {
             // end game clients
             // admin clients
             if (sType.includes('admin')) {
-                socket.on('getAllSessions', (dbName, collectionName, cb) => {
-//                    databaseController.getAllSessions(dbName, collectionName, cb);
-                    sessionController.getSessions({}, cb    )
+                socket.on('getAllSessions', (cb) => {
+                    sessionController.getSessions({}, cb)
                 });
-                socket.on('getSession', (dbName, collectionName, sessionID, cb) => {
-//                    databaseController.getSession(dbName, collectionName, sessionID, cb);
+                socket.on('getSession', (cb) => {
                     sessionController.getSession()
                 });
-                socket.on('deleteSession', (dbName, collectionName, sessionID, cb) => {
-                    databaseController.deleteSession(dbName, collectionName, sessionID, cb);
+                socket.on('deleteSession', (sOb, cb) => {
+//                    console.log('this has been temporarily removed, see other surrounding methods in socketController for approach to take');
+                    sessionController.deleteSession(sOb, cb);
                 });
                 socket.on('deleteSessions', (sOb, cb) => {
                     sessionController.deleteSessions(sOb, cb);
@@ -239,6 +239,33 @@ function initSocket(server) {
                         cb(null);
                     }
                 });
+                socket.on('createCsv', (data, filename = 'session_data', cb) => {
+                    try {
+                        const savedPath = saveCSVLocally(data, `${filename}.csv`);
+
+                        if (savedPath) {
+                            console.log('CSV saved to:', savedPath);
+                            socket.emit('csvSaved', { path: savedPath });
+                            if (cb) {
+                                cb(null, `CSV saved to ${savedPath}`);
+                            }
+                        } else {
+                            // saving skipped (e.g. running in production)
+                            const msg = 'CSV saving skipped (not running locally)';
+                            console.log(msg);
+                            if (cb) {
+                                cb(null, msg); // null error, but msg explains
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Error saving CSV:', error);
+                        socket.emit('csvSaveError', { message: error.message });
+                        if (cb) {
+                            cb(error, null);
+                        }
+                    }
+                });
+
             }
             // end admin clients
             // mapper clients

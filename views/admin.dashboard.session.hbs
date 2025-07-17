@@ -1,3 +1,4 @@
+<div id='closer'><i class="fa fa-close"></i></div>
 <table>
 {{#each session}}
 <tr>
@@ -11,7 +12,7 @@ climbers:
 <th>name</th><th>time</th><th>status</th><th>delays</th><th>total delay</th>
 {{#each climbers}}
 <tr>
-    <td>{{name}}</td><td>{{currentTime}}</td><td>{{status}}{{#if finished}} ({{finishTimeDisplay}}){{/if}}</td><td>{{allDelaysDisplay}}</td><td>{{totalDelays}}</td>
+    <td>{{name}}</td><td>{{totalTimeFormat}}</td><td>{{status}}{{#if finished}} ({{finishTimeDisplay}}){{/if}}</td><td>{{allDelaysDisplay}}</td><td>{{totalDelays}}</td>
 </tr>
 {{/each}}
 </table>
@@ -20,3 +21,4 @@ climbers:
 <tr><td>{{this}}</td></tr>
 {{/each}}
 </table>
+<div id='delete'>DELETE THIS SESSION</div>

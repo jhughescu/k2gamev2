@@ -3322,15 +3322,15 @@ document.addEventListener('DOMContentLoaded', function () {
         C.forEach((co, i) => {
             // work on a duplicate of the Climber
             const c = co.clone();
-            const et = c.finishTime || c.currentTime;
-
+//            const et = c.finishTime || c.currentTime;
+            const et = c.calculateEndTime();
+//            console.log('get end time');
+//            console.log(et);
             c.lbFirst = i === 0;
             c.lbPlace = P[i];
             c.lbTime = window.formatTime(et * 1000);
-            c.allDelaysSum = c.allDelays.split('|').map(e => e = parseFloat(e)).filter(e => !isNaN(e)).reduce((a, b) => a + b, 0);
-//            console.log(`c.allDelaysSum`);
-//            console.log(c.allDelaysSum);
-//            console.log(c.calculateDelayTotal());=
+            c.allDelaysSum = c.calculateDelayTotal();
+
             c.allDelaysSumFormat = window.formatTime(c.allDelaysSum * 60000);
             c.totalSplit = c.lbTime.split(':').map(e => e = parseFloat(e));
             if (c.totalSplit.length === 2) {
@@ -3339,7 +3339,7 @@ document.addEventListener('DOMContentLoaded', function () {
             // to avoid rounding errors, make the total time a summary of the three formatted climber times
             c.totalSplit.forEach((e, i) => {
                 rOb.totalTime[i] += e;
-                if (rOb.totalTime[i] > 60) {
+                if (rOb.totalTime[i] >= 60) {
                     rOb.totalTime[i] -= 60;
                     rOb.totalTime[i - 1] += 1;
                 }
@@ -3347,7 +3347,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
         });
         console.log(rOb.totalTime);
-        rOb.totalTimeFormat = rOb.totalTime.map((n, i) => i === 0 ? n : (n < 10 ? `0${n}` : n)).join(':');
+//        rOb.totalTimeFormat = rOb.totalTime.map((n, i) => i === 0 ? n : (n < 10 ? `0${n}` : n)).join(':');
+        rOb.totalTimeFormat = window.formatSplitTime(rOb.totalTime);
         socket.emit('finalReport', {sessionID: session.uniqueID, climbers: C});
         rOb.profiles = C;
         rOb.sessionID = session.uniqueID;

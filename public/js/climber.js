@@ -693,6 +693,11 @@ class Climber {
         this.delayTotal = totalDelays;
         return totalDelays;
     }
+    calculateEndTime() {
+        // get the total duration for the game ending
+        const et = this.finishTime || this.currentTime;
+        return et;
+    }
 
     calculateClimbRate() {
         const before = window.clone(this);

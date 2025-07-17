@@ -9,6 +9,7 @@ const { app } = require('./../app'); // Import app from app.js
 //const adminController = require('./../controllers/adminController');
 //const sessionController = require('./../controllers/sessionController');
 const templateController = require('./../controllers/templateController');
+const downloadController = require('./../controllers/downloadController');
 
 const basePath = path.join(__dirname, '..', 'public');
 const routeAccessTimes = {};
@@ -91,6 +92,8 @@ app.get('/how3', (rq, res) => {
 app.get('/how4', (rq, res) => {
     res.sendFile(path.join(basePath, 'flat', 'how-to-play-d.html'));
 });
+
+app.post('/download-csv', downloadController.downloadCSV);
 
 app.get('/dev/pbuilder', (req, res) => {
     res.sendFile(path.join(basePath, 'dev_profile_builder.html'));

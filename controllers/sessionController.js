@@ -361,10 +361,10 @@ const deleteSession = async (sOb, cb) => {
     let del = false;
     if (res.deletedCount === 1) {
         del = true;
-//        console.log('deletion successful')
+        console.log('deletion successful')
     }
     if (cb) {
-        cb(del);
+        cb(del ? null : 'deletion failed', del);
     }
 };
 const getGameData = (cb) => {
