@@ -131,27 +131,30 @@ document.addEventListener('DOMContentLoaded', function () {
         const profiles = Object.entries(s)
             .filter(([key, value]) => /^profile\d+$/.test(key))
             .map(([key, value]) => value);
-        profiles.forEach(p => {
-            const conf = {
-                gameData: data,
-                team: data.teams[s.teamRef],
-                summaryString: p.summary.replace(/(_ty:)-?\d+/, '$1-9999')
-            };
-            const c = new Climber(conf);
-            o.climbers.push(prepClimberForDisplay(c));
-//            console.log(c);
+        profiles.forEach((p, i) => {
+            if (p.blank) {
+                // cannot add blank climbers - just leave them out?
+                console.log(`profile ${i} is blank`);
+            } else {
+                const conf = {
+                    gameData: data,
+                    team: data.teams[s.teamRef],
+                    summaryString: p.summary.replace(/(_ty:)-?\d+/, '$1-9999')
+                };
+                const c = new Climber(conf);
+                o.climbers.push(prepClimberForDisplay(c));
+                // make this \/ a common method??
 
-            // make this \/ a common method??
+                c.splitTime.forEach((e, i) => {
+                    o.session.totalTime[i] += e;
+                    if (o.session.totalTime[i] >= 60) {
+                        o.session.totalTime[i] -= 60;
+                        o.session.totalTime[i - 1] += 1;
+                    }
+                });
+            }
 
-            c.splitTime.forEach((e, i) => {
-                o.session.totalTime[i] += e;
-                if (o.session.totalTime[i] >= 60) {
-                    o.session.totalTime[i] -= 60;
-                    o.session.totalTime[i - 1] += 1;
-                }
-            });
         });
-//        o.session.totalTime = o.session.totalTime.map((n, i) => i === 0 ? n : (n < 10 ? `0${n}` : n)).join(':');
         o.session.totalTime = window.formatSplitTime(o.session.totalTime);
         // quiz stuff
         s.quiz.forEach((q, i) => {
