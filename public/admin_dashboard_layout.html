@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Session Search</title>
+
+    <script src="https://code.jquery.com/jquery-3.7.0.js" integrity="sha256-JlqSTELeR4TLqP0OG9dxM7yDPqX1ox/HfgiSLBj8+kM=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/handlebars@latest/dist/handlebars.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src='../js/common.js'></script>
+    <script src='../js/climber.js'></script>
+    <script src='../js/quiz.js'></script>
+    <script src='../js/admin.dashboard.js'></script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel='stylesheet' href='../css/basics.css'>
+    <!-- <link rel='stylesheet' href='../css/admin.dashboard.css'> -->
+    <link rel="stylesheet" href="../css/dashboard_layout.css" />
+    <link rel='stylesheet' href='../css/admin.dashboard.css'>
+</head>
+
+<body>
+    <header>
+        <form id="searchForm">
+            <button id='showAll'>Show all</button>
+            <input type="date" id='dateFrom' name="fromDate" placeholder="From" />
+            <input type="date" id='dateTo' name="toDate" placeholder="To" />
+            <label>
+                <input type="checkbox" id='onlyComplete' name="completedOnly" />
+                Show completed only
+            </label>
+            <button type="submit" id='bSubmit'>Date search</button>
+            <button type="button" id="bClear">Clear</button>
+        </form>
+    </header>
+    <div class="contentArea">
+        <section id="resultsPanel" style="display: none;">
+            <div class="resultsHeader">
+                <button id='bDownload'>Download Data</button>
+            </div>
+            <div class="resultsList" id='sessions'>
+                <!-- search results will go here -->
+            </div>
+        </section>
+        <aside id="detailPanel" style="display: none;">
+            <!-- <button id="closeDetail">Close</button> -->
+            <h2>Session Details</h2>
+            <div id='session'>
+                <!-- session details will go here -->
+            </div>
+        </aside>
+    </div>
+</body>
+
+</html>

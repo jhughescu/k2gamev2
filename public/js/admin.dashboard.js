@@ -30,11 +30,11 @@ document.addEventListener('DOMContentLoaded', function () {
         const $b = $(`#${b}`);
         if ($b.length > 0) {
             $b.prop('disabled', !a);
+            $b.css({opacity: a ? 1 : 0.5});
         } else {
             console.warn(`button #${b} does not exist`);
         }
     };
-    window.getData = getData;
     const getDisplayTime = (t) => {
 
     };
@@ -168,14 +168,20 @@ document.addEventListener('DOMContentLoaded', function () {
             a += ` ${ans.join(', ')}`;
             o.questionSummaries.push(a);
         });
+//        console.log(o.answers)
+
+        // ANSWERS TO 1 AND 3 SEEM TO BE RENDERING INCORRECTLY, SORT THIS OUT
+
+
         // everything else
-        const excludes = ['profile', '_id', 'type', 'supportTeamRef', '__v', 'quiz']
+        const excludes = ['profile', '_id', 'type', 'supportTeamRef', '__v', 'quiz', 'complete']
         Object.entries(s).forEach(([k, v]) => {
             if (!excludes.includes(k) && !/^profile\d+$/.test(k)) {
                 o.session[k] = prepValueForDisplay(k, v);
                 o.session.timeDisplay = window.formatTime(o.session.time * 1000);
             }
         });
+
         return o;
     };
     const prepSessionForDownload = (s) => {
@@ -216,13 +222,18 @@ document.addEventListener('DOMContentLoaded', function () {
     };
 
     const showSession = (s) => {
-        const display = $('#session');
-        display.show();
+        const zone = $('#detailPanel');
+        const displayID = 'session';
+        const display = $(`#${displayID}`);
+//        const display = $('#session');
+        zone.show();
+        display.hide().fadeIn();
         const sesh = prepSessionForDisplay(s);
+//        console.log(sesh)
         const output = prepSessionForDownload(sesh);
-        window.renderTemplate('session', 'admin.dashboard.session', sesh, () => {
-            display.find('#closer').off('click').on('click', () => {
-                closeSession();
+        window.renderTemplate(displayID, 'admin.dashboard.session', sesh, () => {
+            display.find('#download').off('click').on('click', () => {
+                downloadSingleSummary(s);
             });
             display.find('#delete').off('click').on('click', () => {
                 deleteSession(s._id);
@@ -230,7 +241,9 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     };
     const closeSession = () => {
+        const zone = $('#detailPanel');
         const display = $('#session');
+        zone.hide();
         display.hide();
         display.html('');
         $('.sClick').removeClass('clicked');
@@ -252,15 +265,27 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     };
     const downloadSessionSummaries = () => {
-        let output = [];
         const ts = window.getTimestamp().replace(/[ :]/g, '');
-        sessions.forEach(s => {
+        const filename = `k2SessionSummaries${ts}.csv`;
+        downloadData(sessions, filename);
+    };
+    const downloadSingleSummary = (s) => {
+        const ts = window.getTimestamp().replace(/[ :]/g, '');
+        const filename = `k2SessionSummary${s.uniqueID}.csv`;
+        downloadData(s, filename);
+    };
+    const downloadData = (data, filename) => {
+        let output = [];
+        if (!Array.isArray(data)) {
+            data = [data];
+        }
+        data.forEach(s => {
             const pre = prepSessionForDisplay(s);
             const post = prepSessionForDownload(pre);
             output.push(post);
         });
 
-        const filename = `sessionSummaries${ts}.csv`;
+
 
         fetch('/download-csv', {
             method: 'POST',
@@ -286,6 +311,13 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     };
 
+    const findOnlyComplete = () => {
+        return $('#onlyComplete').is(':checked');
+    };
+    const getFilterComplete = () => {
+        return findOnlyComplete() ? {state: { $ne: 'incomplete' }} : {};
+    };
+
     const deleteSession = (id) => {
 //        console.log(`try to delete ${id}`);
         const go = confirm('This will permanently delete the session data, are you sure you want to continue?');
@@ -301,40 +333,56 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             });
         }
-    }
+    };
+
+    let sessionRenderInt;
     const showSessions = () => {
+        const zone = $('#resultsPanel');
         const display = $('#sessions');
-        display.html('');
-        sessions.forEach(s => {
-            //            cons
-            const eid = `s_${s._id}`;
-            display.append(`<p class='sClick' id='${eid}'>${s.uniqueID}: ${s.name}</p>`);
-            const e = $(`#${eid}`);
-            e.data('session', s);
-            let S = null;
-            if (s.quiz) {
-                if (s.quiz.length) {
-                    S = s;
-                }
-            }
-        });
-        display.append(`<p>${sessions.length} sessions found</p>`);
-        const sClick = $('.sClick');
-        sClick.off('click').on('click', function () {
-            sClick.removeClass('clicked');
-            $(this).addClass('clicked');
-            const id = $(this).attr('id');
-            const s = $(this).data('session');
-            showSession(s);
-        });
+        zone.hide();
+//        if (sessions.length > 0) {
+            zone.show();
+            display.html('');
+            sessions.map(s => s.complete = s.state.includes('completed'));
+            display.append(`<p>${sessions.length} sessions found</p>`);
+            const sCount = sessions.length;
+            const sPlural = sessions.length !== 1
+            window.renderTemplate('sessions', 'admin.dashboard.sessionlist', { sessions, sCount, sPlural }, () => {
+                let el = 0;
+                clearInterval(sessionRenderInt);
+                sessionRenderInt = setInterval(() => {
+                    const elNow = $($('.sClick')[el++]);
+                    if (elNow.length > 0) {
+                        elNow.fadeIn();
+                    } else {
+                        clearInterval(sessionRenderInt);
+//                        console.log('dunne')
+                    }
+                }, 50);
+                $(el).fadeIn()
+                $('.sClick').each(function (i) {
+                    $(this).data('session', sessions[i]);
+                });
+                const sClick = $('.sClick');
+                sClick.off('click').on('click', function () {
+    //                console.log('click');
+                    sClick.removeClass('clicked');
+                    $(this).addClass('clicked');
+                    const id = $(this).attr('id');
+                    const s = $(this).data('session');
+    //                console.log(s);
+                    showSession(s);
+                });
+            });
+//        };
         enableButton('bDownload', sessions.length > 0);
         enableButton('bClear', sessions.length > 0);
+        closeSession();
     }
     const getAllSessions = () => {
-//        socket.emit('getAllSessions', dbName, collectionName, (err, r) => {
-        socket.emit('getAllSessions', (err, r) => {
+        const filter = getFilterComplete();
+        socket.emit('getSessions', filter, (err, r) => {
             if (err === null) {
-                //                console.log('got', r);
                 sessions = r;
                 showSessions();
             } else {
@@ -344,29 +392,17 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     const getDateRange = (f = 20250603, t = 20250605, comp = true) => {
         // Return a set of sessions from date f to date t
-        // Date format = YYYYMMDD
-        // By default only completed sessions are included in returns
-        f = Number(f);
-        t = Number(t);
-//        console.log('range', f, typeof(f), t, typeof(t));
+        // Date format = YYYYMMDDhhmmss
+        // Multiply input date by 1000000 to convert date to time
+        f = Number(f) * 1000000;
+        t = Number(t) * 1000000;
         const display = $('#sessions');
-//        socket.emit('getAllSessions', dbName, collectionName, (err, r) => {
-        socket.emit('getAllSessions', (err, r) => {
+        const filter = getFilterComplete();
+        const dateRange = {dateID: { $gte: f, $lte: t }};
+        Object.assign(filter, dateRange);
+        socket.emit('getSessions', filter, (err, r) => {
             if (err === null) {
-                r.forEach(e => {
-                    e.dateStart = Number(String(e.dateID).substr(0, 8));
-                    e.dateLast = Number(String(e.dateAccessed || e.dateID).substr(0, 8));
-                });
-                let range = r.filter(obj => obj.dateStart >= f && obj.dateStart <= t);
-                if (comp) {
-                    range = range.filter(s => s.state.includes('completed'))
-                }
-//                console.log(`${range.length} out of ${r.length} records matched:`);
-//                console.log(range);
-                sessions = range;
-                r.map(e => delete e.dateStart);
-                r.map(e => delete e.dateLast);
-//                console.log(r);
+                sessions = r;
                 showSessions();
             } else {
                 display.html('no completed sessions found for date range');
@@ -383,39 +419,60 @@ document.addEventListener('DOMContentLoaded', function () {
     function checkDates() {
         enableButton('bSubmit', $('#dateFrom').val() && $('#dateTo').val());
     }
-    $('#dateFrom, #dateTo').on('change', checkDates);
-    $('#dateFrom').on('change', function () {
-        sessionStorage.setItem('dateFrom', $(this).val());
-        checkDates();
-    });
-    $('#dateTo').on('change', function () {
-        sessionStorage.setItem('dateTo', $(this).val());
-        checkDates();
-    });
-    $('#bSubmit').on('click', function () {
-        const dateFrom = $('#dateFrom').val().replace(/-/g, '');
-        const dateTo = $('#dateTo').val().replace(/-/g, '');
-        const onlyComp = $('#onlyComplete').is(':checked');
-        getDateRange(dateFrom, dateTo, onlyComp);
-    });
-    $('#bDownload').off('click').on('click', function () {
-//        saveSessionSummaries();
-        downloadSessionSummaries();
-    });
-    $('#bClear').off('click').on('click', function () {
-        clearSessions();
-    });
-    const savedFrom = sessionStorage.getItem('dateFrom');
-    const savedTo = sessionStorage.getItem('dateTo');
 
-    if (savedFrom) $('#dateFrom').val(savedFrom);
-    if (savedTo) $('#dateTo').val(savedTo);
 
-    checkDates();  // Update button state
+
+
     // end form stuff
+
     const setupInterface = () => {
         const bAll = $('#showAll');
-        bAll.off('click').on('click', getAllSessions)
+        bAll.off('click').on('click', (ev) => {
+            ev.preventDefault();
+            getAllSessions();
+        });
+        $('#dateFrom, #dateTo').on('change', checkDates);
+        $('#dateFrom').on('change', function (ev) {
+            ev.preventDefault();
+            sessionStorage.setItem('dateFrom', $(this).val());
+            checkDates();
+        });
+        $('#dateTo').on('change', function (ev) {
+            ev.preventDefault();
+            sessionStorage.setItem('dateTo', $(this).val());
+            checkDates();
+        });
+        $('#onlyComplete').on('change', function (ev) {
+//            ev.preventDefault();
+            sessionStorage.setItem('compSelected', $(this).is(':checked'));
+        });
+        $('#bSubmit').on('click', function (ev) {
+            ev.preventDefault();
+            const dateFrom = $('#dateFrom').val().replace(/-/g, '');
+            const dateTo = $('#dateTo').val().replace(/-/g, '');
+            const onlyComp = $('#onlyComplete').is(':checked');
+            getDateRange(dateFrom, dateTo, onlyComp);
+        });
+        $('#bDownload').off('click').on('click', function (ev) {
+    //        saveSessionSummaries();
+            ev.preventDefault();
+            downloadSessionSummaries();
+        });
+        $('#bClear').off('click').on('click', function (ev) {
+            ev.preventDefault();
+            clearSessions();
+         });
+
+        const savedFrom = sessionStorage.getItem('dateFrom');
+        const savedTo = sessionStorage.getItem('dateTo');
+        const compSelected = sessionStorage.getItem('compSelected');
+
+        if (savedFrom) $('#dateFrom').val(savedFrom);
+        if (savedTo) $('#dateTo').val(savedTo);
+        if (compSelected !== null) {
+            $('#onlyComplete').prop('checked', compSelected === 'true');
+        }
+        checkDates();  // Update button state
     };
 
     //    window.getDateRange = getDateRange;
@@ -435,9 +492,9 @@ document.addEventListener('DOMContentLoaded', function () {
         initQuiz();
         setupInterface();
 
-//        getAllSessions();
+        getAllSessions();
         setTimeout(() => {
-//            $(`.sClick`)[$(`.sClick`).length - 1].click();
+            $(`.sClick`)[$(`.sClick`).length - 1].click();
         }, 3000);
     };
     init();

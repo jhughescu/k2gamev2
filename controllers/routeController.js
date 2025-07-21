@@ -101,8 +101,13 @@ app.get('/dev/pbuilder', (req, res) => {
 app.get('/dev/admin', (req, res) => {
     res.sendFile(path.join(basePath, 'dev_admin.html'));
 });
-app.get('/admin/dashboard', (req, res) => {
+app.get('/admin/dashboard1', (req, res) => {
     res.sendFile(path.join(basePath, 'admin_dashboard.html'));
+//    res.sendFile(path.join(basePath, 'admin_dashboard_layout.html'));
+});
+app.get('/admin/dashboard', (req, res) => {
+//    res.sendFile(path.join(basePath, 'admin_dashboard.html'));
+    res.sendFile(path.join(basePath, 'admin_dashboard_layout.html'));
 });
 app.get('/devtools', (req, res) => {
     res.sendFile(path.join(basePath, 'dev.tools.html'));

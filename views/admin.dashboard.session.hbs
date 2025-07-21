@@ -1,4 +1,3 @@
-<div id='closer'><i class="fa fa-close"></i></div>
 <table>
 {{#each session}}
 <tr>
@@ -18,7 +17,8 @@ climbers:
 </table>
 <table>
 {{#each answers}}
-<tr><td>{{this}}</td></tr>
+<tr><td>{{@key}}) {{this}}</td></tr>
 {{/each}}
 </table>
-<div id='delete'>DELETE THIS SESSION</div>
+<div class='sessionButton' id='download'>Download session data</div>
+<div class='sessionButton' id='delete'>DELETE THIS SESSION</div>

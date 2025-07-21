@@ -1,0 +1,10 @@
+{{sCount}} session{{#if sPlural}}s{{/if}} found
+{{#each sessions}}
+
+
+<p class='sClick resultItem' id='s_{{_id}}' style='display: none;'>
+    <span class="resultID">{{uniqueID}}</span>
+    <span class="resultName">{{name}}</span>
+    <span class="status {{#if complete}}complete{{else}}incomplete{{/if}}">{{#if complete}}✔{{else}}✘{{/if}}</span>
+</p>
+{{/each}}

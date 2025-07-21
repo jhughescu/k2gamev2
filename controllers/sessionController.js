@@ -382,11 +382,10 @@ const getGameData = (cb) => {
     }, 500);
 };
 
-const getSessions = async (sOb, cb) => {
+const getSessions = async (sOb = {}, cb) => {
     try {
-        const s = await Session.find();
-//        console.log(`getSessions finds ${s.length} sessions`);
-        if (cb) cb(null, s); // success: err is null
+        const s = await Session.find(sOb);
+        if (cb) cb(null, s);
     } catch (err) {
         console.error('Error retrieving sessions:', err);
         if (cb) cb(err, null); // error: pass the error

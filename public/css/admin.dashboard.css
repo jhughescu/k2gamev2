@@ -5,7 +5,7 @@ html, body {
 #qrCodes img {
     width: 200px;
 }
-#session {
+#sessionNOPE {
     display: none;
     font-size: 1.1em;
     position: absolute;
@@ -37,6 +37,7 @@ html, body {
 .clicked {
     font-weight: bold;
     cursor: default;
+    color: #adcefa;
 }
 #session #closer:hover {
     background-color: #bab9b9;
@@ -58,12 +59,23 @@ html, body {
     margin-left: 4px;
     font-size: 28px;
 }
-#session #delete {
-    background-color: #cc0101;
-    width: fit-content;
-    padding: 2px 20px;
+#session .sessionButton {
+    width: 200px;
+    padding: 6px 20px;
     transition: background-color 1s;
     cursor: pointer;
+    margin-top: 10px;
+    text-align: center;
+}
+#session #download {
+    background-color: #1f1f1f;
+}
+#session #download:hover {
+    background-color: black;
+
+}
+#session #delete {
+    background-color: #cc0101;
 }
 #session #delete:hover {
     background-color: red;

@@ -205,8 +205,8 @@ function initSocket(server) {
             // end game clients
             // admin clients
             if (sType.includes('admin')) {
-                socket.on('getAllSessions', (cb) => {
-                    sessionController.getSessions({}, cb)
+                socket.on('getSessions', (sOb, cb) => {
+                    sessionController.getSessions(sOb, cb)
                 });
                 socket.on('getSession', (cb) => {
                     sessionController.getSession()
