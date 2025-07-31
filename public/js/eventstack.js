@@ -105,7 +105,7 @@ class EventStack {
         // Uses the next event in the stack - removes it from the stack
         // Requires a callback, which sends the event to the calling object
         const e = this.events.shift();
-        console.log(`event "${e.event}" used, ${this.events.length} events remaining`);
+//        console.log(`event "${e.event}" used, ${this.events.length} events remaining`);
         if (cb) {
             cb(e);
         } else {
@@ -117,7 +117,7 @@ class EventStack {
         // called from main game code
         if (parseInt(v) > parseInt(this.eventSummary[ev.n])) {
             this.eventSummary[ev.n] = v;
-            console.log(`updateSummary`, ev.n, v, this.eventSummary.toString());
+//            console.log(`updateSummary`, ev.n, v, this.eventSummary.toString());
         } else {
             console.warn(`cannot decrease event value`);
         }

@@ -40,7 +40,7 @@
             "id": 1,
             "country": "Czechoslovakia",
             "adjective": "Czech",
-            "active": false,
+            "active": true,
             "profiles": {
                 "p0": {"name": "Hana Dvorakova", "gender": "f"},
                 "p1": {"name": "Jan Svoboda", "gender": "m"},
@@ -201,7 +201,7 @@
             "id": 8,
             "country": "Spain",
             "adjective": "Spanish",
-            "active": false,
+            "active": true,
             "profiles": {
                 "p0": {"name": "Alejandro Sánchez", "gender": "m"},
                 "p1": {"name": "Enriqua García", "gender": "f"},
@@ -342,10 +342,10 @@
     },
     "route": {"ratio": [50, 50]},
     "activeEventRangeNO": [-10, -18],
-    "activeEventRange": [0, 560000000000000000000000],
     "activeEventRangeNO": [12, 56],
     "activeEventRangeNO": [10, 56],
     "activeEventRangeNO": [3, 3],
+    "activeEventRange": [0, 560],
     "events": [
         {
             "time": 0.5,

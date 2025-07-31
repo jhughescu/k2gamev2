@@ -51,8 +51,16 @@ document.addEventListener('DOMContentLoaded', function () {
     const init = () => {
         bNew.off('click').on('click', (ev) => {
 //            ev.preventDefault();
+//            console.log('the click');
             localStorage.clear();
         });
+        if (window.getCheatState()) {
+            setTimeout(() => {
+//                console.log('auto go now');
+                bNew.click();
+                window.location.assign('/game');
+            }, 2000);
+        }
     };
     init();
 });

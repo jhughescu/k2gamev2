@@ -17,49 +17,71 @@ html, body {
     color: white;
     padding: 20px;
 }
-#session table {
+#sessionPanel table {
     margin-bottom: 20px;
 }
-#session td {
-    padding: 0px 5px;
+#sessionPanel td {
+    padding: 0px 15px;
 }
+.sClickNO {
+    user-select: none;
+    cursor: pointer;
+    transition: color 0.5s ease;
+    width: fit-content;
+}
+
 .sClick {
     user-select: none;
     cursor: pointer;
     transition: color 0.5s ease;
     width: fit-content;
-/*    color: #4a4a4a;*/
+    display: flex;
+    align-items: center;  /* vertical alignment */
 }
-.sClick:hover {
+.resultItem {
+  display: grid;
+  grid-template-columns: 140px 100px 140px 34px; /* adjust widths as needed */
+  align-items: center;
+/*    background-color: grey;*/
+  gap: 10px;
+}
+
+.sClicker:hover {
     color: #04062a;
     color: white;
+}
+.sClick input[type='checkbox'] {
+    margin-left: 0px;
 }
 .clicked {
     font-weight: bold;
     cursor: default;
     color: #adcefa;
 }
-#session #closer:hover {
+#sessionPanel #closer:hover {
     background-color: #bab9b9;
     color: black;
 }
-#session #closer {
+#sessionPanel #closer {
     position: absolute;
-    right: 10px;
-    top: 10px;
-    width: 30px;
-    height: 30px;
+    right: 20px;
+    top: 34px;
+    width: 26px;
+    height: 26px;
     background-color: grey;
     color: #1d1d1d;
     cursor: pointer;
     transition: background-color 1s;
 }
-#session #closer i {
+#sessionPanel #closer span {
+    position: relative;
     color: black;
-    margin-left: 4px;
-    font-size: 28px;
+    margin-left: 6px;
+    top: 2px;
+    font-size: 20px;
+    font-weight: bold;
 }
-#session .sessionButton {
+#sessionPanel .sessionButton {
     width: 200px;
     padding: 6px 20px;
     transition: background-color 1s;
@@ -67,17 +89,26 @@ html, body {
     margin-top: 10px;
     text-align: center;
 }
-#session #download {
+#sessionPanel #download {
     background-color: #1f1f1f;
 }
-#session #download:hover {
+#sessionPanel #download:hover {
     background-color: black;
 
 }
-#session #delete {
+#sessionPanel #delete {
     background-color: #cc0101;
 }
-#session #delete:hover {
+#sessionPanel #delete:hover {
     background-color: red;
 
+}
+
+#sessionPanel {
+    position: fixed;
+    width: fit-content;
+    height: fit-content;
+    background-color: #343638;
+    border-radius: 6px;
+    padding: 20px;
 }

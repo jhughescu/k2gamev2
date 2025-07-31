@@ -12,6 +12,7 @@ const sessionSchema = new Schema({
     },
     dateID: Number,
     dateAccessed: Number,
+    playTime: Number,
     type: Number,
     teamRef: Number,
     state: String,

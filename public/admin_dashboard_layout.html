@@ -16,9 +16,9 @@
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel='stylesheet' href='../css/basics.css'>
-    <!-- <link rel='stylesheet' href='../css/admin.dashboard.css'> -->
+     <link rel='stylesheet' href='../css/admin.dashboard.css'>
     <link rel="stylesheet" href="../css/dashboard_layout.css" />
-    <link rel='stylesheet' href='../css/admin.dashboard.css'>
+    <link rel='stylesheet' href='../css/admin.dashboard.comparison.css'>
 </head>
 
 <body>
@@ -38,15 +38,18 @@
     <div class="contentArea">
         <section id="resultsPanel" style="display: none;">
             <div class="resultsHeader">
-                <button id='bDownload'>Download Data</button>
+                <button id='bDownload'>Download All</button>
+                <button id='bDownloadSel' disabled>Download Selected</button>
+                <button id='bDeleteSel' disabled>Delete Selected</button>
             </div>
             <div class="resultsList" id='sessions'>
                 <!-- search results will go here -->
             </div>
         </section>
         <aside id="detailPanel" style="display: none;">
-            <!-- <button id="closeDetail">Close</button> -->
-            <h2>Session Details</h2>
+
+            <h2>Session Comparison</h2>
+<!--            <button id="closeDetail">Close</button>-->
             <div id='session'>
                 <!-- session details will go here -->
             </div>

@@ -74,19 +74,26 @@ form {
 /* end custom scroll */
 
 /* Result items with aligned columns */
-.resultItem {
+.resultItem, .resultheader, .resultsubheader{
   display: flex;
   align-items: center;
   color: #fff;
   text-decoration: none;
-  padding: 5px 30px 5px 10px; /* keep extra right padding here too */
-  border-bottom: 1px solid #444;
+  padding: 0px 10px 0px 10px; /* keep extra right padding here too */
+/*  border-bottom: 1px solid #444;*/
   white-space: nowrap;
 }
+.resultheader, .resultsubheader{
+    padding: 0px 30px 0px 10px;
+}
+.resultsubheader{
+    font-size: 0.8em;
+}
 
-.resultItem:hover {
+.resultOver:hover {
   background-color: #444;
 }
+
 
 .resultID {
   display: inline-block;
@@ -115,9 +122,11 @@ form {
   flex: 1;
   padding: 30px;
   background-color: #2a2a2a;
+/*  background-color: #b92323;*/
   display: flex;
   flex-direction: column;
   overflow-y: auto;
+    position: relative;
 }
 #detailPanel h2 {
 /*    color: green;*/
@@ -132,7 +141,8 @@ form {
 
 #closeDetail {
   align-self: flex-end;
-  margin-bottom: 10px;
+    position: absolute;
+    top: 50px;
 }
 
 .deleteBtn {

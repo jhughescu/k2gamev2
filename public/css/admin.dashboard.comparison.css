@@ -1,0 +1,175 @@
+:root {
+    --bar-color: steelblue;
+    --bar-highlight: #3ea8ff;
+    --bar-gap: 1%;
+    --bar-border-radius: 4px;
+}
+
+.dashboard-grid {
+    display: grid;
+/*    outline: 1px solid rgba(255, 255, 255, 0.2);*/
+    grid-template-columns: repeat(2, 1fr);
+    /* two columns in first row */
+    grid-template-rows: auto auto;
+    /* two rows */
+    gap: 6px;
+    /* space between items */
+    max-width: 1200px;
+    margin: 0 auto;
+}
+@media (max-width: 1400px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+}
+.dashboard-grid > .grid-header {
+    grid-column: 1 / -1;      /* span all columns */
+    font-weight: bold;
+    font-size: 1.2em;
+    margin: 10px 0;
+    text-align: left;
+    padding: 6px;
+/*    border-bottom: 1px solid rgba(255,255,255,0.2);*/
+}
+
+.dashboard-grid > *:nth-child(odd) {
+/*  background-color: rgba(0, 0, 0, 0.25);*/
+}
+.dashboard-grid > *:nth-child(even) {
+/*  background-color: rgba(255, 0, 0, 0.25);*/
+}
+
+
+
+.chart-container {
+    width: 80px;
+    /* Change this or set to 100% to fill parent */
+    height: 300px;
+    /* Change this to control height */
+    margin: auto;
+    border: 1px solid #ccc;
+    padding: 10px;
+    box-sizing: border-box;
+}
+
+.chart {
+    display: flex;
+    align-items: flex-end;
+    height: 100%;
+    width: 100%;
+    gap: var(--bar-gap);
+}
+.chart-with-axis {
+    display: flex;
+    height: 100%;
+    width: 100%;
+}
+.y-axis {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; /* evenly space labels */
+    margin-right: 12px;
+    font-size: 0.7em;
+    text-align: right;
+    height: 100%; /* important to match the height of the chart */
+}
+
+.y-label {
+    /* optional styling */
+    height: 1px; /* doesn't matter, flexbox will distribute space */
+}
+
+.bar {
+    flex: 1;
+    background-color: var(--bar-color);
+    border-radius: var(--bar-border-radius) var(--bar-border-radius) 0 0;
+    height: 50%;
+    /* Default height, can be overridden inline */
+    transition: height 0.3s;
+}
+
+/* Optional: labels below bars (add in HTML if you want) */
+.bar-label {
+    text-align: center;
+    font-size: 0.8em;
+    margin-top: 4px;
+}
+
+.bar.highlight {
+    background-color: var(--bar-highlight);
+}
+
+.qSummary {
+    font-size: 0.9em;
+    display: flex;
+    /* horizontal layout */
+    align-items: flex-start;
+    /* top-align the pie chart and text */
+    gap: 20px;
+    /* space between pie and text */
+    margin-bottom: 3px;
+    /* space below each summary */
+    margin-top: 20px;
+}
+
+.options-list {
+    margin-top: 2px;
+    display: flex;
+    flex-direction: column;
+    /* stack lines vertically */
+    justify-content: flex-start;
+    /* start from top */
+}
+
+.options-list p {
+    margin: 4px;
+}
+
+.pie-chart {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    /*    margin: 40px auto;*/
+    margin: 0px;
+    flex-shrink: 0;
+}
+.qSummary {
+    font-size: 0.9em;
+    display: grid;
+    grid-template-columns: auto 1fr;      /* pie chart on the left, options on the right */
+    grid-template-rows: auto;             /* one row for question on top, then content below */
+    grid-template-areas:
+        "question question"
+        "pie options";
+    gap: 20px;
+    margin-top: 20px;
+    margin-bottom: 3px;
+}
+
+.question {
+    grid-area: question;
+    font-weight: bold;
+    margin-bottom: 4px;
+}
+
+.pie-chart {
+    grid-area: pie;
+}
+
+.options-list {
+    grid-area: options;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    margin-top: 2px;
+}
+
+
+.option-square {
+    margin: 0px;
+    padding: 0px 5px 0px 0px;
+    font-size: 1.8em;
+    line-height: 0px;
+    display: inline-block;
+    transform: scaleX(1.5);
+}

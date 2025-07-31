@@ -90,6 +90,7 @@ const newSession = async (cb) => {
                 profile1: {blank: true},
                 profile2: {blank: true}
             });
+            console.log(s)
             cb(developSession(s));
         } catch (err) {
             console.error(`error creating session`, err);
@@ -399,9 +400,26 @@ const getSessionsV1 = async (sOb, cb) => {
         cb(s);
     }
 };
-const deleteSessions = async (sOb, cb) => {
+const deleteSessions = async (dArr, cb) => {
+    if (!dArr || (typeof dArr === 'object' && Object.keys(dArr).length === 0)) {
+        console.warn('deleteSessions: No filter provided. Refusing to delete all sessions by default.');
+        if (cb) cb();
+        return;
+    }
+
+    try {
+        const result = await Session.deleteMany({ _id: { $in: dArr }});
+        console.log(`Deleted ${result.deletedCount} sessions.`);
+    } catch (error) {
+        console.error("Error deleting sessions:", error);
+    }
+
+    if (cb) cb();
+};
+
+const deleteSessionsV1 = async (sOb = {}, cb) => {
 //    console.log('deleting');
-    Session.deleteMany({})
+    Session.deleteMany(sOb)
     .then(result => {
         console.log(`Deleted ${result.deletedCount} sessions.`);
     })

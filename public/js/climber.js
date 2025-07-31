@@ -1085,6 +1085,7 @@ class Climber {
         this.updatePosition(cs);
         this.showPie(false);
         this.storeSummary();
+        console.log(this);
     }
     zero(cs) {
 //        console.log('zero');

@@ -1,0 +1,24 @@
+<div class='dashboard-grid'>
+    <div class="grid-header">Timing</div>
+    <div>
+        total time:
+        {{> admin_dashboard_barchart barChartTotalTime}}
+    </div>
+    <div>
+        play time:
+        {{> admin_dashboard_barchart barChartPlayTime}}
+    </div>
+
+    <div class="grid-header">Answers</div>
+    {{#each pieStrings}}
+        <div class='qSummary'>
+            <div class='question'>{{question}}</div>
+            <div class='pie-chart' id='pie-chart-{{@key}}' style='background: conic-gradient({{grad}})'></div>
+            <div class='options-list'>
+                {{#each options}}
+                    <p><span class='option-square' style='color: {{colour}};'>&#9632;</span> {{str}} ({{count}})</p>
+                {{/each}}
+            </div>
+        </div>
+    {{/each}}
+</div>

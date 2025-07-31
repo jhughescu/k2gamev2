@@ -145,11 +145,13 @@ class ToyClimbers {
                 this.theRouteMap = window.clone(Climber.routeMap);
 //                console.log(`map length: ${Object.values(this.theRouteMap).length}`);
                 this.toysUpdate(true);
+                /*
                 return;
                 setInterval(() => {
                     console.log(`we have the map, run the update, map length: ${Object.values(this.theRouteMap).length}`);
                     this.toysUpdate();
                 }, 1000);
+                */
             }
         } else {
             setTimeout(() => {
@@ -190,6 +192,7 @@ class ToyClimbers {
         if (!$.isEmptyObject(cto)) {
             this.currentTimeObject = cto;
         }
+        /*
         return;
         if (this.position + step < 100) {
             this.position += step;
@@ -197,6 +200,7 @@ class ToyClimbers {
             this.position = 100;
         }
         return this.position;
+        */
     }
     toysUpdate(force) {
         // this is the interval update belonging to the ToyClimbers class - these don't need to be updated as frequently as the main game interval

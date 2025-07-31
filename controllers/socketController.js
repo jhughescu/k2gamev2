@@ -215,8 +215,8 @@ function initSocket(server) {
 //                    console.log('this has been temporarily removed, see other surrounding methods in socketController for approach to take');
                     sessionController.deleteSession(sOb, cb);
                 });
-                socket.on('deleteSessions', (sOb, cb) => {
-                    sessionController.deleteSessions(sOb, cb);
+                socket.on('deleteSessions', (dOb, cb) => {
+                    sessionController.deleteSessions(dOb, cb);
                 });
                 socket.on('createQR', (cb) => {
                     console.log('create a QR');

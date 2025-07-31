@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pure CSS Pie Chart</title>
+  <style>
+    .pie-chart {
+      width: 200px;
+      height: 200px;
+      border-radius: 50%;
+      background: conic-gradient(
+        #4CAF50 25%,        /* 40% green */
+        #FF9800 0 75%,     /* next 30% orange */
+        #2196F3 0          /* remaining 30% blue */
+      );
+      margin: 40px auto;
+/*      box-shadow: 0 0 10px rgba(0,0,0,0.2);*/
+    }
+
+    .legend {
+      width: 200px;
+      margin: 0 auto;
+      font-family: sans-serif;
+    }
+
+    .legend div {
+      display: flex;
+      align-items: center;
+      margin: 5px 0;
+    }
+
+    .legend span {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      margin-right: 8px;
+      border-radius: 3px;
+    }
+  </style>
+</head>
+<body>
+  <div class="pie-chart"></div>
+  <div class="legend">
+    <div><span style="background:#4CAF50"></span>Green (40%)</div>
+    <div><span style="background:#FF9800"></span>Orange (30%)</div>
+    <div><span style="background:#2196F3"></span>Blue (30%)</div>
+  </div>
+</body>
+</html>

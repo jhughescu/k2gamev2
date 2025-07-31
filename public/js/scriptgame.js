@@ -47,7 +47,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
     socket.on('requestGame', (id) => {
-        console.log(`req game`, session.uniqueID.toString() === id.toString());
+//        console.log(`req game`, session.uniqueID.toString() === id.toString());
         if (session) {
             if (session.uniqueID.toString() === id.toString()) {
                 socket.emit('gameFound', gameData);
@@ -110,19 +110,17 @@ document.addEventListener('DOMContentLoaded', function () {
         cheating = c;
         sessionStorage.setItem('cheating', c);
     };
-    const getCheatState = () => {
-        //        return false;
+    const getCheatStateGONE = () => {
         let cs = window.isLocal() || window.getQuery('cheating') ? true : false;
         const sc = sessionStorage.getItem('cheating');
         if (sc !== null) {
             cs = sc;
         }
         cs = window.procVal(cs);
-//        console.log(`request cheat state, window.isLocal? ${window.isLocal()}, query cheating? ${window.getQuery('cheating')}, stored: ${sc} returning ${cs}`);
         return cs;
     };
 
-    let cheating = getCheatState();
+    let cheating = window.getCheatState();
     let autoPlay = false;
     //    const cheating = false;
     const cheatTimeout = 2500;
@@ -197,6 +195,7 @@ document.addEventListener('DOMContentLoaded', function () {
     let toyClimbers = null;
     let currentHash = null;
     let quiz = null;
+    let playTime = {time: null,  zero: null};
 
     // bg gradient change
     const gradientStops = [
@@ -1185,7 +1184,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 eventStack = new EventStack(initO);
                 summariseSession();
                 if (!versionControl.isCurrentVersion(session.uniqueID)) {
-                    //                    console.log(window.location);
                     if (window.location.host.includes('localhost')) {
                         versionControl.updateVersion(session.uniqueID);
                         console.warn('version control limited in dev; version number will update automatically');
@@ -1199,8 +1197,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 }
                 initRender();
-//                console.log('goQuiz will be called', session);
-//                storm = new Storm({ ender });
                 goQuiz();
                 updateView();
                 if (session.state === 'new') {
@@ -1219,7 +1215,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
             } else {
-                console.log('waiting for data...')
+//                console.log('waiting for data...');
             }
         }, 100);
     };
@@ -1483,7 +1479,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const resetSession = () => {
         //        gameTime.now = startTime;
         //        resetUpdates();
-        cheating = getCheatState();
+        cheating = window.getCheatState();
         gTimer.resetTimer();
         theState.storeTime(gTimer.elapsedTime);
         eventStack.initSessionEvents(0);
@@ -1561,11 +1557,12 @@ document.addEventListener('DOMContentLoaded', function () {
             if (gTimer.hasStarted || force && !checkCompletion().allFinished || gTimer.elapsedTime > 0) {
                 //            if (gTimer.isRunning) {
 //                resumeStorm();
-//                console.log(`gTimer hasStarted, we can go (elapsed: ${gTimer.elapsedTime})`)
+//                console.log(`gTimer hasStarted, we can go (elapsed: ${gTimer.elapsedTime})`);
                 gTimer.resumeTimer();
                 storeLocal('time', gTimer.elapsedTime);
                 theState.storeTime(gTimer.elapsedTime);
                 showtime();
+//                playTimeStart();
                 //            }
             } else {
 //                console.log(`can't do it...`);
@@ -1968,7 +1965,33 @@ document.addEventListener('DOMContentLoaded', function () {
     const runTime = endTime - startTime;
     const gameHours = gTimer.getHoursFromMilli(runTime);
     const gameMinutes = gTimer.getMinutesFromMilli(runTime);
-    //    console.log(`startTime: ${window.formatTime(startTime)}, endTime: ${window.formatTime(endTime)}, runTime: ${gameHours} hours (${gameMinutes} minutes)`);
+    const playTimeStart = () => {
+        // set playTime when the map is rendered
+        const d = new Date();
+        playTime.zero = Number(d.getTime());
+        playTime.time = session.playTime || 0;
+//        console.log(`playTimeStart`, playTime);
+//        console.log(session);
+    };
+    window.getPlayTime = () => {
+        const n = new Date().getTime();
+        const pt = n - playTime.zero;
+        const dpt = window.roundNumber(pt / 1000, 2);
+        const spt = window.roundNumber(playTime.time / 1000, 2);
+        const tpt = window.roundNumber((pt + playTime.time) / 1000, 2);
+//        console.log(`session playTime is now ${dpt}, stored time: ${spt}, total: ${tpt}, ${window.formatTime(pt + playTime.time)}`);
+        console.log(`total playTime ${window.formatTime(pt + playTime.time)}`);
+//        console.log(`stored time: ${spt}`);
+        return pt;
+    };
+    const storePlayTimeOnExit = () => {
+        // can only run in map mode
+//        console.log(`try to run storePlayTimeOnExit, cp: ${getCurrentPage().page}, map? ${getCurrentPage().page === 'map'}`);
+        if (getCurrentPage().page === 'map') {
+//            console.log('can store');
+            updateSession('playTime', playTime.time + getPlayTime());
+        }
+    };
     addTimesToData();
     let sessionMax = null; /* total play time before game death in minutes. Set via gameData on startup */
     const setSessionMax = (n) => {
@@ -2612,7 +2635,13 @@ document.addEventListener('DOMContentLoaded', function () {
                         };
                         //                        console.log('uo', uo);
                         onSubmitResouces(p, uo);
+
                     });
+                    if (cheating) {
+                        setTimeout(() => {
+                            $('.back-btn').click();
+                        }, 3000);
+                    }
                 } else {
                     const prof = window.clone(session)[`profile${n}`];
 //                    console.log(session);
@@ -2623,6 +2652,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         showAlert: false
                     });
                 }
+
             })
         });
     };
@@ -2730,7 +2760,7 @@ document.addEventListener('DOMContentLoaded', function () {
     };
     //  # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # eventTrigger
     const eventTrigger = (ev) => {
-        console.log(`eventTrigger`, ev.time, ev.event);
+//        console.log(`eventTrigger`, ev.time, ev.event);
 //        console.log(session.events);
 //        console.log(`should trigger: ${session.events[window.clone(ev).n] === 0}`);
         // EventStack calls this method when a new event is to be triggered
@@ -2746,7 +2776,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         const C = Climber.getClimbers();
         if (!ev.active) {
-            console.log(`inactive event to auto-complete`);
+//            console.log(`inactive event to auto-complete`);
             completeEvent({auto: true});
             return;
         }
@@ -2755,7 +2785,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 // Profile event, only one climber
                 if (C[ev.profiles[0]].finished) {
                     // profile has finished, do not run this event
-                    console.log(`profile finish, event will not occur (autocomplete)`);
+//                    console.log(`profile finish, event will not occur (autocomplete)`);
                     completeEvent({auto: true});
                     return;
                 }
@@ -2775,7 +2805,7 @@ document.addEventListener('DOMContentLoaded', function () {
             } else {
                 showModalPhoto(ev);
             }
-            console.log(`photo event (autocomplete)`);
+//            console.log(`photo event (autocomplete)`);
             completeEvent({auto: true});
             return;
         }
@@ -2787,7 +2817,7 @@ document.addEventListener('DOMContentLoaded', function () {
 //                console.log(`this is the event method trigger`);
                 eval(ev.method)({}, ev);
                 // force autocomplete if the ev.method does not do this
-                console.log(`non-modal event (autocomplete)`);
+//                console.log(`non-modal event (autocomplete)`);
                 completeEvent({auto: true});
             }
         }
@@ -2868,6 +2898,7 @@ document.addEventListener('DOMContentLoaded', function () {
     };
     const endgame = (good) => {
         updateSession('state', `completed:${good ? 'good' : 'bad'}`);
+        storePlayTimeOnExit();
         renderLeaderboardClimber();
     };
     const allClimbersFinished = () => {
@@ -3241,6 +3272,7 @@ document.addEventListener('DOMContentLoaded', function () {
     };
     //  # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # renderMap
     const renderMap = () => {
+//        console.log(`RENDER MAP`);
         if (window.clone(gTimer).elapsedTime === 0) {
             renderCinema();
         }
@@ -3259,6 +3291,7 @@ document.addEventListener('DOMContentLoaded', function () {
 //            console.log('renderMap now');
             renderTemplate('theatre', 'map', rOb, () => {
 //                console.log(rOb);
+                playTimeStart();
                 updateAddress('map');
                 $('body').addClass('body-map');
                 renderTemplateWithStyle('timerpanel', 'dev.timer.panel', gameData, () => {
@@ -3311,8 +3344,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     };
     const renderLeaderboardClimber = () => {
-        console.log(`renderLeaderboardClimber`);
-//        const C = window.clone(Climber.getClimbers());
+//        console.log(`renderLeaderboardClimber`);
         const C = Climber.getClimbers();
         window.sortBy(C, 'currentTime');
         const P = ['1st', '2nd', '3rd'];
@@ -3322,10 +3354,7 @@ document.addEventListener('DOMContentLoaded', function () {
         C.forEach((co, i) => {
             // work on a duplicate of the Climber
             const c = co.clone();
-//            const et = c.finishTime || c.currentTime;
             const et = c.calculateEndTime();
-//            console.log('get end time');
-//            console.log(et);
             c.lbFirst = i === 0;
             c.lbPlace = P[i];
             c.lbTime = window.formatTime(et * 1000);
@@ -3346,16 +3375,21 @@ document.addEventListener('DOMContentLoaded', function () {
             });
 
         });
-        console.log(rOb.totalTime);
-//        rOb.totalTimeFormat = rOb.totalTime.map((n, i) => i === 0 ? n : (n < 10 ? `0${n}` : n)).join(':');
+//        console.log(rOb.totalTime);
         rOb.totalTimeFormat = window.formatSplitTime(rOb.totalTime);
         socket.emit('finalReport', {sessionID: session.uniqueID, climbers: C});
         rOb.profiles = C;
         rOb.sessionID = session.uniqueID;
-        console.log(rOb);
+//        console.log(rOb);
         renderNone(() => {
             renderTemplate('theatre', 'leaderboard.climber', rOb, () => {
                 updateAddress('leaderboardclimber');
+                if (cheating) {
+                    setTimeout(() => {
+                        console.log('go again');
+                        startNew();
+                    }, 2000);
+                }
             });
         });
     };
@@ -3421,10 +3455,12 @@ document.addEventListener('DOMContentLoaded', function () {
                         setTimeout(() => {
                             // ADD CHEAT CONDITION FOR QUIZ QUESTIONS
                             return;
+                            /*
                             $('.bQuizAnswer')[Math.floor($('.bQuizAnswer').length * Math.random())].click();
                             setTimeout(() => {
                                 $('.k2-modal-btn').click();
                             }, 500);
+                            */
                         }, 1000);
                     }
                 })
@@ -3576,7 +3612,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const getToolkitInfo = () => {
         const ti = {
             autoResource: autoResource,
-            cheating: getCheatState()
+            cheating: window.getCheatState()
         };
         return ti;
     };
@@ -3594,12 +3630,23 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const renderHome = () => {
         renderNone(() => {
-
             renderTemplate('theatre', 'home', session, () => {
                 setupHome();
                 updateAddress('home');
-//                console.log('setup tools');
-//                window.tools.setup(session, gameData);
+                if (cheating) {
+                    setTimeout(() => {
+                        const p = Object.entries(session)
+                            .filter(([key, value]) => key.includes('profile'))
+                            .map(([key, value]) => value.oxygen);
+                        if (Math.max(...p) === 0) {
+                            // it is PROBABLE that no resources have been assigned.
+                            $('#btn-resources').click();
+                        } else {
+                            $('#btn-start').click();
+                        }
+
+                    }, 2000);
+                }
             })
         });
     };
@@ -3741,6 +3788,7 @@ document.addEventListener('DOMContentLoaded', function () {
         snapshot();
         if (theState !== null) {
             theState.storeTime(gTimer.elapsedTime);
+            storePlayTimeOnExit();
         }
     };
     // publically exposed methods - keep
@@ -3942,7 +3990,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 renderHome();
         }
         setupBasics();
-        console.log('setup tools');
+//        console.log('setup tools');
         window.tools.setup(session, gameData);
         window.tools.showSessionID();
     };

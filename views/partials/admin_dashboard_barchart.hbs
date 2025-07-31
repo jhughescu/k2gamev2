@@ -1,0 +1,20 @@
+<div class="chart-container">
+    <div class='chart-with-axis'>
+        <div class="y-axis">
+<!--
+            <div class="y-label y-label-100">100%</div>
+            <div class="y-label y-label-75">75%</div>
+            <div class="y-label y-label-50">50%</div>
+            <div class="y-label y-label-25">25%</div>
+            <div class="y-label y-label-0"></div>
+-->
+            {{#each range}}<div class="y-label y-label-0">{{this}}</div>{{/each}}
+            <div class="y-label y-label-0"></div> <!-- keep this line! -->
+        </div>
+        <div class="chart">
+            {{#each sessions}}
+                <div class="bar chartbar_{{name}}" id='' style="height: {{metric}}%;"></div>
+            {{/each}}
+        </div>
+    </div>
+</div>

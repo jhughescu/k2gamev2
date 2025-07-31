@@ -56,6 +56,15 @@ document.addEventListener('DOMContentLoaded', function () {
     const isLocal = () => {
         return window.location.host.includes('localhost');
     };
+    const getCheatState = () => {
+        let cs = isLocal() || window.getQuery('cheating') ? true : false;
+        const sc = sessionStorage.getItem('cheating');
+        if (sc !== null) {
+            cs = sc;
+        }
+        cs = window.procVal(cs);
+        return cs;
+    };
     const checkDevMode = async () => {
         let dm = false;
 //        console.log(`checkDevMode`);
@@ -175,6 +184,17 @@ document.addEventListener('DOMContentLoaded', function () {
         const str = `${level === 'hour' && hours > 0 ? hoursStr + ':' : ''}${minutesStr}:${secondsStr}`;
         return str;
     }
+    const createSplitTime = (t) => {
+//        console.log(`createSplitTime`, t);
+        if (typeof(t) !== 'string') {
+            t = String(t);
+        }
+        let splitTime = t.split(':').map(e => e = parseFloat(e));
+        if (splitTime.length === 2) {
+            splitTime.unshift(0);
+        }
+        return splitTime;
+    };
     const formatSplitTime = (a) => {
         // convert an array [1,7,23] to string 1:07:23
         return a.map((n, i) => i === 0 ? n : (n < 10 ? `0${n}` : n)).join(':');
@@ -1223,11 +1243,13 @@ document.addEventListener('DOMContentLoaded', function () {
     getPartials();
     window.procVal = procVal;
     window.isLocal = isLocal;
+    window.getCheatState = getCheatState;
     window.justNumber = justNumber;
     window.roundNumber = roundNumber;
     window.getNumberText = getNumberText;
     window.getTimestamp = getTimestamp;
     window.formatTime = formatTime;
+    window.createSplitTime = createSplitTime;
     window.formatSplitTime = formatSplitTime;
     window.roundAll = roundAll;
     window.emitWithPromise = emitWithPromise;

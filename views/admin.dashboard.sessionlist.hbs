@@ -1,10 +1,16 @@
-{{sCount}} session{{#if sPlural}}s{{/if}} found
-{{#each sessions}}
-
-
-<p class='sClick resultItem' id='s_{{_id}}' style='display: none;'>
-    <span class="resultID">{{uniqueID}}</span>
-    <span class="resultName">{{name}}</span>
-    <span class="status {{#if complete}}complete{{else}}incomplete{{/if}}">{{#if complete}}✔{{else}}✘{{/if}}</span>
+<p class='resultheader'>{{sCount}} session{{#if sPlural}}s{{/if}} found</p>
+<p class='resultsubheader'>Select to view detail or check multiple to compare</p>
+<p class="resultItem">
+    <span class="resultID"></span>
+    <span class="resultName"></span>
+    <span class="status"></span>
+    <input id="checkAll" type="checkbox">
 </p>
+{{#each sessions}}
+    <p class='sClick resultItem resultOver' id='s_{{_id}}' style='display: none;'>
+        <span class="sClicker resultID">{{uniqueID}}</span>
+        <span class="sClicker resultName">{{name}}</span>
+        <span class="status {{#if complete}}complete{{else}}incomplete{{/if}}">{{#if complete}}✔{{else}}✘{{/if}}</span>
+        <input type='checkbox' class='sessionCheck'>
+    </p>
 {{/each}}
