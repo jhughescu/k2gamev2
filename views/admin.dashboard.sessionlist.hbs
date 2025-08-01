@@ -7,7 +7,7 @@
     <input id="checkAll" type="checkbox">
 </p>
 {{#each sessions}}
-    <p class='sClick resultItem resultOver' id='s_{{_id}}' style='display: none;'>
+    <p class='sClick resultItem resultOver ind ind_{{name}}' id='s_{{_id}}' style='display: none;'>
         <span class="sClicker resultID">{{uniqueID}}</span>
         <span class="sClicker resultName">{{name}}</span>
         <span class="status {{#if complete}}complete{{else}}incomplete{{/if}}">{{#if complete}}✔{{else}}✘{{/if}}</span>

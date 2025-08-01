@@ -1,6 +1,7 @@
 :root {
     --bar-color: steelblue;
     --bar-highlight: #3ea8ff;
+    --bar-select: #ffe72c;
     --bar-gap: 1%;
     --bar-border-radius: 4px;
 }
@@ -97,6 +98,9 @@
 
 .bar.highlight {
     background-color: var(--bar-highlight);
+}
+.bar.select {
+    background-color: var(--bar-select);
 }
 
 .qSummary {

@@ -111,4 +111,5 @@ html, body {
     background-color: #343638;
     border-radius: 6px;
     padding: 20px;
+    box-shadow: -4px 4px 4px  rgba(0, 0, 0, 0.5);
 }

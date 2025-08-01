@@ -195,7 +195,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         });
 
-        console.log(o)
+//        console.log(o);
         return o;
     };
     const prepSessionForDownload = (s) => {
@@ -280,15 +280,25 @@ document.addEventListener('DOMContentLoaded', function () {
         display.show();
         S.map(s => delete s.climbers);
         questions.forEach((q, i) => rOb.quizSummary[`q${i}`] = new Array(q.options.length).fill(0));
-        S.forEach(s => {
+//        console.log(JSON.stringify(rOb.quizSummary))
+//        console.log(rOb.quizSummary)
+        S.forEach((s, i) => {
+//            console.log(i, s.answersIndex[0]);
             s.answersIndex.forEach((a, i) => {
                 a.forEach((r, j) => {
-                    rOb.quizSummary[`q${i}`][r] += 1;
+//                    console.log(rOb.quizSummary[`q${i}`].length, r);
+                    if (r < rOb.quizSummary[`q${i}`].length) {
+                        rOb.quizSummary[`q${i}`][r] += 1;
+                    } else {
+                        console.warn('rougue answer', s.answersIndex, s);
+                    }
                 });
             });
         });
         Object.entries(rOb.quizSummary).forEach((s, i) => {
             const total = s[1].reduce((a, b) => a + b, 0);
+//            console.log(i, s)
+//            console.log(total)
             const colours = ['#4CAF50', '#FF9800', '#2196F3', '#e200ff', '#9af321'];
             let cum = 0;
             rOb.quizPerc[s[0]] = s[1].map(value => (value / total) * 100);
@@ -337,7 +347,7 @@ document.addEventListener('DOMContentLoaded', function () {
             window.renderTemplate(displayID, 'admin.dashboard.comparison', rOb, () => {
 //                console.log('render complete');
                 $('.chart-container').css({
-                    width: '350px',
+                    width: '450px',
                     height: '200px'
                 });
                 const sBar = $('.bar');
@@ -357,8 +367,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 sBar.on('mouseout', function () {
                     unhighlightSession();
                 });
-                pies.each((i, p) => {
-                    //
+                sBar.off('click').on('click', function () {
+//                    console.log($(this).data().session._id);
+                    showSession($(this).data('session'));
                 });
             });
         });
@@ -390,14 +401,16 @@ document.addEventListener('DOMContentLoaded', function () {
         if ($(`#${displayID}`).length === 0) {
             zone.append(`<div id='${displayID}'></div>`);
         }
-//        const displayID = 'session';
         const display = $(`#${displayID}`);
+        display.draggable({
+            containment: 'parent', // keep inside parent; remove if you want free dragging
+            scroll: false,
+            cursor: "move"
+        });
         zone.show();
         display.hide().fadeIn();
         const sesh = window.clone(prepSessionForDisplay(s));
         const output = prepSessionForDownload(sesh);
-        console.log(s);
-        console.log(sesh);
         const miniSesh = reduceSession(window.clone(sesh));
         window.renderTemplate(displayID, 'admin.dashboard.session', miniSesh, () => {
             display.find('#download').off('click').on('click', () => {
@@ -410,6 +423,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 closeSession();
             });
         });
+        $(`.ind_${s.name}`).addClass('select');
     };
     const showSessionv1 = (s) => {
         const zone = $('#detailPanel');
@@ -439,6 +453,7 @@ document.addEventListener('DOMContentLoaded', function () {
         display.hide();
         display.html('');
         $('.sClick').removeClass('clicked');
+        $('.ind').removeClass('select');
     };
     const saveSessionSummaries = () => {
         let output = [];
@@ -503,12 +518,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const findOnlyComplete = () => {
         const oc = $onlyComplete.is(':checked');
-        console.log(oc);
+//        console.log(oc);
         return oc;
     };
     const getFilterComplete = () => {
         const f = findOnlyComplete() ? {state: { $ne: 'incomplete' }} : {};
-        console.log(f);
+//        console.log(f);
         return f;
     };
 
@@ -553,9 +568,13 @@ document.addEventListener('DOMContentLoaded', function () {
         // bar charts
         $('.bar').removeClass('highlight');
         $(`.chartbar_${s.name}`).addClass('highlight');
+        $(`.resultItem`).removeClass('hover');
+        $(`#s_${s._id}`).addClass('hover');
+//        console.log($(`#s_${s._id}`));
     };
     const unhighlightSession = () => {
         $('.bar').removeClass('highlight');
+        $(`.resultItem`).removeClass('hover');
     };
     const sessionRenderComplete = () => {
         // called when session list has finished rendering to DOM
@@ -648,7 +667,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     const getAllSessions = () => {
         const filter = getFilterComplete();
-        console.log(filter)
+//        console.log(filter)
         socket.emit('getSessions', filter, (err, r) => {
             if (err === null) {
                 sessions = r;
@@ -668,7 +687,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const filter = getFilterComplete();
         const dateRange = {dateID: { $gte: f, $lte: t }};
         Object.assign(filter, dateRange);
-        console.log(`getDateRange`, filter);
+//        console.log(`getDateRange`, filter);
         socket.emit('getSessions', filter, (err, r) => {
             if (err === null) {
                 sessions = r;
@@ -712,7 +731,7 @@ document.addEventListener('DOMContentLoaded', function () {
         $dateFrom = $('#dateFrom');
         $dateTo = $('#dateTo');
         $onlyComplete = $('#onlyComplete');
-        console.log($onlyComplete)
+//        console.log($onlyComplete)
         $bSubmit = $('#bSubmit');
         $bDownload = $('#bDownload');
         $bDownloadSel = $('#bDownloadSel');

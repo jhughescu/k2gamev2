@@ -1,6 +1,6 @@
 {
-  "timestamp": "2025-07-31T12:36:18+01:00",
-  "commitHash": "ae664cd81128b3a6e21bd6281e223cd58fccc6f2",
-  "commitMessage": "Admin dashboard improved.",
+  "timestamp": "2025-08-01T10:24:21+01:00",
+  "commitHash": "d85d8e33a46ee74a453dcd685e290ae1aa6c488f",
+  "commitMessage": "Improvements and bug fixes for the admin dashboard. Full autoplay & session restart in cheat mode.",
   "branch": "master"
 }
