@@ -396,6 +396,7 @@ document.addEventListener('DOMContentLoaded', function () {
         return s;
     };
     const showSession = (s) => {
+        closeSession();
         const zone = $('#detailPanel');
         const displayID = 'sessionPanel';
         if ($(`#${displayID}`).length === 0) {
