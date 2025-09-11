@@ -102,12 +102,21 @@ document.addEventListener('DOMContentLoaded', function () {
         $(selector).css('z-index', maxZ + 1);
     };
 
+    const hideSessionID = () => {
+        const panelName = 'idpanel';
+        $(`#${panelName}`).remove();
+    };
     const showSessionID = () => {
         const panelName = 'idpanel';
+        const idString = `ID: ${session.uniqueID}`;
+//        console.log(idString);
         if ($(`#${panelName}`).length === 0) {
-            $('body').append(`<div class='fullscreen debugPanel' id='idpanel' style='display: none;'>ID: ${session.uniqueID}<i class="fa fa-copy"></i></div>`);
-            $(`#${panelName}`).delay(2000).fadeIn();
+            $('body').append(`<div class='fullscreen debugPanel' id='idpanel' style='display: none;'>${idString}<i class="fa fa-copy"></i><i class="fa fa-close"></i></div>`);
+            $(`#${panelName}`).delay(1000).fadeIn();
             bringToFront(`#${panelName}`);
+            $('.fa-close').off('click').on('click', () => {
+                hideSessionID();
+            });
             $('.fa-copy').off('click').on('click', () => {
                 navigator.clipboard.writeText(session.uniqueID)
                     .then(() => {
@@ -127,13 +136,23 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
     };
+    const waitForSession = () => {
+        // used in dev, shows session ID when available
+        if (session) {
+            showSessionID();
+        } else {
+            setTimeout(waitForSession, 100);
+        }
+    };
     const init = () => {
         window.tools = {
             setup: setup,
             toolkitClosed: toolkitClosed,
             toolkitOpen: toolkitOpen,
-            showSessionID: showSessionID
+            showSessionID: showSessionID,
+            hideSessionID: hideSessionID,
         };
+//        waitForSession();
     };
     const onToolkitRequest = (id) => {
 //        console.log(id);

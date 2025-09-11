@@ -5,7 +5,9 @@ const fs = require('fs');
 const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
 const handlebars = require('handlebars');
-const { app } = require('./../app'); // Import app from app.js
+const {
+    app
+} = require('./../app'); // Import app from app.js
 //const adminController = require('./../controllers/adminController');
 //const sessionController = require('./../controllers/sessionController');
 const templateController = require('./../controllers/templateController');
@@ -14,17 +16,22 @@ const downloadController = require('./../controllers/downloadController');
 const basePath = path.join(__dirname, '..', 'public');
 const routeAccessTimes = {};
 const connectedUsers = new Map();
+const DEBUG_PIN = process.env.DEBUG_PIN || '2222';
 
 
 app.use(express.static(basePath));
 // Use body-parser middleware to parse request bodies
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.urlencoded({
+    extended: true
+}));
 app.use((req, res, next) => {
     const currentTime = new Date().toISOString();
     routeAccessTimes[req.path] = currentTime;
     next();
 });
-app.use(bodyParser.json({ limit: '0.5mb' }));
+app.use(bodyParser.json({
+    limit: '0.5mb'
+}));
 app.use(cookieParser());
 
 
@@ -36,9 +43,11 @@ app.post('/getTemplate', (req, res) => {
 });
 app.get('/partials', async (req, res) => {
     const partials = await templateController.getPartials();
-//    console.log(`server tries to get those partials`);
-//    console.log(partials);
-    res.json({ partials });
+    //    console.log(`server tries to get those partials`);
+    //    console.log(partials);
+    res.json({
+        partials
+    });
 });
 
 app.get(`/ptest`, (req, res) => {
@@ -52,7 +61,7 @@ app.get(`/game`, (req, res) => {
 });
 app.get(`/`, (req, res) => {
     res.sendFile(path.join(basePath, 'flat', 'home.html'));
-//    res.sendFile('../public/flat/index.html');
+    //    res.sendFile('../public/flat/index.html');
 });
 app.get('/testuser', (req, res) => {
     const username = req.query.user;
@@ -69,7 +78,7 @@ app.get('/testuser', (req, res) => {
 
     console.log(`User ${username} connected from ${ip}!!`);
     res.sendFile(path.join(basePath, 'game.html'));
-//    res.send(`Hello ${username}, you are now registered.`);
+    //    res.send(`Hello ${username}, you are now registered.`);
 });
 app.get('/data/routemap.json', (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'data', 'routemap.json'));
@@ -94,6 +103,26 @@ app.get('/how4', (rq, res) => {
 });
 
 app.post('/download-csv', downloadController.downloadCSV);
+app.post('/api/check-debug-pin', (req, res) => {
+    const {
+        pin
+    } = req.body;
+    if (!pin) return res.status(400).json({
+        ok: false,
+        error: "No PIN"
+    });
+
+    if (pin === DEBUG_PIN) {
+        return res.json({
+            ok: true
+        });
+    } else {
+        return res.status(401).json({
+            ok: false,
+            error: "Invalid PIN"
+        });
+    }
+});
 
 app.get('/dev/pbuilder', (req, res) => {
     res.sendFile(path.join(basePath, 'dev_profile_builder.html'));
@@ -103,10 +132,10 @@ app.get('/dev/admin', (req, res) => {
 });
 app.get('/admin/dashboard1', (req, res) => {
     res.sendFile(path.join(basePath, 'admin_dashboard.html'));
-//    res.sendFile(path.join(basePath, 'admin_dashboard_layout.html'));
+    //    res.sendFile(path.join(basePath, 'admin_dashboard_layout.html'));
 });
 app.get('/admin/dashboard', (req, res) => {
-//    res.sendFile(path.join(basePath, 'admin_dashboard.html'));
+    //    res.sendFile(path.join(basePath, 'admin_dashboard.html'));
     res.sendFile(path.join(basePath, 'admin_dashboard_layout.html'));
 });
 app.get('/devtools', (req, res) => {

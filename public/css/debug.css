@@ -5,6 +5,9 @@
     color: green;
 }
 
+html {
+  transition: background-color 0.3s ease;
+}
 
 
 #temp {
@@ -75,7 +78,7 @@
     position: fixed;
     top: 22px;
     left: 30px;
-    width: 200px;
+    width: 240px;
     height: 30px;
     border-radius: 6px;
     background-color: white;
@@ -86,6 +89,16 @@
     padding: 8px 18px;
     color: #101822;
 }
+@media (max-width: 800px) {
+    #idpanel {
+        top: 2px;
+        left: 4px;
+        width: 290px;
+        height: 43px;
+        background-color: rgba(211, 211, 211, 0.9);
+    }
+}
+
 #idpanel p {
     font-weight: normal;
     margin-top: 8px;

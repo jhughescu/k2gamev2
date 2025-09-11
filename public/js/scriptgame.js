@@ -3992,7 +3992,7 @@ document.addEventListener('DOMContentLoaded', function () {
         setupBasics();
 //        console.log('setup tools');
         window.tools.setup(session, gameData);
-        window.tools.showSessionID();
+//        window.tools.showSessionID();
     };
     const init = () => {
         gameflow('script init');

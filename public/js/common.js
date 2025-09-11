@@ -54,6 +54,7 @@ document.addEventListener('DOMContentLoaded', function () {
         // observer.disconnect();
     };
     const isLocal = () => {
+//        return window.location.host.includes('localhost') || window.location.host.includes('ngrok-free.app');
         return window.location.host.includes('localhost');
     };
     const getCheatState = () => {
@@ -1238,7 +1239,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
 
-    // NOTE: parials are currently set up each time the system admin connects, so the method call below is safe for now.
+    // NOTE: partials are currently set up each time the system admin connects, so the method call below is safe for now.
     // In case of problems getting partials, check the order of system architecture.
     getPartials();
     window.procVal = procVal;
