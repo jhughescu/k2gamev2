@@ -53,8 +53,9 @@ const processData = async () => {
     }
 };
 
-const newSession = async (cb) => {
+const newSession = async (ob, cb) => {
 //    console.log(`newSession; let's call getSessions to see how many sessions there are`);
+//    console.log(ob);
     getSessions({}, async () => {
         const sessions = await Session.find();
         const data = await processData();
@@ -66,8 +67,10 @@ const newSession = async (cb) => {
         const sN = tools.getTimeNumber().toString();
         const sID = `k2session_${tools.findSmallestMissingNumber(list)}`;
         const at = persistentData.activeTeams;
-        const cc = Math.floor(at.length * Math.random());
+        let cc = parseInt(ob.forceTeam) || Math.floor(at.length * Math.random());
+//        cc = 1;
 //        console.log(`OK, let's create a session. There are ${sessions.length} sessions already in the system, the new ID will be ${sID}`);
+        console.log(`new session with cc ${cc}`);
         let st;
         do {
             st = Math.floor(at.length * Math.random());

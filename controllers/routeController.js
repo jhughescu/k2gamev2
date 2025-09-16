@@ -101,6 +101,12 @@ app.get('/how3', (rq, res) => {
 app.get('/how4', (rq, res) => {
     res.sendFile(path.join(basePath, 'flat', 'how-to-play-d.html'));
 });
+app.get('/how5', (rq, res) => {
+    res.sendFile(path.join(basePath, 'flat', 'how-to-play-e.html'));
+});
+app.get('/how6', (rq, res) => {
+    res.sendFile(path.join(basePath, 'flat', 'how-to-play-f.html'));
+});
 
 app.post('/download-csv', downloadController.downloadCSV);
 app.post('/api/check-debug-pin', (req, res) => {
@@ -123,6 +129,7 @@ app.post('/api/check-debug-pin', (req, res) => {
         });
     }
 });
+
 
 app.get('/dev/pbuilder', (req, res) => {
     res.sendFile(path.join(basePath, 'dev_profile_builder.html'));

@@ -124,6 +124,7 @@ p {
 .main-content {
     width: 90%;
     margin: 20px auto;
+/*    display: none;*/
 }
 
 .center {
@@ -276,13 +277,23 @@ p {
 /* How to play */
 
 .how2play-content {
-    max-width: 300px;
-    margin: 0 auto;
+    position: relative;
+/*    max-width: 300px;*/
+
+    max-width: 90%;
+/*    width: 400px;*/
+/*    margin: 0 auto;*/
+/*    background-color: yellow;*/
 }
 
 .how2play-content img {
-    width: 100%;
+    display: block;
+    position: relative;
+/*    width: 100%;*/
+    width: 300px;
     margin-bottom: 20px;
+    margin: auto;
+/*    background-color: red;*/
 }
 
 .how2play-nav {
@@ -1141,13 +1152,17 @@ form input {
 }
 
 /* Desktop Styles Below */
+
 body {
-        background-image: url("../../assets/K2-mobile-home-background.svg");
+    margin: 0;
+    padding: 30px; /* if you still want padding around content */
+    background-image: url("../../assets/K2-mobile-home-background.svg");
     background-size: cover;
-        background-repeat: no-repeat;
-        background-position: center;
-        width: 100%;
-        padding: 30px;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-attachment: fixed; /* optional: keeps it fixed while scrolling */
+    min-height: 100vh; /* body always at least full viewport height */+
+
 }
 .desktop-fade-bg {
     background-color: rgba(255, 255, 255, 0.85);
@@ -1159,6 +1174,7 @@ body {
 @media (min-width: 800px) {
 
     /* Main Mountain Background */
+/*
     body {
         background-image: url("../../assets/K2-mobile-home-background.svg");
         background-size: cover;
@@ -1167,6 +1183,7 @@ body {
         width: 100%;
         padding: 30px;
     }
+*/
 .desktop-fade-bg {
     margin: 50px auto;
 }

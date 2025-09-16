@@ -80,8 +80,10 @@ html {
     left: 30px;
     width: 240px;
     height: 30px;
+    height: 54px;
     border-radius: 6px;
     background-color: white;
+    background-color: #b5b5b5;
     opacity: 0.7;
     z-index: 9999999999999999999999;
     font-size: 0.85em;
@@ -95,12 +97,13 @@ html {
         left: 4px;
         width: 290px;
         height: 43px;
+        height: 67px;
         background-color: rgba(211, 211, 211, 0.9);
     }
 }
 
 #idpanel p {
-    font-weight: normal;
+/*    font-weight: normal;*/
     margin-top: 8px;
 }
 #idpanel i {
@@ -111,4 +114,11 @@ html {
 }
 #idpanel i:hover {
     color: #000eaf;
+}
+#idpanel .link {
+    cursor: pointer;
+    pointer-events: auto;
+}
+#idpanel .link:hover {
+    text-decoration: underline;
 }

@@ -26,7 +26,14 @@ document.addEventListener('DOMContentLoaded', function () {
         const gid = getStoreID();
         const lid = localStorage.getItem(gid);
         const continuing = Boolean(lid);
-        bNew.fadeIn();
+        bNew.fadeIn(300, ()  => {
+            const T = window.getQueries().team;
+//            console.log(T);
+            if (T) {
+//                console.log(`game?team=${T}`);
+                bNew.find('a').attr('href', `game?team=${T}`);
+            }
+        });
         bHow.fadeIn();
         if (continuing) {
             bContinue.fadeIn();

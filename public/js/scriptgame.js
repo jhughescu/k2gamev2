@@ -1175,6 +1175,13 @@ document.addEventListener('DOMContentLoaded', function () {
         const i = setInterval(() => {
             if (gameData !== null) {
                 session = sesh;
+                if (window.getQueries().hasOwnProperty('team')) {
+                    const ft = parseInt(window.getQueries().team);
+                    console.log(`force team to ${ft} (if available)`);
+                    if (gameData.teams[ft]) {
+                        session.team = gameData.teams[ft];
+                    }
+                }
                 gameflow(`session initialised (${type}) with ID ${session.uniqueID}`);
                 theState = new State(socket, session);
                 gTimer.setTimer(session.time);
@@ -1379,7 +1386,7 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         } else {
             gameflow('no game in progress, start new game');
-            socket.emit('newSession', sesh => {
+            socket.emit('newSession', {forceTeam: window.getQueries().team || false}, sesh => {
                 setSession(sesh, 'new');
                 const i = setInterval(() => {
                     if (gameData !== null) {
@@ -2583,6 +2590,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 updateAddress('resources');
                 $(`#resop_${rOb.profile}_${rOb.type}`).addClass('selected');
                 setupResources();
+//                setTimeout(() => {
+//                    $('#theatre').animate({
+//                        scrollTop: $("h3:contains('Resources')").offset().top
+//                    }, 500);
+//                }, 100);
                 //                console.log(`renderResources`, autoResource);
                 if (autoResource && window.isLocal()) {
 //                    console.log('YESDSSS')
@@ -2637,6 +2649,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         onSubmitResouces(p, uo);
 
                     });
+
                     if (cheating) {
                         setTimeout(() => {
                             $('.back-btn').click();
@@ -3384,10 +3397,14 @@ document.addEventListener('DOMContentLoaded', function () {
         renderNone(() => {
             renderTemplate('theatre', 'leaderboard.climber', rOb, () => {
                 updateAddress('leaderboardclimber');
+                const btnRestart = $('#playagain');
+                if (btnRestart) {
+                    btnRestart.off('click').on('click', startNew);
+                }
                 if (cheating) {
                     setTimeout(() => {
                         console.log('go again');
-                        startNew();
+//                        startNew();
                     }, 2000);
                 }
             });
@@ -3998,5 +4015,11 @@ document.addEventListener('DOMContentLoaded', function () {
         gameflow('script init');
         newconnect = true;
     };
+
+//    publically exposed methods:
+    window.scriptgame = {
+        startNew: startNew
+    }
+
     init();
 });

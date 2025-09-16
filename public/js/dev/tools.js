@@ -111,11 +111,21 @@ document.addEventListener('DOMContentLoaded', function () {
         const idString = `ID: ${session.uniqueID}`;
 //        console.log(idString);
         if ($(`#${panelName}`).length === 0) {
-            $('body').append(`<div class='fullscreen debugPanel' id='idpanel' style='display: none;'>${idString}<i class="fa fa-copy"></i><i class="fa fa-close"></i></div>`);
-            $(`#${panelName}`).delay(1000).fadeIn();
+            let str = `<div class='fullscreen debugPanel' id='idpanel' style='display: none;'>${idString}<i class="fa fa-copy"></i><i class="fa fa-close"></i>`;
+            str += `<p class='link startNew'>Start new game</p>`;
+            str += `</div>`;
+            $('body').append(str);
+            $(`#${panelName}`).delay(100).fadeIn();
             bringToFront(`#${panelName}`);
             $('.fa-close').off('click').on('click', () => {
                 hideSessionID();
+            });
+            $('.startNew').off('click').on('click', () => {
+                if (window.scriptgame) {
+                    if (window.scriptgame.startNew) {
+                        window.scriptgame.startNew();
+                    }
+                }
             });
             $('.fa-copy').off('click').on('click', () => {
                 navigator.clipboard.writeText(session.uniqueID)

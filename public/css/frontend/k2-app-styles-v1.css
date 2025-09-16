@@ -747,6 +747,14 @@ img.help-yes {
 		display: grid;
 		align-self: center;
 	}
+.separator {
+    grid-column: 1 / -1; /* span all columns */
+    height: 1px;
+    background-color: rgba(128,128,128,1.00);
+    width: calc(100% - 30px);
+    left: 15px;
+    position: relative;
+}
 
 	.table-grid-icons{
 		display: flex;

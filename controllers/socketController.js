@@ -97,9 +97,9 @@ function initSocket(server) {
                 socket.on('disconnect', () => {
 //                    console.log('gone');
                 });
-                socket.on('newSession', (cb) => {
+                socket.on('newSession', (ob = {}, cb) => {
 //                    console.log('new session');
-                    sessionController.newSession(cb);
+                    sessionController.newSession(ob, cb);
                 });
                 socket.on('restoreSession', (sOb, cb) => {
 //                    console.log('restored session');

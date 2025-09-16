@@ -1,24 +1,27 @@
 (function () {
     const HOLD_DURATION = 5000; // ms
     let pressTimer = null;
-    let debugActive = false; // 👈 track debug state
+    let debugActive = false;
 
-    function isExcludedTarget(el) {
-        return (
-            el.closest("input, textarea, select, button, a, [contenteditable], [data-no-debug]")
-        );
-    }
-
-    function startPress(e) {
-        if (isExcludedTarget(e.target)) return;
+    const isExcludedTarget = (el) => {
+        if (!el) return false;
+        // if text node, use its parent element
+        if (el.nodeType === 3) el = el.parentElement;
+        if (!el || typeof el.closest !== "function") return false;
+        return !!el.closest("input, textarea, select, button, a, [contenteditable], [data-no-debug]");
+    };
+    const startPress = (e) => {
+        // allow multiple pointers but ignore if started in an excluded control
+//        console.log(`startPress`);
+        const tgt = e && e.target ? e.target : null;
+        if (isExcludedTarget(tgt)) return;
+        clearTimeout(pressTimer);
         pressTimer = setTimeout(() => askForPin(), HOLD_DURATION);
-    }
-
-    function endPress() {
+    };
+    const endPress = () => {
         clearTimeout(pressTimer);
         pressTimer = null;
-    }
-
+    };
     const showSessionID = () => {
         if (window.tools && typeof window.tools.showSessionID === "function") {
             window.tools.showSessionID();
@@ -29,41 +32,48 @@
             window.tools.hideSessionID();
         }
     };
-
     const needPIN = () => {
         // return !(window.isLocal() || window.location.host.includes('ngrok-free.app'));
         return false;
     };
-
-    async function askForPin() {
-        // 🔀 toggle logic
+    const hapticShiver = (mode) => {
+        if (!navigator.vibrate) return;
+        if (mode === "on") navigator.vibrate([30, 40, 30]);
+        else if (mode === "off") navigator.vibrate(60);
+    };
+    const askForPin = async () => {
+        // if debug currently active -> turn off without asking PIN
         if (debugActive) {
-            // Turn OFF debug
             debugActive = false;
-            flashBackground("off", 200, () => {
-                if (window.eruda) {
-                    window.eruda.destroy();
-                }
+            flashBackground("off", () => {
+                hapticShiver("off");
+                if (window.eruda) window.eruda.destroy();
                 hideSessionID();
             });
             return;
         }
 
-        // Turn ON debug
         const entered = needPIN() ? prompt("Enter debug PIN:") : true;
         if (!entered) return;
 
         try {
             const res = await fetch("/api/check-debug-pin", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ pin: entered }),
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    pin: entered
+                }),
             });
 
-            const data = !needPIN() ? { ok: true } : await res.json();
+            const data = !needPIN() ? {
+                ok: true
+            } : await res.json();
             if (data.ok) {
                 debugActive = true;
-                flashBackground("on", 200, () => {
+                flashBackground("on", () => {
+                    hapticShiver("on");
                     if (!window.eruda) {
                         const script = document.createElement("script");
                         script.src = "https://cdn.jsdelivr.net/npm/eruda";
@@ -75,7 +85,10 @@
                         };
                         document.body.appendChild(script);
                     } else {
-                        window.eruda.init();
+                        // if already present, ensure it's initialized then show session
+                        try {
+                            window.eruda.init();
+                        } catch (e) {}
                         showSessionID();
                     }
                 });
@@ -85,51 +98,71 @@
         } catch (err) {
             console.error("PIN verification failed", err);
         }
-    }
+    };
+    // camera-flash style: overlay is immediately visible (opacity:1) then fades out
+    const flashBackground = (mode, callback) => {
+        const duration = 200; // always 200ms
+        const color = mode === "on" ? "#78e078" : "#dd6a6a";
+        const overlay = document.createElement("div");
 
-    function flashBackground(mode, duration, callback) {
-        const $html = $("html");
-        const hb = $html.css("background-color");
+        Object.assign(overlay.style, {
+            position: "fixed",
+            top: "0",
+            left: "0",
+            width: "100%",
+            height: "100%",
+            backgroundColor: color,
+            opacity: "1", // start fully visible (camera flash)
+            transition: `opacity ${duration}ms ease`,
+            zIndex: "9999999",
+            pointerEvents: "none",
+        });
+        document.body.appendChild(overlay);
 
-        // cancel any ongoing flash
-        if ($html.data("flashActive")) {
-            $html.off("transitionend.flash");
-            $html.css("transition", "").css("background-color", hb);
-            $html.removeData("flashActive");
+        // Force layout so the browser registers the initial state (important on mobile)
+        // reading offsetHeight forces paint of the initial opacity:1 style
+        void overlay.offsetHeight;
+
+        // Start fade out on the next rendering frame
+        requestAnimationFrame(() => {
+            overlay.style.opacity = "0";
+        });
+
+        let called = false;
+
+        const done = () => {
+            if (called) return;
+            called = true;
+            if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+            if (typeof callback === "function") callback();
         }
 
-        $html.data("flashActive", true);
+        // Listen for transitionend for opacity (fade-out completion)
+        const onTransEnd = (e) => {
+            if (e.propertyName !== "opacity") return;
+            overlay.removeEventListener("transitionend", onTransEnd);
+            done();
+        }
+        overlay.addEventListener("transitionend", onTransEnd);
 
-        // pick color based on mode
-        const color = mode === "on" ? "#587c58" : "#804848";
-
-        $html.css({
-            "transition": `background-color ${duration}ms ease`
+        // Fallback: if transitionend doesn't fire, ensure cleanup after duration + small buffer
+        setTimeout(() => {
+            done();
+            overlay.removeEventListener("transitionend", onTransEnd);
+        }, duration + 80);
+    };
+    // Use pointer events if available to avoid duplicate touch/mouse events.
+    if (window.PointerEvent) {
+        document.addEventListener("pointerdown", startPress);
+        document.addEventListener("pointerup", endPress);
+        document.addEventListener("pointercancel", endPress);
+    } else {
+        // fallbacks for older browsers
+        document.addEventListener("touchstart", startPress, {
+            passive: true
         });
-
-        // Step 1: change to flash color
-        $html.css({ "background-color": color });
-
-        // Step 2: when transition ends (flash complete), revert
-        $html.one("transitionend.flash", () => {
-            $html.css({ "background-color": hb });
-
-            // Step 3: wait for revert transition to finish
-            $html.one("transitionend.flash", () => {
-                $html.css("transition", ""); // cleanup
-                $html.removeData("flashActive");
-                if (typeof callback === "function") {
-                    callback();
-                }
-            });
-        });
+        document.addEventListener("touchend", endPress);
+        document.addEventListener("mousedown", startPress);
+        document.addEventListener("mouseup", endPress);
     }
-
-    // Desktop
-    document.addEventListener("mousedown", startPress);
-    document.addEventListener("mouseup", endPress);
-
-    // Mobile
-    document.addEventListener("touchstart", startPress);
-    document.addEventListener("touchend", endPress);
 })();

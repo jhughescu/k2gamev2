@@ -170,21 +170,27 @@ p.resource_value {
 }
 
 .adjust_btn {
-    width: 20px; /* Set width of the buttons */
-    height: 20px; /* Set height of the buttons */
-    background-color: #ccc; /* Example styling */
+    width: 20px;
+    height: 20px;
+    background-color: #ccc;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    border-radius: 3px; /* Optional: Rounded corners */
+    border-radius: 3px;
+}
+@media(max-width: 800px) {
+    .adjust_btn {
+        width: 40px;
+        height: 40px;
+    }
 }
 .adjust_btn.minus::after {
-    content: "-"; /* Example: Display minus sign */
+    content: "-";
 }
 
 .adjust_btn.plus::after {
-    content: "+"; /* Example: Display plus sign */
+    content: "+";
 }
 .adjust_btn.disabled {
     opacity: 0.5;
@@ -199,7 +205,8 @@ p.resource_value {
     width: 60px;
 /*    width: 130px;*/
 /*    height: 50px;*/
-    height: 79px;
+    height: 79px; /* use if rope included */
+    height: 56px;
     border-radius: 6px;
     background-color: rgba(255, 255, 255, 0.71);
     box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.6);
@@ -254,6 +261,10 @@ p.resource_value {
     justify-content: center;
     font-size: 12px;
 /*    background-color: yellow;*/
+}
+#climberDetailPanel .detail_rope {
+    /* Keep this below other definitions so it takes precendence */
+    display: none;
 }
 
 
