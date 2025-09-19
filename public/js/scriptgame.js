@@ -2152,6 +2152,7 @@ document.addEventListener('DOMContentLoaded', function () {
     };
     const setupOverlayIframe = (src = false, callback) => {
         removeOverlayIframe();
+        pauseSession();
         $('body').prepend('<div class="iframer" id="iframer"><iframe id="overlayIframe"></iframe></div>');
         $('#iframer').css({'z-index': window.getMaxZIndex() + 1});
         const oif = $('#overlayIframe');
@@ -2166,6 +2167,7 @@ document.addEventListener('DOMContentLoaded', function () {
     };
     const removeOverlayIframe = () => {
         $('#iframer').remove();
+        unpauseSession();
     };
     const setupHelpButton = () => {
         const hId = 'helpbutton';
