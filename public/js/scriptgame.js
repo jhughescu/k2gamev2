@@ -2092,7 +2092,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const setupBasics = () => {
 //        console.log(`setupBasics`);
         const bMenu = $('#menu');
-//        console.log(bMenu);
+
+
         bMenu.off('click').on('click', toggleOverlay);
     };
     const setupHome = () => {
@@ -2149,7 +2150,42 @@ document.addEventListener('DOMContentLoaded', function () {
         //        }
 
     };
-
+    const setupOverlayIframe = (src = false, callback) => {
+        removeOverlayIframe();
+        $('body').prepend('<div class="iframer" id="iframer"><iframe id="overlayIframe"></iframe></div>');
+        $('#iframer').css({'z-index': window.getMaxZIndex() + 1});
+        const oif = $('#overlayIframe');
+        if (src) {
+            oif.off('load').on('load', () => {
+                if (callback) {
+                    callback();
+                }
+            })
+            oif.attr('src', src);
+        }
+    };
+    const removeOverlayIframe = () => {
+        $('#iframer').remove();
+    };
+    const setupHelpButton = () => {
+        const hId = 'helpbutton';
+        const bHelp = $(`#${hId}`);
+        window.removeTemplate(hId);
+        window.renderTemplate(hId, 'svg/icon_help', {colour: 'fff'}, () => {
+            bHelp.off('click').on('click', () => {
+//                window.open('how1/ext', '_blank');
+                setupOverlayIframe('how1', () => {
+                    const bb = $('#overlayIframe').contents().find('.back-btn');
+                    $('#overlayIframe').contents().find('body').css('background', 'transparent');
+                    bb.attr('href', '#');
+                    bb.off('click').on('click', () => {
+                        removeOverlayIframe();
+                    })
+                });
+            })
+        });
+    };
+    window.testHelp = setupHelpButton;
     // controls (page types)
     const onSubmitResouces = (p, ob) => {
         const t = p.temptype;
@@ -3304,6 +3340,7 @@ document.addEventListener('DOMContentLoaded', function () {
 //            console.log('renderMap now');
             renderTemplate('theatre', 'map', rOb, () => {
 //                console.log(rOb);
+                setupHelpButton();
                 playTimeStart();
                 updateAddress('map');
                 $('body').addClass('body-map');

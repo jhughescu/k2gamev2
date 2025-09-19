@@ -150,7 +150,7 @@ p {
     transition: 0.5s;
 }
 .big-button.short a {
-    padding: 10px;
+/*    padding: 10px;*/
 }
 
 .big-button a:hover,

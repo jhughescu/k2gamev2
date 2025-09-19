@@ -89,8 +89,10 @@ app.get('/test', (req, res) => {
 app.get('/map', (req, res) => {
     res.render('map');
 });
+/*
 app.get('/how1', (rq, res) => {
-    res.sendFile(path.join(basePath, 'flat', 'how-to-play-a.html'));
+//    res.sendFile(path.join(basePath, 'flat', 'how-to-play-a.html'));
+    res.render('how1');
 });
 app.get('/how2', (rq, res) => {
     res.sendFile(path.join(basePath, 'flat', 'how-to-play-b.html'));
@@ -107,6 +109,18 @@ app.get('/how5', (rq, res) => {
 app.get('/how6', (rq, res) => {
     res.sendFile(path.join(basePath, 'flat', 'how-to-play-f.html'));
 });
+*/
+
+app.get('/how:step([1-6])/:arg?', (req, res) => {
+    const { step, arg } = req.params;
+    const isExt = arg === 'ext';
+    const isInt = arg !== 'ext';
+    const stepNum = parseInt(step, 10);   // convert "1".."6" → 1..6
+    const links = Array.from({ length: 6 }, (_, i) => ({link: i + 1, active: i + 1 === stepNum}));
+//    console.log(`isExt: ${isExt}`);
+    res.render(`how${step}`, { stepNum, arg, isExt, links });
+});
+
 
 app.post('/download-csv', downloadController.downloadCSV);
 app.post('/api/check-debug-pin', (req, res) => {

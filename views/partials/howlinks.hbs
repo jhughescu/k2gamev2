@@ -1,0 +1,7 @@
+                <div class="how2play-nav">
+                    {{#each links}}
+                    <a href="../how{{this.link}}{{#if ../isExt}}/ext{{/if}}">
+                        <div class="how2play-button{{#if this.active}} h2p-btn-active{{/if}}"></div>
+                    </a>
+                    {{/each}}
+                </div>

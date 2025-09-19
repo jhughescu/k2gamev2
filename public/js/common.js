@@ -262,6 +262,16 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         localStorage.setItem(id, o);
     };
+    const getMaxZIndex = () => {
+        let maxZ = 0;
+        $('*').each(function () {
+            const z = parseInt($(this).css('z-index'), 10);
+            if (!isNaN(z) && z > maxZ) {
+                maxZ = z;
+            }
+        });
+        return maxZ;
+    }
 
     const tintImage = (imgEl, color) => {
         const canvas = document.createElement('canvas');
@@ -1291,5 +1301,6 @@ document.addEventListener('DOMContentLoaded', function () {
     window.shuffle = shuffle;
     window.filterScorePackets = filterScorePackets;
     window.mapSessionToGame = mapSessionToGame;
-    window.getRouteStages = getRouteStages
+    window.getRouteStages = getRouteStages;
+    window.getMaxZIndex = getMaxZIndex;
 });
