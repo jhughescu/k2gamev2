@@ -65,6 +65,7 @@
 
     .resources-grid .resources-profile-header {
 /*        background-color: aqua;*/
+        z-index: 999999999;
     }
 
     .resources-grid.mini .resources-profile-header {
@@ -73,8 +74,9 @@
         left: 0px;
         padding: 6px;
         width: calc(100% - 40px);
-        height: 120px;
+        height: 140px;
         margin: 0 20px;
+/*        background-color: red;*/
     }
 
     .resources-grid.mini .main-content {

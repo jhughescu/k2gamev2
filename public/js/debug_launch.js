@@ -1,5 +1,5 @@
 (function () {
-    const HOLD_DURATION = 1000; // ms
+    const HOLD_DURATION = 4000; // ms
     let pressTimer = null;
     let debugActive = false;
 
@@ -12,26 +12,34 @@
     };
     const isInScrollbar = (e) => {
         const el = document.getElementById('theatre');
-        let rect;
+        let target = document.documentElement;
 
         if (el && el.scrollHeight > el.clientHeight) {
-            // Case 1: #theatre is scrollable
-            rect = el.getBoundingClientRect();
-            console.log(`on theatre`);
-        } else {
-            // Case 2: page (viewport) scrolls instead
-            rect = document.documentElement.getBoundingClientRect();
-            console.log(`on document`);
+            target = el; // #theatre scrolls
         }
 
-        const inVertical = e.clientX >= rect.right;
-        const inHorizontal = e.clientY >= rect.bottom;
-        console.log(e.clientX, e.clientY);
-        console.log(rect);
-        console.log(document.documentElement.getBoundingClientRect());
-        console.log(`isInScrollbar, ${inVertical}, ${inHorizontal}`);
+        const rect = target.getBoundingClientRect();
+        const scrollbarWidth = target.offsetWidth - target.clientWidth;
+        const scrollbarHeight = target.offsetHeight - target.clientHeight;
+
+        // Classic scrollbars (space-consuming)
+        const inClassicVertical = scrollbarWidth > 0 && e.clientX >= rect.right - scrollbarWidth;
+        const inClassicHorizontal = scrollbarHeight > 0 && e.clientY >= rect.bottom - scrollbarHeight;
+
+        // Overlay scrollbars (zero-width gutter)
+        const inOverlayVertical = scrollbarWidth === 0 &&
+            target.scrollHeight > target.clientHeight &&
+            e.clientX >= rect.right;
+        const inOverlayHorizontal = scrollbarHeight === 0 &&
+            target.scrollWidth > target.clientWidth &&
+            e.clientY >= rect.bottom;
+
+        const inVertical = inClassicVertical || inOverlayVertical;
+        const inHorizontal = inClassicHorizontal || inOverlayHorizontal;
+
         return inVertical || inHorizontal;
     };
+
 
     const startPress = (e) => {
         // allow multiple pointers but ignore if started in an excluded control

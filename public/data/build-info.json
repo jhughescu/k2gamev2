@@ -1,6 +1,6 @@
 {
-  "timestamp": "2025-09-29T10:10:03+01:00",
-  "commitHash": "de7eec8383ab78b9e7082297dfff0c32e70ba8f1",
-  "commitMessage": "How to pages - game pauses on open, unpauses on close.",
+  "timestamp": "2025-09-29T10:15:44+01:00",
+  "commitHash": "8e5d2a744b839a52a0ba179640c3f2d857795910",
+  "commitMessage": "Resources headers shrink on scroll (mobile) - test.",
   "branch": "master"
 }
