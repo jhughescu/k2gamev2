@@ -1,0 +1,98 @@
+@media(max-width: 800px) {
+    .nav-header-container {
+        height: 70px;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        background-color: white;
+/*        opacity: 0.6;*/
+/*        position: fixed;*/
+/*        top: 0;*/
+/*        left: 0;*/
+/*        right: 0;*/
+        /* overridden by JS when scrollbar exists */
+/*        height: 70px;*/
+        box-sizing: border-box;
+        z-index: 1000;
+    }
+
+    .nav-header-container.mini {
+        height: 36px;
+        padding: 0px;
+    }
+
+    .nav-header-container.mini h1 {
+        font-size: 1.3em;
+    }
+
+    .nav-header-container.mini .back-btn-title-bar {
+        padding-top: 10px;
+    }
+
+    .nav-header-container.mini .back-btn img {
+        width: calc(100% - 10px);
+        margin: 5px;
+    }
+
+    .nav-header-container.mini .back-btn {
+        width: 30px;
+        height: 30px;
+        padding: 0px;
+        margin-left: 10px;
+    }
+
+    .resources-grid {
+        padding-top: 80px;
+        /*        position: absolute;*/
+        top: 0px;
+/*        background-color: aquamarine;*/
+    }
+
+    #theatre {
+/*        overflow: hidden;*/
+    }
+
+    .resources-grid .main-content {
+        /*        transition: padding 1s ease;*/
+
+        top: 0px;
+    }
+
+    .resources-grid.mini {
+        padding-top: 110px;
+    }
+
+    .resources-grid .resources-profile-header {
+/*        background-color: aqua;*/
+    }
+
+    .resources-grid.mini .resources-profile-header {
+        position: fixed;
+        top: 30px;
+        left: 0px;
+        padding: 6px;
+        width: calc(100% - 40px);
+        height: 120px;
+        margin: 0 20px;
+    }
+
+    .resources-grid.mini .main-content {
+        padding-top: 40px;
+    }
+
+    .resources-grid.mini .profile-icon {
+        width: 60px;
+        padding-top: 0px;
+    }
+
+    .resources-grid.mini h2 {
+        font-size: 1em;
+        margin: 3px;
+    }
+
+    .resources-grid.mini .resources-profile-header p {
+        font-size: 0.8em;
+        margin: 3px;
+    }
+}

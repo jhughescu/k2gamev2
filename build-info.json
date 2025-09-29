@@ -1,6 +1,6 @@
 {
-  "timestamp": "2025-09-19T13:52:53+01:00",
-  "commitHash": "4371cd2fe104aabd063c2b743761857745f613d7",
-  "commitMessage": "Turned off ngrok init for production commit",
+  "timestamp": "2025-09-29T10:10:03+01:00",
+  "commitHash": "de7eec8383ab78b9e7082297dfff0c32e70ba8f1",
+  "commitMessage": "How to pages - game pauses on open, unpauses on close.",
   "branch": "master"
 }

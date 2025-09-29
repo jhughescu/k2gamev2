@@ -158,7 +158,7 @@ p{
 			width: 70px;
 			padding: 15px;
 			background: none;
-			transition: 0.5s;
+/*			transition: 0.5s;*/
 		z-index: 10;
 		}
 
@@ -593,6 +593,13 @@ background-color: none		}
 	display: block;
 	margin: 0px auto 10px;
 }
+@media (max-width: 800px) {
+    .modal-alert img{
+        /* JH adjust */
+        padding: 10px;
+        width: 100px;
+    }
+}
 
 .modal-alert p{
 	text-align: center;
@@ -903,6 +910,7 @@ img.help-yes {
 			text-align: right;
 			font-size: 1.5em;
             padding-right: 40px;
+            padding-right: 50px;
 		}
 
 		.game-progress-nav{
@@ -918,6 +926,7 @@ img.help-yes {
 			justify-content: end;
 			margin: 0 auto;
 			height: 74px;
+			height: 64px;
 			position: relative;
 			padding: 22px;
 		}

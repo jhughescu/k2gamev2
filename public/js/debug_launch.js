@@ -1,5 +1,5 @@
 (function () {
-    const HOLD_DURATION = 5000; // ms
+    const HOLD_DURATION = 1000; // ms
     let pressTimer = null;
     let debugActive = false;
 
@@ -10,11 +10,35 @@
         if (!el || typeof el.closest !== "function") return false;
         return !!el.closest("input, textarea, select, button, a, [contenteditable], [data-no-debug]");
     };
+    const isInScrollbar = (e) => {
+        const el = document.getElementById('theatre');
+        let rect;
+
+        if (el && el.scrollHeight > el.clientHeight) {
+            // Case 1: #theatre is scrollable
+            rect = el.getBoundingClientRect();
+            console.log(`on theatre`);
+        } else {
+            // Case 2: page (viewport) scrolls instead
+            rect = document.documentElement.getBoundingClientRect();
+            console.log(`on document`);
+        }
+
+        const inVertical = e.clientX >= rect.right;
+        const inHorizontal = e.clientY >= rect.bottom;
+        console.log(e.clientX, e.clientY);
+        console.log(rect);
+        console.log(document.documentElement.getBoundingClientRect());
+        console.log(`isInScrollbar, ${inVertical}, ${inHorizontal}`);
+        return inVertical || inHorizontal;
+    };
+
     const startPress = (e) => {
         // allow multiple pointers but ignore if started in an excluded control
 //        console.log(`startPress`);
         const tgt = e && e.target ? e.target : null;
         if (isExcludedTarget(tgt)) return;
+        if (isInScrollbar(e)) return;
         clearTimeout(pressTimer);
         pressTimer = setTimeout(() => askForPin(), HOLD_DURATION);
     };

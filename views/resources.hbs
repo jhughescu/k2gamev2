@@ -1,46 +1,48 @@
-
 <div class="main-background">
-<div class="desktop-fade-bg">
-	<!-- Page Header -->
-<div class="nav-header-container dark-text">
-	<div class="back-btn-title-bar">
-		<a class="back-btn" title="Previous page"><img alt="Previous page icon" src="assets/buttons/backButton-black.svg"/></a>
-		<h1>Resources</h1>
-	</div>
-</div>
+    <div class="desktop-fade-bg">
+        <!-- Page Header -->
+        <div class="nav-header-container dark-text">
+            <div class="back-btn-title-bar">
+                <a class="back-btn" title="Previous page">
+                    <img alt="Previous page icon" src="assets/buttons/backButton-black.svg" />
+                </a>
+                <h1>Resources</h1>
+            </div>
+        </div>
 
-	<!-- Profile Hero -->
 
-<div class="resources-grid">
-	<div class="resources-grid-item">
-<!-- PROFILE A START -->
-	<!-- Header -->
-<div class="resources-profile-header" id="profile-A">
-	<div class="resources-profile-navbtn-box">
-	<a class="resources-profile-navbtn navbtn-previous resources_adj" id='res_-1_{{profile}}' title="Previous page"><img alt="Previous page icon" src="assets/buttons/previousButton-black.svg"/></a>
-	</div>
-	<div class="resources-profile-info center">
-		<img class="profile-icon" alt="Profile icon" src="assets/profiles/profileimages_{{filename}}.png"/>
-		<h2><span class='dyno'>{{name}}</span></h2>
-		<p>Profile <span class='dyno'>{{OPTION}}</span></p>
-	</div>
-	<div class="resources-profile-navbtn-box">
-	<a class="resources-profile-navbtn navbtn-next resources_adj" id='res_1_{{profile}}' title="Next page"><img alt="Next page icon" src="assets/buttons/nextButton-black.svg"/></a>
-	</div>
+        <!-- Profile Hero -->
 
-</div>
-		<!-- Main Content -->
-<div class="main-content">
-	<div class="content-block">
-		<p>Select which load you want to allocate for this climber.</p>
-		<div class="resource-options-container center">
-		    {{#each options}}
-			<div class="resource-option-item resop noselect" id='resop_{{../profile}}_{{n}}'>
-			<h3>Option <span class='dyno'>{{option}}</span></h3>
-				<p><span class='dyno'>{{capacity}}</span>kg load carrying capacity</p>
-			</div>
-			{{/each}}
-<!--
+        <div class="resources-grid">
+            <div class="resources-grid-item">
+                <!-- PROFILE A START -->
+                <!-- Header -->
+                <div class="resources-profile-header" id="profile-A">
+                    <div class="resources-profile-navbtn-box">
+                        <a class="resources-profile-navbtn navbtn-previous resources_adj" id='res_-1_{{profile}}' title="Previous page"><img alt="Previous page icon" src="assets/buttons/previousButton-black.svg" /></a>
+                    </div>
+                    <div class="resources-profile-info center">
+                        <img class="profile-icon" alt="Profile icon" src="assets/profiles/profileimages_{{filename}}.png" />
+                        <h2><span class='dyno'>{{name}}</span></h2>
+                        <p>Profile <span class='dyno'>{{OPTION}}</span></p>
+                    </div>
+                    <div class="resources-profile-navbtn-box">
+                        <a class="resources-profile-navbtn navbtn-next resources_adj" id='res_1_{{profile}}' title="Next page"><img alt="Next page icon" src="assets/buttons/nextButton-black.svg" /></a>
+                    </div>
+
+                </div>
+                <!-- Main Content -->
+                <div class="main-content">
+                    <div class="content-block">
+                        <p>Select which load you want to allocate for this climber.</p>
+                        <div class="resource-options-container center">
+                            {{#each options}}
+                                <div class="resource-option-item resop noselect" id='resop_{{../profile}}_{{n}}'>
+                                    <h3>Option <span class='dyno'>{{option}}</span></h3>
+                                    <p><span class='dyno'>{{capacity}}</span>kg load carrying capacity</p>
+                                </div>
+                            {{/each}}
+                            <!--
 			<div class="resource-option-item">
 			<h3>Option B</h3>
 				<p>60kg load carrying capacity</p>
@@ -50,85 +52,105 @@
 				<p>90kg load carrying capacity</p>
 			</div>
 -->
-		</div>
-		<div class="call-out-box">
-		<h3>Ideal climb times</h3>
-		<p>Based on nothing unexpected occurring.</p>
-		<img class="summit-graphic" src="assets/profiles/profileimages_profile_blank.png" alt="Ideal climb times"/>
-        <div class="inset-box">
-            <img src="assets/icons/questionMark.png" alt="question mark icon"/>
-              <p>Would you prefer to prioritise speed or to take extra resources and move at a slower pace but test your edurance?</p>
-        </div>
-		</div>
-	</div>
-</div>
-</div> <!-- Closing Flex Item Tag -->
-	<div class="resources-grid-item">
+                        </div>
+                        <div class="call-out-box">
+                            <h3>Ideal climb times</h3>
+                            <p>Based on nothing unexpected occurring.</p>
+                            <img class="summit-graphic" src="assets/profiles/profileimages_profile_blank.png" alt="Ideal climb times" />
+                            <div class="inset-box">
+                                <img src="assets/icons/questionMark.png" alt="question mark icon" />
+                                <p>Would you prefer to prioritise speed or to take extra resources and move at a slower pace but test your edurance?</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div> <!-- Closing Flex Item Tag -->
+            <div class="resources-grid-item">
 
-<div class="main-content">
-	<div class="call-out-box">
-		<h3>Resources</h3>
-		<p>Based on the load option you select above, this section shows the number of each resource you are physically able to carry - it may not be enough to make the climb without resupplying.</p>
-<!--		<div class='separator'></div>-->
-		<div class="resources-table-grid">
-			<div></div>
-			<div><p>Required Amount (Carried)</p></div>
-			<div><p>Weight (Carried)</p></div>
-            <div class='separator'></div>
-					<!-- Oxygen Row -->
-			<div class="table-grid-icons">
-				<div><img src="assets/icons/Icons_Oxygen.png" alt="Oxygen tank icon"/></div>
-				<p>Oxygen</p></div>
-			<div><p class='resource_value' id='total_oxygen'>-</p></div>
-			<div><p class='resource_value' id='weight_oxygen'>-</p></div>
-					<!-- Sustenance Row -->
-			<div class="table-grid-icons">
-				<div><img src="assets/icons/Icons_Sustenance.png" alt="sustenance icon"/></div>
-				<p>Sustenance</p></div>
-			<div><p class='resource_value' id='total_sustenance'>-</p></div>
-			<div><p class='resource_value' id='weight_sustenance'>-</p></div>
-					<!-- Rope Row -->
-					<!--
+                <div class="main-content">
+                    <div class="call-out-box">
+                        <h3>Resources</h3>
+                        <p>Based on the load option you select above, this section shows the number of each resource you are physically able to carry - it may not be enough to make the climb without resupplying.</p>
+                        <!--		<div class='separator'></div>-->
+                        <div class="resources-table-grid">
+                            <div></div>
+                            <div>
+                                <p>Required Amount (Carried)</p>
+                            </div>
+                            <div>
+                                <p>Weight (Carried)</p>
+                            </div>
+                            <div class='separator'></div>
+                            <!-- Oxygen Row -->
+                            <div class="table-grid-icons">
+                                <div><img src="assets/icons/Icons_Oxygen.png" alt="Oxygen tank icon" /></div>
+                                <p>Oxygen</p>
+                            </div>
+                            <div>
+                                <p class='resource_value' id='total_oxygen'>-</p>
+                            </div>
+                            <div>
+                                <p class='resource_value' id='weight_oxygen'>-</p>
+                            </div>
+                            <!-- Sustenance Row -->
+                            <div class="table-grid-icons">
+                                <div><img src="assets/icons/Icons_Sustenance.png" alt="sustenance icon" /></div>
+                                <p>Sustenance</p>
+                            </div>
+                            <div>
+                                <p class='resource_value' id='total_sustenance'>-</p>
+                            </div>
+                            <div>
+                                <p class='resource_value' id='weight_sustenance'>-</p>
+                            </div>
+                            <!-- Rope Row -->
+                            <!--
 			<div class="table-grid-icons">
 				<div><img src="assets/icons/Icons_RopeIcon.png" alt="rope icon"/></div>
 				<p>Emergency Rope (metres)</p></div>
 			<div><p class='resource_value' id='total_rope'></p></div>
 			<div><p class='resource_value' id='weight_rope'></p></div>
                 -->
-                <div class='separator'></div>
-					<!-- Total Row -->
-			<div class="table-grid-icons">
+                            <div class='separator'></div>
+                            <!-- Total Row -->
+                            <div class="table-grid-icons">
 
-				<p>Total</p></div>
-			<div></div>
-			<div><p class='resource_value' id='resource_total'>-</p></div>
-					<!-- Remaining Row -->
-			<div class="table-grid-icons">
+                                <p>Total</p>
+                            </div>
+                            <div></div>
+                            <div>
+                                <p class='resource_value' id='resource_total'>-</p>
+                            </div>
+                            <!-- Remaining Row -->
+                            <div class="table-grid-icons">
 
-				<p>Remaining</p></div>
-			<div></div>
-			<div><p class='resource_value' id='resource_remaining'>-</p></div>
-		</div>
-		<div class="inset-box">
-			<img src="assets/icons/questionMark.png" alt="question mark icon"/>
-			<p>Are you happy with your resource distribution?</p>
-		</div>
-		<div class="content-block resource_adjust">
-			<p>Adjust your resources:</p>
-			<form action="#">
-                <div class="input-group">
-                    <label for="oxygen">Oxygen ({{gameData.constants.oxygen.weight}}kg each)</label>
-                    <input type="number" id="oxygen" name="oxygen" value="" step="1" min="-9999" max="9999">
-                    <div class="adjust_btn minus"></div>
-                    <div class="adjust_btn plus"></div>
-                </div>
-                <div class="input-group">
-                    <label for="sustenance">Sustenance ({{gameData.constants.sustenance.weight}}kg each)</label>
-                    <input type="number" id="sustenance" name="sustenance" value="" step='1' min='-9999' max='9999'>
-                    <div class="adjust_btn minus"></div>
-                    <div class="adjust_btn plus"></div>
-                </div>
-                <!--
+                                <p>Remaining</p>
+                            </div>
+                            <div></div>
+                            <div>
+                                <p class='resource_value' id='resource_remaining'>-</p>
+                            </div>
+                        </div>
+                        <div class="inset-box">
+                            <img src="assets/icons/questionMark.png" alt="question mark icon" />
+                            <p>Are you happy with your resource distribution?</p>
+                        </div>
+                        <div class="content-block resource_adjust">
+                            <p>Adjust your resources:</p>
+                            <form action="#">
+                                <div class="input-group">
+                                    <label for="oxygen">Oxygen ({{gameData.constants.oxygen.weight}}kg each)</label>
+                                    <input type="number" id="oxygen" name="oxygen" value="" step="1" min="-9999" max="9999">
+                                    <div class="adjust_btn minus"></div>
+                                    <div class="adjust_btn plus"></div>
+                                </div>
+                                <div class="input-group">
+                                    <label for="sustenance">Sustenance ({{gameData.constants.sustenance.weight}}kg each)</label>
+                                    <input type="number" id="sustenance" name="sustenance" value="" step='1' min='-9999' max='9999'>
+                                    <div class="adjust_btn minus"></div>
+                                    <div class="adjust_btn plus"></div>
+                                </div>
+                                <!--
                 <div class="input-group">
                     <label for="rope">Emergency rope ({{gameData.constants.rope.weight}}kg each)</label>
                     <input type="number" id="rope" name="rope" value="" step='1' min='-9999' max='9999'>
@@ -136,17 +158,16 @@
                     <div class="adjust_btn plus"></div>
                 </div>
                 -->
-<!--                <input type="submit" value="Submit" class="form-submit-btn" data-profile='profile{{profile}}'>-->
-                <button type="button" class="form-submit-btn" data-profile='profile{{profile}}'>Submit</button>
-			</form>
-		</div>
-	</div>
-</div>
+                                <!--                <input type="submit" value="Submit" class="form-submit-btn" data-profile='profile{{profile}}'>-->
+                                <button type="button" class="form-submit-btn" data-profile='profile{{profile}}'>Submit</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
 
-<!-- PROFILE A END -->
-</div> <!-- Closing Grid Item Tag -->
+                <!-- PROFILE A END -->
+            </div> <!-- Closing Grid Item Tag -->
 
-</div> <!-- Closing Grid Container Tag -->
-</div> <!-- Closing Desktop Fade BG Tag -->
+        </div> <!-- Closing Grid Container Tag -->
+    </div> <!-- Closing Desktop Fade BG Tag -->
 </div> <!-- Closing Main BG Tag -->
-

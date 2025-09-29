@@ -2305,6 +2305,168 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
     };
+    const setupResourcesMobileV1 = () => {
+    const $scroller = $('#theatre');
+
+        // Each element gets its own max/min config
+        const resizableItems = [
+            { $el: $('.nav-header-container'), max: 74, min: 30 },
+            { $el: $('.nav-header-container').find('.back-btn-title-bar').find('.back-btn'), max: 74, min: 30 },
+            { $el: $('.logo-container'),       max: 100, min: 50 },
+            { $el: $('.search-bar'),           max: 60,  min: 40 }
+        ];
+
+        $scroller.on('scroll', function () {
+            const scrollY = $(this).scrollTop();
+
+            resizableItems.forEach(item => {
+                const newHeight = Math.max(item.min, item.max - scrollY);
+                item.$el.css('height', newHeight + 'px');
+            });
+        });
+    };
+
+
+    const adjustHeaderForTheatreScrollbar = () => {
+        const $theatre = $('#theatre');
+        const $nav = $('.nav-header-container');
+
+        if (!$theatre.length || !$nav.length) {
+            return;
+        }
+
+        const theatre = $theatre[0];
+        const scrollbarWidth = theatre.offsetWidth - theatre.clientWidth;
+
+        if (scrollbarWidth > 0) {
+            // Inset header so it stops short of theatre scrollbar
+            $nav.css({
+                right: scrollbarWidth + 'px',
+                left: 0,
+                width: 'auto'
+            });
+        } else {
+            // Reset to full width if no scrollbar present
+            $nav.css({
+                right: '',
+                left: 0,
+                width: ''
+            });
+        }
+    }
+    const setupResourcesMobileV2 = () => {
+        const $scroller = $('#theatre');
+        const $navHeader = $('.nav-header-container');
+        const $title = $navHeader.find('h1');
+
+        const maxHeight = 74;
+        const minHeight = 30;
+        const maxTitleSize = 24; // px
+        const minTitleSize = 16; // px
+
+        $scroller.on('scroll', function () {
+            const scrollY = $(this).scrollTop();
+            const newHeight = Math.max(minHeight, maxHeight - scrollY);
+
+            $navHeader.css('height', newHeight + 'px');
+
+            // Parent font scaling (light)
+            const fontScale = 0.8 + (newHeight / maxHeight) * 0.2;
+            $navHeader.css('font-size', fontScale + 'em');
+
+            // H1 scaling (independent)
+            const ratio = (newHeight - minHeight) / (maxHeight - minHeight);
+            const newTitleSize = minTitleSize + ratio * (maxTitleSize - minTitleSize);
+            $title.css('font-size', newTitleSize + 'px');
+        });
+    };
+    const setupResourcesMobileV3 = () => {
+//        return;
+        const $scroller = $('#theatre');
+        const $header = $('.nav-header-container');
+        // Config: each item can have its own min/max height and children with min/max fonts
+        const resizableItems = [
+            {
+                $el: $('.nav-header-container'),
+                minHeight: 30,
+                maxHeight: 74,
+                children: [
+                    { $el: $('h1', '.nav-header-container'), minFont: 16, maxFont: 24 }
+                ]
+            },
+            {
+                $el: $('.resources-profile-header'),
+                minHeight: 140,
+                maxHeight: 250,
+                children: [
+                    { $el: $('h2', '.resources-profile-header'), minFont: 16, maxFont: 24 },
+                    { $el: $('p', '.resources-profile-header'), minFont: 11, maxFont: 16 },
+//                    { $el: $('p', '.resources-profile-header'), minFont: 12, maxFont: 18 },
+                    { $el: $('.profile-icon', '.resources-profile-header'), minFont: 40, maxFont: 80 } // use font-scale for width/height in em
+                ]
+            }
+        ];
+
+        $scroller.on('scroll', function () {
+            const scrollY = $(this).scrollTop();
+//            $('.resources-profile-header').css({'padding-top': '6em'});
+//            console.log(`scrollY: ${scrollY}`);
+            if (scrollY > 30) {
+//                console.log('mini')
+                $header.addClass('mini');
+            } else {
+                $header.removeClass('mini');
+            }
+            return;
+            resizableItems.forEach(item => {
+                const newHeight = Math.max(item.minHeight, item.maxHeight - scrollY);
+                item.$el.css('height', newHeight + 'px');
+                $('.resources-profile-header').css({'padding-top': `${newHeight}px`});
+                const newPadding = newHeight;
+                console.log(`set padding to ${newPadding}px`);
+                if (item.children) {
+                    item.children.forEach(child => {
+                        const ratio = (newHeight - item.minHeight) / (item.maxHeight - item.minHeight);
+                        const newFont = child.minFont + ratio * (child.maxFont - child.minFont);
+                        child.$el.css('font-size', newFont + 'px');
+
+                        // Optional: if scaling an icon/image with em, set width/height too
+                        if (child.$el.is('img')) {
+                            child.$el.css({
+                                width: newFont + 'px',
+                                height: newFont + 'px',
+//                                'padding-top': newFont + 'px'
+                            });
+                        }
+                    });
+                }
+            });
+        });
+    };
+    const setupResourcesMobile = () => {
+//        return;
+        const $scroller = $('#theatre');
+        const $header = $('.nav-header-container');
+        const $content = $('.resources-grid');
+        adjustHeaderForTheatreScrollbar();
+        $scroller.on('scroll', function () {
+            const scrollY = $(this).scrollTop();
+            if (scrollY > 30) {
+                $header.offsetHeight;
+                $header.addClass('mini');
+                $content.addClass('mini');
+            } else {
+                $header.removeClass('mini');
+                $content.removeClass('mini');
+            }
+        });
+    };
+
+
+
+
+
+
 
     const setupResources = async () => {
         const sub = $('.form-submit-btn');
@@ -2619,23 +2781,18 @@ document.addEventListener('DOMContentLoaded', function () {
         }, 100);
     };
     const renderResources = (n = 0) => {
-//                console.log(`renderResources ${n}`);
         renderNone(() => {
             const p = `profile${n === undefined || n === null? 0 : n}`;
             const rOb = session[p];
-//            console.log(rOb);
             renderTemplate('theatre', 'resources', rOb, () => {
                 updateAddress('resources');
                 $(`#resop_${rOb.profile}_${rOb.type}`).addClass('selected');
                 setupResources();
-//                setTimeout(() => {
-//                    $('#theatre').animate({
-//                        scrollTop: $("h3:contains('Resources')").offset().top
-//                    }, 500);
-//                }, 100);
-                //                console.log(`renderResources`, autoResource);
+//                console.log(window.innerWidth);
+                if (window.innerWidth <= 800) {
+                    setupResourcesMobile();
+                }
                 if (autoResource && window.isLocal()) {
-//                    console.log('YESDSSS')
                     checkCapacity();
                     const c = gameData.constants;
                     const ch = [1, 1, 3];
@@ -2695,10 +2852,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 } else {
                     const prof = window.clone(session)[`profile${n}`];
-//                    console.log(session);
-//                    console.log(window.clone(session));
-//                    console.log(window.clone(session));
-//                    console.log(`profile${n}`)
                     resOptionselect(n, prof.type > -1 ? prof.type : 0, {
                         showAlert: false
                     });

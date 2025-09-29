@@ -178,12 +178,18 @@ p.resource_value {
     position: absolute;
     top: 10px;
     right: 28px;
+/*    right: 16px;*/
     width: 40px;
     height: 40px;
 /*    background-color: red;*/
     z-index: 9999999;
     cursor: pointer;
     opacity: 0.8;
+}
+@media(max-width: 800px) {
+    #helpbutton {
+        right: 16px;
+    }
 }
 #helpbutton:hover {
     opacity: 1;
