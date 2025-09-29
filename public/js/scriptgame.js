@@ -2417,7 +2417,7 @@ document.addEventListener('DOMContentLoaded', function () {
             } else {
                 $header.removeClass('mini');
             }
-            return;
+//            return;
             resizableItems.forEach(item => {
                 const newHeight = Math.max(item.minHeight, item.maxHeight - scrollY);
                 item.$el.css('height', newHeight + 'px');
@@ -2445,21 +2445,24 @@ document.addEventListener('DOMContentLoaded', function () {
     };
     const setupResourcesMobile = () => {
 //        return;
-        const $scroller = $('#theatre');
-        const $header = $('.nav-header-container');
-        const $content = $('.resources-grid');
-        adjustHeaderForTheatreScrollbar();
-        $scroller.on('scroll', function () {
-            const scrollY = $(this).scrollTop();
-            if (scrollY > 30) {
-                $header.offsetHeight;
-                $header.addClass('mini');
-                $content.addClass('mini');
-            } else {
-                $header.removeClass('mini');
-                $content.removeClass('mini');
-            }
-        });
+        console.log(`setupResourcesMobile`);
+        if (window.innerWidth <= 800) {
+            const $scroller = $('#theatre');
+            const $header = $('.nav-header-container');
+            const $content = $('.resources-grid');
+            adjustHeaderForTheatreScrollbar();
+            $scroller.on('scroll', function () {
+                const scrollY = $(this).scrollTop();
+                if (scrollY > 30) {
+                    $header.offsetHeight;
+                    $header.addClass('mini');
+                    $content.addClass('mini');
+                } else {
+                    $header.removeClass('mini');
+                    $content.removeClass('mini');
+                }
+            });
+        }
     };
 
 
@@ -2472,6 +2475,8 @@ document.addEventListener('DOMContentLoaded', function () {
         const sub = $('.form-submit-btn');
         const p = session[sub.data('profile')];
         setupResourceExtras(false);
+        setupResourcesMobile();
+
         //
         if (p.type > -1) {
             sub.prop('disabled', true);
@@ -2789,9 +2794,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 $(`#resop_${rOb.profile}_${rOb.type}`).addClass('selected');
                 setupResources();
 //                console.log(window.innerWidth);
-                if (window.innerWidth <= 800) {
-                    setupResourcesMobile();
-                }
+
                 if (autoResource && window.isLocal()) {
                     checkCapacity();
                     const c = gameData.constants;
