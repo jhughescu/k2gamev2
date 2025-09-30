@@ -1,3 +1,10 @@
+:root{
+	--grey-background: rgba(237,237,237,1.00);
+
+	--button-gradient: linear-gradient(to right, rgba(38,113,136,1.00), rgba(56,163,182,1.00));
+
+	--button-gradient-hover: linear-gradient(to right, rgba(56,163,182,1.00), rgba(56,163,182,1.00));
+}
 @media(max-width: 800px) {
     .nav-header-container {
         height: 70px;
@@ -6,6 +13,7 @@
         left: 0;
         right: 0;
         background-color: white;
+/*        background-color: yellow;*/
 /*        opacity: 0.6;*/
 /*        position: fixed;*/
 /*        top: 0;*/
@@ -27,7 +35,7 @@
     }
 
     .nav-header-container.mini .back-btn-title-bar {
-        padding-top: 10px;
+        padding-top: 14px;
     }
 
     .nav-header-container.mini .back-btn img {
@@ -42,6 +50,10 @@
         margin-left: 10px;
     }
 
+    .resources-profile-navbtn {
+        background-color: var(--grey-background);
+    }
+
     .resources-grid {
         padding-top: 80px;
         /*        position: absolute;*/
@@ -52,7 +64,9 @@
     #theatre {
 /*        overflow: hidden;*/
     }
-
+    .mini {
+/*        background-color: red;*/
+    }
     .resources-grid .main-content {
         /*        transition: padding 1s ease;*/
 
@@ -61,6 +75,8 @@
 
     .resources-grid.mini {
         padding-top: 110px;
+        padding-top: 280px;
+        padding-top: 180px;
     }
 
     .resources-grid .resources-profile-header {
@@ -71,6 +87,7 @@
     .resources-grid.mini .resources-profile-header {
         position: fixed;
         top: 30px;
+        top: 46px;
         left: 0px;
         padding: 6px;
         width: calc(100% - 40px);
@@ -80,7 +97,11 @@
     }
 
     .resources-grid.mini .main-content {
-        padding-top: 40px;
+        padding-top: 43px;
+    }
+    .resources-grid.mini .main-content-sub {
+        padding-top: 3px;
+        margin-top: 0;
     }
 
     .resources-grid.mini .profile-icon {

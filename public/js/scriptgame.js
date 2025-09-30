@@ -2255,11 +2255,18 @@ document.addEventListener('DOMContentLoaded', function () {
         const remain = parseFloat($('#resource_remaining').find('div').length > 0 ? $('#resource_remaining').find('div').html() : $('#resource_remaining').html());
         const c = gameData.constants;
         const p = session[$('.form-submit-btn').data('profile')];
+        const resSet = p.type > -1;
+//        console.log(`setupResourceExtras`, p.name);
+//        console.log(p.name, p.oxygen, p.sustenance, p.rope);
+//        console.log(p.oxygen === 0 & p.sustenance === 0 & p.rope === 0);
+//        console.log(`resSet: ${resSet}, ${boo}`);
+        if (resSet) {
+            // if resources already set boo will always be false
+            boo = false;
+        }
         nin.prop('disabled', !boo);
+        adj.addClass('disabled');
         if (boo) {
-            //            console.log(p);
-            //            console.log(p.options);
-            //            console.log(p.temptype);
             if (!p.hasOwnProperty('temptype')) {
                 console.warn('This action has been cancelled, however the profiles should have been created regardless.');
                 return;
@@ -2292,16 +2299,20 @@ document.addEventListener('DOMContentLoaded', function () {
                 resOptionselect(p.profile, p.temptype);
             });
             adj.off('click').on('click', function () {
-                const i = $(this).parent().find('input');
-                const a = $(this).attr('class').includes('plus') ? 1 : -1;
-                let n = parseFloat(i.val()) + a;
-                //                console.log(n, a, i);
-                //                console.log(p);
+//                console.log($(this));
+                const isDisabled = $(this).hasClass('disabled');
+                if (!isDisabled) {
+                    const i = $(this).parent().find('input');
+                    const a = $(this).attr('class').includes('plus') ? 1 : -1;
+                    let n = parseFloat(i.val()) + a;
+                    //                console.log(n, a, i);
+                    //                console.log(p);
 
-                n = n < 0 ? 0 : n;
-                const v = i.attr('id');
-                updateProfile(p, v, n);
-                updateResourceView(p);
+                    n = n < 0 ? 0 : n;
+                    const v = i.attr('id');
+                    updateProfile(p, v, n);
+                    updateResourceView(p);
+                }
             });
         }
     };
@@ -2443,24 +2454,31 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         });
     };
+    const doMini = () => {
+        const $scroller = $('#theatre');
+        const $header = $('.nav-header-container');
+            const $content = $('.resources-grid');
+        const scrollY = $scroller.scrollTop();
+        if (scrollY > 30) {
+            $header.offsetHeight;
+            $header.addClass('mini');
+            $content.addClass('mini');
+        } else {
+            $header.removeClass('mini');
+            $content.removeClass('mini');
+        }
+    };
     const setupResourcesMobile = () => {
 //        return;
-        console.log(`setupResourcesMobile`);
+//        console.log(`setupResourcesMobile`);
         if (window.innerWidth <= 800) {
             const $scroller = $('#theatre');
-            const $header = $('.nav-header-container');
-            const $content = $('.resources-grid');
+//            const $header = $('.nav-header-container');
+//            const $content = $('.resources-grid');
             adjustHeaderForTheatreScrollbar();
+            doMini();
             $scroller.on('scroll', function () {
-                const scrollY = $(this).scrollTop();
-                if (scrollY > 30) {
-                    $header.offsetHeight;
-                    $header.addClass('mini');
-                    $content.addClass('mini');
-                } else {
-                    $header.removeClass('mini');
-                    $content.removeClass('mini');
-                }
+                doMini();
             });
         }
     };
@@ -2474,9 +2492,19 @@ document.addEventListener('DOMContentLoaded', function () {
     const setupResources = async () => {
         const sub = $('.form-submit-btn');
         const p = session[sub.data('profile')];
+        const bPrevious = $('.navbtn-previous');
+        const bNext = $('.navbtn-next');
+//        console.log(`setupResources`, p.name, p.profile);
+//        console.log(p);
+//        console.log(bPrevious, bNext);
         setupResourceExtras(false);
         setupResourcesMobile();
-
+        if (p.profile === 0) {
+            bPrevious.hide();
+        }
+        if (p.profile === 2) {
+            bNext.hide();
+        }
         //
         if (p.type > -1) {
             sub.prop('disabled', true);
@@ -2527,7 +2555,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         } else if (getWeight(p).remaining > 0) {
                             const m = `${p.name} has ${getWeight(p).remaining}kg unused carrying capacity, are you sure you don't want to use it? You will not be able to change your mind later.`;
                             const ok = showConfirm(m);
-                            console.log(`OK is ${ok}`);
+//                            console.log(`OK is ${ok}`);
                             if (ok) {
                                 submitResources(p);
                             }
@@ -2642,8 +2670,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 updateProfile(profile, 'oxygen', t_oxygen);
                 updateProfile(profile, 'sustenance', t_sustenance);
                 updateResourceView(profile);
+//                console.log(2);
                 setupResourceExtras(true);
-                $('.adjust_btn').removeClass('disabled');
+//                console.log('remove the disabled class');
+//                console.log(p.name, p.type);
+                if (p.type === -1) {
+                    $('.adjust_btn').removeClass('disabled');
+                }
                 resOptionOnClick(profile, type, ob.showAlert);
             }
         }
