@@ -1,6 +1,6 @@
 {
-  "timestamp": "2025-09-29T16:54:42+01:00",
-  "commitHash": "bfd3ecdf23367cac792f925e0cfdb420f8036deb",
-  "commitMessage": "Knocked out a FF return statement...",
+  "timestamp": "2025-10-08T15:04:42+01:00",
+  "commitHash": "0b00e974a27938420b6f4d44271ae28c368371e1",
+  "commitMessage": "Prev/next buttons on resources page hidden when not available. Plus/minus buttons fixed, scrolling behaviour fixed.",
   "branch": "master"
 }

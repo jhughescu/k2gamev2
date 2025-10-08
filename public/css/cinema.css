@@ -34,4 +34,5 @@ overlay for showing videos - these will appear fullscreen above other content
     background-color: #63bcfd;
     z-index: 2;
     cursor: pointer;
+    opacity: 0;
 }

@@ -14,7 +14,9 @@ try {
     execSync('taskkill /IM ngrok.exe /F', { stdio: 'ignore' }); // Silently kill
 } catch (err) {
     console.warn('No existing ngrok process to kill.');
-//    startNgrok();
+    if (process.env.ISLOCAL) {
+        startNgrok();
+    }
 }
 
 

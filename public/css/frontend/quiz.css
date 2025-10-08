@@ -1,0 +1,58 @@
+.quizQuestion {
+/*        font-size: 18px;*/
+    }
+    .quizQuestion .bQuiz {
+        margin: 10px auto;
+        width: 300px;
+        height: 40px;
+        color: white;
+        text-align: left;
+        border-radius: 10px;
+        box-shadow: -2px 2px 3px rgba(28, 28, 28, 0.85);
+        padding: 12px;
+        cursor: pointer;
+    }
+    .quizQuestion .bQuizAnswer {
+        background-color: #f54589;
+    }
+    .quizQuestion .bQuizSubmit {
+        margin-top: 30px;
+        width: 150px;
+        text-align: center;
+        background-color: #747373;
+    }
+
+    .quizQuestion .bQuiz.clicked {
+/*        cursor: default;*/
+    }
+    .quizQuestion .bQuizAnswer.clicked {
+        background-color: #ea015b;
+/*        color: black;*/
+    }
+    .quizQuestion .bQuiz.disabled {
+        cursor: default;
+    }
+    .quizQuestion .bQuizAnswer.correct {
+/*        background-color: #0b9810;*/
+        box-shadow: -4px 4px 3px rgba(28, 28, 28, 0.95);
+    }
+    .quizQuestion .bQuizAnswer.incorrect {
+/*        opacity: 0.5;*/
+        color: #deacbf;
+    }
+    .quizQuestion form {
+        text-align: left;
+/*        background-color: blue;*/
+        margin: 0px 40px;
+    }
+    .quizQuestion input {
+        margin: 0px 20px 20px 0px;
+    }
+    .quizQuestion p {
+        margin: 0px 40px;
+        text-align: left;
+        font-size: 1rem;
+    }
+    .quizQuestion #answers {
+        margin: 30px 0px;
+    }

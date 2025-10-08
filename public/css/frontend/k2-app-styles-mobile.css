@@ -5,8 +5,60 @@
 
 	--button-gradient-hover: linear-gradient(to right, rgba(56,163,182,1.00), rgba(56,163,182,1.00));
 }
+
 @media(max-width: 800px) {
-    .nav-header-container {
+    .modal {
+        height: calc(100% - 40px);
+/*        height: 100%;*/
+    }
+    ul, ol {
+      margin-left: 0;
+      padding-left: 10px; /* controls how far list items are inset */
+    }
+    .climber-response p,  .modal-content p {
+        font-size: 0.7em;
+/*        background-color: red;*/
+    }
+    .modal #modal_content_section {
+        padding-top: 30px;
+/*        font-size: 0.7em;*/
+/*        background-color: red;*/
+    }
+    .modal p,
+    .modal #modal_content_section p,
+    .modal .choice_option p,
+    .modal #modal_content_section ul,
+/*    .modal .teamSelectButton p,*/
+    .modal .teamSelectButton h4,
+    .quizQuestion p,
+    .modal form
+    {
+/*        padding-top: 30px;*/
+        font-size: 0.9em;
+/*        background-color: red;*/
+    }
+    .modal .teamSelectText p {
+        font-size: 0.7em;
+/*        background-color: grey;*/
+    }
+    .modal_content h3 {
+        font-size: 1rem;
+    }
+        font-size: 1.3rem;
+        width: 100%;
+        margin: 0.5rem auto;
+    }
+    .profile-header p {
+        font-size: 1rem;
+    /*    background-color: blue;*/
+        margin: 0 auto;
+    }
+
+    .nav-header-container h1 {
+/*        background-color: pink;*/
+        font-size: 1.5rem;
+    }
+    .nav-header-container-resources {
         height: 70px;
         position: fixed;
         top: 0;
@@ -25,25 +77,25 @@
         z-index: 1000;
     }
 
-    .nav-header-container.mini {
+    .nav-header-container-resources.mini {
         height: 46px;
         padding: 0px;
     }
 
-    .nav-header-container.mini h1 {
+    .nav-header-container-resources.mini h1 {
         font-size: 1.3em;
     }
 
-    .nav-header-container.mini .back-btn-title-bar {
+    .nav-header-container-resources.mini .back-btn-title-bar {
         padding-top: 14px;
     }
 
-    .nav-header-container.mini .back-btn img {
+    .nav-header-container-resources.mini .back-btn img {
         width: calc(100% - 10px);
         margin: 5px;
     }
 
-    .nav-header-container.mini .back-btn {
+    .nav-header-container-resources.mini .back-btn {
         width: 40px;
         height: 40px;
         padding: 0px;
@@ -56,20 +108,9 @@
 
     .resources-grid {
         padding-top: 80px;
-        /*        position: absolute;*/
         top: 0px;
-/*        background-color: aquamarine;*/
-    }
-
-    #theatre {
-/*        overflow: hidden;*/
-    }
-    .mini {
-/*        background-color: red;*/
     }
     .resources-grid .main-content {
-        /*        transition: padding 1s ease;*/
-
         top: 0px;
     }
 
@@ -80,7 +121,6 @@
     }
 
     .resources-grid .resources-profile-header {
-/*        background-color: aqua;*/
         z-index: 999999999;
     }
 

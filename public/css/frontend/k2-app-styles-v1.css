@@ -596,8 +596,8 @@ background-color: none		}
 @media (max-width: 800px) {
     .modal-alert img{
         /* JH adjust */
-        padding: 10px;
-        width: 100px;
+/*        padding: 10px;*/
+/*        width: 100px;*/
     }
 }
 

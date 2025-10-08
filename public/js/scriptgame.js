@@ -405,19 +405,21 @@ document.addEventListener('DOMContentLoaded', function () {
             $(`#h_${act}`).show();
             setupModalDiceButton((ob) => {
                 if (ob.state === 1) {
-                    rollDisplay.html(`You rolled a ${ob.res}.`);
+                    rollDisplay.html(`<p>You rolled a ${ob.res}.</p>`);
                     log += `${ob.res} rolled, time pens: `
                     const r = ob.res >= 3 ? 1 : 0;
                     const cl = Climber.getClimbers();
                     let hasPens = false;
-                    rollDisplay.append('<ul>');
+//                    rollDisplay.append('<ul>');
+                    let resStr = '<ul>';
                     results.forEach((c, i) => {
                         const prof = session[`profile${i}`];
 //                        console.log(i, c);
                         if (c[r] > 0) {
                             hasPens = true;
 //                            rollDisplay.append(`<p><b>${cl[i].name.split(' ')[0]}</b> will be slowed by ${c[r]} minutes</p>`);
-                            rollDisplay.append(`<li><b>${cl[i].name.split(' ')[0]}</b> will be slowed by ${c[r]} minutes</li>`);
+//                            rollDisplay.append(`<li><b>${cl[i].name.split(' ')[0]}</b> will be slowed by ${c[r]} minutes</li>`);
+                            resStr += `<li><b>${cl[i].name.split(' ')[0]}</b> will be slowed by ${c[r]} minutes</li>`;
                             log += `${cl[i].name.split(' ')[0]} ${c[r]} `;
                             prof.adjustProperty(ev.metrics.penalty, c[r], (res) => {
                                 //                                console.log(`adjustment complete`, res);
@@ -427,7 +429,9 @@ document.addEventListener('DOMContentLoaded', function () {
                             devShowProfiles();
                         }
                     });
-                    rollDisplay.append('</ul>');
+//                    rollDisplay.append('</ul>');
+                    resStr += '</ul>';
+                    rollDisplay.append(resStr);
                     if (!hasPens) {
                         rollDisplay.append(`<p>No penalties.</p>`);
                     }
@@ -2457,7 +2461,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const doMini = () => {
         const $scroller = $('#theatre');
         const $header = $('.nav-header-container');
-            const $content = $('.resources-grid');
+        const $content = $('.resources-grid');
         const scrollY = $scroller.scrollTop();
         if (scrollY > 30) {
             $header.offsetHeight;
@@ -2470,8 +2474,10 @@ document.addEventListener('DOMContentLoaded', function () {
     };
     const setupResourcesMobile = () => {
 //        return;
-//        console.log(`setupResourcesMobile`);
-        if (window.innerWidth <= 800) {
+        console.log(`setupResourcesMobile`, $('.mini').length);
+//        console.log();
+        if (window.innerWidth <= 800 && $('.mini').length === 0) {
+            console.log('do it');
             const $scroller = $('#theatre');
 //            const $header = $('.nav-header-container');
 //            const $content = $('.resources-grid');
@@ -3863,6 +3869,8 @@ document.addEventListener('DOMContentLoaded', function () {
     };
 
 
+
+
     window.ctest = renderCinema;
     window.setupCinema = setupCinema;
     window.getVidID = getVidID;
@@ -4247,7 +4255,19 @@ document.addEventListener('DOMContentLoaded', function () {
 //    publically exposed methods:
     window.scriptgame = {
         startNew: startNew
-    }
+    };
+    const onResize = () => {
+        doMini();
+        setupResourcesMobile();
+    };
+    let resizeTimeout;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+            onResize();
+        }, 200);
+
+    });
 
     init();
 });
