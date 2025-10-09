@@ -1,6 +1,6 @@
 {
-  "timestamp": "2025-10-08T12:47:35+01:00",
-  "commitHash": "0b00e974a27938420b6f4d44271ae28c368371e1",
-  "commitMessage": "Prev/next buttons on resources page hidden when not available. Plus/minus buttons fixed, scrolling behaviour fixed.",
+  "timestamp": "2025-10-09T09:37:46+01:00",
+  "commitHash": "08a2a52aa7e71fe2e6ac78284641a9d6b295fc3c",
+  "commitMessage": "CSS tweaks, modal text for mobile shrunk to fit space. Modal height increased. To undo changes omit k2-app-styles-mobile.css",
   "branch": "master"
 }
