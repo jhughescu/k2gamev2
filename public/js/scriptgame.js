@@ -738,7 +738,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             const response = `You rolled a ${result}${boo ? ', ' + prof.responses.res + summary.join(' and ') : ', so nobody gets a penalty.'}`;
                             log += `${result} rolled${boo ? ', ' + prof.responses.res + summary.join(' and ') : ', so nobody gets a penalty.'}`;
                             //                            console.log('log created', log);
-                            dv.find('.choice_option_content').html(response);
+                            dv.find('.choice_option_content').html(`<p>${response}</p>`);
                             //                            console.log(response);
                             // change the support team after each profile event (so the new team will be ready when the next event occurs)
                             if (supportTeamType === 1) {

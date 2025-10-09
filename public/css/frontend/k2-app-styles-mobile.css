@@ -8,8 +8,14 @@
 
 @media(max-width: 800px) {
     .modal {
-        height: calc(100% - 40px);
+        height: calc(100% - 110px);
 /*        height: 100%;*/
+    }
+    .modal-profile-img {
+        width: 80px;
+        height: 100px;
+        padding-top: 20px;
+        /* padding is applied inside the image, therefore this is subtracted from the height*/
     }
     ul, ol {
       margin-left: 0;
@@ -27,6 +33,7 @@
     .modal p,
     .modal #modal_content_section p,
     .modal .choice_option p,
+    .modal .choice_option_content,
     .modal #modal_content_section ul,
 /*    .modal .teamSelectButton p,*/
     .modal .teamSelectButton h4,

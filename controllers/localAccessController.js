@@ -15,7 +15,7 @@ try {
 } catch (err) {
     console.warn('No existing ngrok process to kill.');
     if (process.env.ISLOCAL) {
-//        startNgrok();
+        startNgrok();
     }
 }
 

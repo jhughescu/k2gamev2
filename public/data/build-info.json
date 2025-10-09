@@ -1,6 +1,6 @@
 {
-  "timestamp": "2025-10-09T09:37:46+01:00",
-  "commitHash": "08a2a52aa7e71fe2e6ac78284641a9d6b295fc3c",
-  "commitMessage": "CSS tweaks, modal text for mobile shrunk to fit space. Modal height increased. To undo changes omit k2-app-styles-mobile.css",
+  "timestamp": "2025-10-09T15:26:07+01:00",
+  "commitHash": "56346f6660326d4f7ccc8b79bf75824911632c71",
+  "commitMessage": "Knocked out ngrok for deploy",
   "branch": "master"
 }
