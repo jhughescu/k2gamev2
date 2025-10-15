@@ -1,6 +1,6 @@
 {
-  "timestamp": "2025-10-09T15:26:07+01:00",
-  "commitHash": "56346f6660326d4f7ccc8b79bf75824911632c71",
-  "commitMessage": "Knocked out ngrok for deploy",
+  "timestamp": "2025-10-15T09:36:28+01:00",
+  "commitHash": "e7b4f1f6638e5b56ee594e8297bde51da67719ac",
+  "commitMessage": "Quiz questions adjusted to fit.",
   "branch": "master"
 }
