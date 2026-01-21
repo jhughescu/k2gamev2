@@ -1,6 +1,5 @@
 const socketIo = require('socket.io');
 const { getEventEmitter } = require('./../controllers/eventController');
-const routeController = require('./../controllers/routeController');
 const sessionController = require('./../controllers/sessionController');
 //const downloadController = require('./../controllers/downloadController');
 const { saveCSVLocally, convertToCSV } = require('./../controllers/downloadController');
@@ -10,6 +9,7 @@ const gfxController = require('./../controllers/gfxController');
 const quizController = require('./../controllers/quizController');
 
 const tools = require('./../controllers/tools');
+const { sessionMiddleware } = require('./../controllers/authController');
 
 const eventEmitter = getEventEmitter();
 
@@ -47,14 +47,21 @@ const getPlayerHandshake = () => {
 // Function to initialize socket.io
 function initSocket(server) {
     io = socketIo(server);
+    
+    // Share express session with socket.io
+    io.engine.use(sessionMiddleware);
+    
     // Handle client events
     io.on('connection', async (socket) => {
-        let ref = socket.request.headers.referer;
+        let ref = socket.request.headers.referer || '';
         let src = ref.split('?')[0]
         src = src.split('/').reverse()[0];
         src = `/${src}`;
         const Q = socket.handshake.query;
         let sType = false;
+        
+        // Get session from socket request
+        const session = socket.request.session || {};
         socket.on('checkSocket', (o, cb) => {
             const sock = `${o.address}-${o.sock}`;
             const ro = {total: showRoomSize(sock)};
@@ -205,6 +212,16 @@ function initSocket(server) {
             // end game clients
             // admin clients
             if (sType.includes('admin')) {
+                // Verify admin authentication
+                if (!session.isAuthenticated || session.role !== 'admin') {
+                    console.warn('Unauthorized admin socket connection attempt');
+                    socket.emit('authError', { message: 'Admin authentication required' });
+                    socket.disconnect(true);
+                    return;
+                }
+                
+                console.log('Authenticated admin socket connection established');
+                
                 socket.on('getSessions', (sOb, cb) => {
                     sessionController.getSessions(sOb, cb)
                 });

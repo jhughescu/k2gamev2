@@ -61,7 +61,12 @@ const newSession = async (ob, cb) => {
         const data = await processData();
         const list = [];
         sessions.forEach(s => {
-            list.push(parseInt(s.name.split('_')[1]));
+            if (s.name && s.name.includes('_')) {
+                const num = parseInt(s.name.split('_')[1]);
+                if (!isNaN(num)) {
+                    list.push(num);
+                }
+            }
         });
         list.sort((a, b) => a - b);
         const sN = tools.getTimeNumber().toString();
@@ -148,25 +153,60 @@ const restoreSession = async (sOb, cb) => {
         cb(`session not found`);
     }
 };
+const ALLOWED_SET_FIELDS = new Set([
+    'name',
+    'dateID',
+    'dateAccessed',
+    'playTime',
+    'type',
+    'teamRef',
+    'state',
+    'time',
+    'supportTeamRef',
+    'events',
+    'profile0',
+    'profile1',
+    'profile2'
+]);
+
+const ALLOWED_PUSH_FIELDS = new Set(['quiz']);
+
 const updateSession = async (sOb, cb) => {
 //    console.log(`updateSession called for uniqueID: ${sOb.uniqueID} (${typeof(sOb.uniqueID)})`);
 //    console.log(sOb);
     try {
         const filter = { uniqueID: String(sOb.uniqueID) };
-//        console.log(filter)
+
+        if (!filter.uniqueID) {
+            throw new Error('updateSession missing uniqueID');
+        }
+
         const update = { $set: {}, $push: {} };
+        const skippedFields = [];
 
         for (const [key, value] of Object.entries(sOb)) {
-            if (key === 'quiz') {
-                update.$push.quiz = value;
-            } else {
-                update.$set[key] = value;
+            if (key === 'uniqueID') continue; // uniqueID is only used for the filter
+
+            if (ALLOWED_PUSH_FIELDS.has(key)) {
+                update.$push[key] = value;
+                continue;
             }
+
+            if (ALLOWED_SET_FIELDS.has(key)) {
+                update.$set[key] = value;
+                continue;
+            }
+
+            skippedFields.push(key);
         }
 
         // Clean up empty operators if not used
         if (Object.keys(update.$push).length === 0) delete update.$push;
         if (Object.keys(update.$set).length === 0) delete update.$set;
+
+        if (!update.$set && !update.$push) {
+            throw new Error(`No permitted fields to update. Skipped: ${skippedFields.join(', ') || 'none'}`);
+        }
 
 
         const result = await Session.updateOne(filter, update);

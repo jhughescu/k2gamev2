@@ -17,25 +17,29 @@ const basePath = path.join(__dirname, '..', 'public');
 const routeAccessTimes = {};
 const connectedUsers = new Map();
 const DEBUG_PIN = process.env.DEBUG_PIN || '2222';
+const authController = require('./authController');
 
-
+// Static files
 app.use(express.static(basePath));
-// Use body-parser middleware to parse request bodies
-app.use(bodyParser.urlencoded({
-    extended: true
-}));
+
+// Cookie parser
+app.use(cookieParser());
+
+// Route access logging
 app.use((req, res, next) => {
     const currentTime = new Date().toISOString();
     routeAccessTimes[req.path] = currentTime;
     next();
 });
-app.use(bodyParser.json({
-    limit: '0.5mb'
-}));
-app.use(cookieParser());
 
-
-
+// Authentication routes
+app.get('/auth/login', (req, res) => {
+    res.sendFile(path.join(basePath, 'auth_login.html'));
+});
+app.post('/auth/login', authController.loginLimiter, authController.login);
+app.post('/auth/logout', authController.authLimiter, authController.logout);
+app.get('/auth/check', authController.authLimiter, authController.checkAuth);
+app.get('/auth/env-info', authController.getEnvInfo);
 
 
 app.post('/getTemplate', (req, res) => {
@@ -146,25 +150,26 @@ app.post('/api/check-debug-pin', (req, res) => {
 });
 
 
-app.get('/dev/pbuilder', (req, res) => {
+// Protected dev routes - require admin authentication
+app.get('/dev/pbuilder', authController.requireAdmin, (req, res) => {
     res.sendFile(path.join(basePath, 'dev_profile_builder.html'));
 });
-app.get('/dev/admin', (req, res) => {
+app.get('/dev/admin', authController.requireAdmin, (req, res) => {
     res.sendFile(path.join(basePath, 'dev_admin.html'));
 });
-app.get('/admin/dashboard1', (req, res) => {
+app.get('/admin/dashboard1', authController.requireAdmin, (req, res) => {
     res.sendFile(path.join(basePath, 'admin_dashboard.html'));
     //    res.sendFile(path.join(basePath, 'admin_dashboard_layout.html'));
 });
-app.get('/admin/dashboard', (req, res) => {
+app.get('/admin/dashboard', authController.requireAdmin, (req, res) => {
     //    res.sendFile(path.join(basePath, 'admin_dashboard.html'));
     res.sendFile(path.join(basePath, 'admin_dashboard_layout.html'));
 });
-app.get('/devtools', (req, res) => {
+app.get('/devtools', authController.requireAdmin, (req, res) => {
     res.sendFile(path.join(basePath, 'dev.tools.html'));
 });
 
-app.get('/dev/logdisplay', (req, res) => {
+app.get('/dev/logdisplay', authController.requireAdmin, (req, res) => {
     res.sendFile(path.join(basePath, 'log_display.html'));
 });
 

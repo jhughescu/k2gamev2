@@ -1,10 +1,26 @@
 document.addEventListener('DOMContentLoaded', function () {
+    // Check and apply dev mode styling
+    fetch('/auth/env-info')
+        .then(res => res.json())
+        .then(data => {
+            if (data.isDev) {
+                document.querySelector('header').classList.add('dev-mode');
+            }
+        })
+        .catch(err => console.error('Env info fetch failed:', err));
+
     const socket = io('', {
         query: {
             role: 'admin.dashboard'
         }
     });
 
+    // Handle authentication errors
+    socket.on('authError', (data) => {
+        console.error('Socket authentication failed:', data.message);
+        alert('Authentication required. Redirecting to login...');
+        window.location.href = '/auth/login?redirect=' + encodeURIComponent(window.location.pathname);
+    });
 
     let sessions = null;
     let data;
@@ -23,6 +39,7 @@ document.addEventListener('DOMContentLoaded', function () {
     let $bDeleteSel;
     let $bClear;
     let $bSeshClose;
+    let $bLogout;
 //
     const getData = () => {
         if (socket.connected) {
@@ -591,7 +608,7 @@ document.addEventListener('DOMContentLoaded', function () {
         zone.hide();
         zone.show();
         display.html('');
-        sessions.map(s => s.complete = s.state.includes('completed'));
+        sessions.map(s => s.complete = (s.state || '').includes('completed'));
         display.append(`<p>${sessions.length} sessions found</p>`);
         const sCount = sessions.length;
         const sPlural = sessions.length !== 1;
@@ -739,6 +756,7 @@ document.addEventListener('DOMContentLoaded', function () {
         $bDeleteSel = $('#bDeleteSel');
         $bClear = $('#bClear');
         $bSeshClose = $('#closeDetail');
+        $bLogout = $('#logoutBtn');
         //
         $bAll.off('click').on('click', (ev) => {
             ev.preventDefault();
@@ -781,6 +799,20 @@ document.addEventListener('DOMContentLoaded', function () {
         $bClear.off('click').on('click', function (ev) {
             ev.preventDefault();
             clearSessions();
+        });
+        $bLogout.off('click').on('click', async function (ev) {
+            ev.preventDefault();
+            try {
+                const resp = await fetch('/auth/logout', { method: 'POST', credentials: 'include' });
+                if (resp.ok) {
+                    window.location.href = '/auth/login?redirect=' + encodeURIComponent(window.location.pathname);
+                } else {
+                    alert('Logout failed');
+                }
+            } catch (err) {
+                console.error('Logout error', err);
+                alert('Logout failed');
+            }
         });
         $bSeshClose.off('click').on('click', closeSession);
         //

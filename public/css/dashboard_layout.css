@@ -13,12 +13,48 @@ body {
 header {
   background-color: #333;
   padding: 10px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+header.dev-mode {
+  background-color: #d97760;
+  position: relative;
+}
+
+header.dev-mode::after {
+  content: '● DEV MODE';
+  position: absolute;
+  right: 80px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 11px;
+  font-weight: bold;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 4px 8px;
+  border-radius: 3px;
 }
 
 form {
   display: flex;
   gap: 10px;
   align-items: center;
+  flex-wrap: wrap;
+}
+
+#logoutBtn {
+  margin-left: auto;
+  background: #444;
+  color: #fff;
+  border: 1px solid #666;
+  border-radius: 4px;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+#logoutBtn:hover {
+  background: #555;
 }
 
 

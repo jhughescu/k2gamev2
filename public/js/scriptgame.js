@@ -1,14 +1,19 @@
 document.addEventListener('DOMContentLoaded', function () {
     //    return;
 
-
-
+    // Safe function dispatch table - replaces eval() for method calls
+    const eventMethodDispatch = {
+        'resourcesGoneSetup': null, // Will be set after function definition
+        'resourcesGoneSetupV1': null,
+        'profileEvent': null
+    };
 
     const socket = io('', {
         query: {
             role: 'player'
         }
     });
+    window.socket = socket; // Expose for testing in console
     socket.on('disconnect', () => {
         //        theState.storeTime(session.time);
 
@@ -786,6 +791,12 @@ document.addEventListener('DOMContentLoaded', function () {
             $(`.choice_option`).hide();
         })
     };
+
+    // Populate the dispatch table with actual function references
+    eventMethodDispatch['resourcesGoneSetup'] = resourcesGoneSetup;
+    eventMethodDispatch['resourcesGoneSetupV1'] = resourcesGoneSetupV1;
+    eventMethodDispatch['profileEvent'] = profileEvent;
+
     // end modal-specifics
     const closeModal = (ob) => {
         const m = $('#overlay_modal');
@@ -924,7 +935,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 // event modals cannot be closed by clicking the overlay, they require user input before progression
                 if (hasMethod) {
                     //                    console.log(ev.method);
-                    eval(ev.method)(m, ev);
+                    const methodFunc = eventMethodDispatch[ev.method];
+                    if (methodFunc && typeof methodFunc === 'function') {
+                        methodFunc(m, ev);
+                    } else {
+                        console.error(`Unknown event method: ${ev.method}`);
+                    }
                 } else {
                     setupModalClose(m, !hasMethod);
                 }
@@ -3061,10 +3077,15 @@ document.addEventListener('DOMContentLoaded', function () {
         } else {
             if (ev.hasOwnProperty('method')) {
 //                console.log(`this is the event method trigger`);
-                eval(ev.method)({}, ev);
-                // force autocomplete if the ev.method does not do this
+                const methodFunc = eventMethodDispatch[ev.method];
+                if (methodFunc && typeof methodFunc === 'function') {
+                    methodFunc({}, ev);
+                    // force autocomplete if the ev.method does this
 //                console.log(`non-modal event (autocomplete)`);
-                completeEvent({auto: true});
+                    completeEvent({auto: true});
+                } else {
+                    console.error(`Unknown event method: ${ev.method}`);
+                }
             }
         }
     };

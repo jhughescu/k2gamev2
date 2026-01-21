@@ -1,6 +1,6 @@
 {
-  "timestamp": "2025-10-15T09:36:28+01:00",
-  "commitHash": "e7b4f1f6638e5b56ee594e8297bde51da67719ac",
-  "commitMessage": "Quiz questions adjusted to fit.",
+  "timestamp": "2026-01-21T14:36:52Z",
+  "commitHash": "bfa352a6ccfbc5581878b1a3606873b2195be282",
+  "commitMessage": "Ngrok knocked out. Consider new apparoach which doesn't require the manual switching off of the feature.",
   "branch": "master"
 }

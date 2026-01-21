@@ -97,6 +97,7 @@ const writeBeautifiedJson = async (directoryPath, fileName, data) => {
 const updateUpdates = async () => {
 //    console.log(`updateUpdates: ${isDev()}`);
     if (isLocal()) {
+        await fs.mkdir('logs', { recursive: true });
         let uf = await fs.readFile(LOG_UPDATE);
         uf = JSON.parse(uf);
         let index = Object.keys(uf).length;
@@ -117,9 +118,10 @@ const updateUpdates = async () => {
         eventEmitter.emit('updateLogUpdated', writer);
     }
 };
-const resetUpdatelog = () => {
+const resetUpdatelog = async () => {
     if (isDev()) {
-        fs.writeFile(LOG_UPDATE, '{}');
+        await fs.mkdir('logs', { recursive: true });
+        await fs.writeFile(LOG_UPDATE, '{}');
     }
 };
 const resetUpdates = () => {
@@ -191,7 +193,7 @@ const writeProfileFile = (o) => {
         fs.writeFile(`data/profiles/profile_${c}_${n}.json`, beautify(o, null, 2, 100));
     }
 };
-const writeFinalReport = (ob) => {
+const writeFinalReport = async (ob) => {
     if (isLocal()) {
         const o = {sessionID: ob.sessionID, climbers: []};
         ob.climbers.forEach(c => {
@@ -204,7 +206,8 @@ const writeFinalReport = (ob) => {
                 allDelays: c.allDelays
             });
         });
-        fs.writeFile(`logs/reports/game_${ob.sessionID}.json`, beautify(o, null, 2, 100));
+        await fs.mkdir('logs/reports', { recursive: true });
+        await fs.writeFile(`logs/reports/game_${ob.sessionID}.json`, beautify(o, null, 2, 100));
     }
 };
 const writeClimberLog = async (o) => {
@@ -263,6 +266,7 @@ const writeLogs = async () => {
     console.log(`writeLogs`);
     if (isLocal()) {
         try {
+            await fs.mkdir('logs', { recursive: true });
             let uf;
             // Check if the log file exists
             try {
@@ -318,9 +322,9 @@ const addLog = async (id, ob) => {
     clearTimeout(logTime);
     logTime = setTimeout(writeLogs, 500);
 };
-const init = () => {
+const init = async () => {
     console.log(`init: ${isDev()}`);
-    resetUpdatelog();
+    await resetUpdatelog();
 };
 
 init();
