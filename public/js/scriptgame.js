@@ -3,9 +3,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Safe function dispatch table - replaces eval() for method calls
     const eventMethodDispatch = {
-        'resourcesGoneSetup': null, // Will be set after function definition
+        'resourcesGoneSetup': null,      // Will be set after function definition
         'resourcesGoneSetupV1': null,
-        'profileEvent': null
+        'profileEvent': null,
+        'injury1Setup': null,
+        'getQuestionAndRender': null,
+        'startStorm': null
     };
 
     const socket = io('', {
@@ -792,11 +795,6 @@ document.addEventListener('DOMContentLoaded', function () {
         })
     };
 
-    // Populate the dispatch table with actual function references
-    eventMethodDispatch['resourcesGoneSetup'] = resourcesGoneSetup;
-    eventMethodDispatch['resourcesGoneSetupV1'] = resourcesGoneSetupV1;
-    eventMethodDispatch['profileEvent'] = profileEvent;
-
     // end modal-specifics
     const closeModal = (ob) => {
         const m = $('#overlay_modal');
@@ -887,7 +885,7 @@ document.addEventListener('DOMContentLoaded', function () {
             unpauseSession();
             return;
         }
-//        console.log(window.clone(ev));
+       console.log(window.clone(ev));
 //        ev.current = true;
 //        if (ev.current) {
 //
@@ -4272,6 +4270,14 @@ document.addEventListener('DOMContentLoaded', function () {
         gameflow('script init');
         newconnect = true;
     };
+
+    // Populate the dispatch table with actual function references (after all functions are defined)
+    eventMethodDispatch['resourcesGoneSetup'] = resourcesGoneSetup;
+    eventMethodDispatch['resourcesGoneSetupV1'] = resourcesGoneSetupV1;
+    eventMethodDispatch['profileEvent'] = profileEvent;
+    eventMethodDispatch['injury1Setup'] = injury1Setup;
+    eventMethodDispatch['getQuestionAndRender'] = getQuestionAndRender;
+    eventMethodDispatch['startStorm'] = startStorm;
 
 //    publically exposed methods:
     window.scriptgame = {
