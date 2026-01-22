@@ -8,6 +8,8 @@ const path = require('path');
 const socketIo = require('socket.io');
 const jwt = require('jsonwebtoken');
 const helmet = require('helmet');
+const cookieParser = require('cookie-parser');
+const { doubleCsrfProtection } = require('./controllers/csrfConfig');
 //const gfxController = require('./controllers/gfxController');
 const app = express();
 const server = http.createServer(app);
@@ -48,9 +50,17 @@ app.use(helmet({
 // Configure session middleware BEFORE any routes
 app.use(authController.sessionMiddleware);
 
+// Cookie parser (needed for CSRF)
+app.use(cookieParser());
+
 // Body parser middleware (needed for login form)
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Apply CSRF protection to authenticated routes only
+// Logout is authenticated, so it gets CSRF protection
+app.use('/auth/logout', doubleCsrfProtection);
+// Login is unauthenticated - no valid session to tie token to, so skip CSRF
 
 
 const padNum = (n) => {

@@ -1,4 +1,14 @@
 document.addEventListener('DOMContentLoaded', function () {
+        let csrfToken = null;
+
+        // Fetch CSRF token on page load
+        fetch('/auth/csrf-token')
+            .then(res => res.json())
+            .then(data => {
+                csrfToken = data.csrfToken;
+            })
+            .catch(err => console.error('CSRF token fetch failed:', err));
+
     // Check and apply dev mode styling
     fetch('/auth/env-info')
         .then(res => res.json())
@@ -803,7 +813,17 @@ document.addEventListener('DOMContentLoaded', function () {
         $bLogout.off('click').on('click', async function (ev) {
             ev.preventDefault();
             try {
-                const resp = await fetch('/auth/logout', { method: 'POST', credentials: 'include' });
+                if (!csrfToken) {
+                    alert('Security token not available. Please refresh the page.');
+                    return;
+                }
+                const resp = await fetch('/auth/logout', {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: {
+                        'x-csrf-token': csrfToken
+                    }
+                });
                 if (resp.ok) {
                     window.location.href = '/auth/login?redirect=' + encodeURIComponent(window.location.pathname);
                 } else {

@@ -40,6 +40,7 @@ app.post('/auth/login', authController.loginLimiter, authController.login);
 app.post('/auth/logout', authController.authLimiter, authController.logout);
 app.get('/auth/check', authController.authLimiter, authController.checkAuth);
 app.get('/auth/env-info', authController.getEnvInfo);
+app.get('/auth/csrf-token', authController.getCsrfToken);
 
 
 app.post('/getTemplate', (req, res) => {

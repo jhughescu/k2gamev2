@@ -9,6 +9,7 @@
         "chalk": "^4.1.2",
         "connect-mongo": "^6.0.0",
         "cookie-parser": "^1.4.6",
+        "csrf-csrf": "^4.0.3",
         "csv-parser": "^3.0.0",
         "dotenv": "^16.4.5",
         "express": "^4.18.2",
@@ -32,9 +33,11 @@
         "yargs": "^17.7.2"
     },
     "scripts": {
+        "help": "echo Available commands: && echo   npm run dev - start project with auto-reload on port 3030 && echo   npm start - start project in production mode && echo   npm run free-port - end any processes on port 3030 && echo   npm run help - show this list",
         "generate-build-info": "node generate_build_info.js",
         "dev": "nodemon --exec \"npm run generate-build-info && node\" app.js",
-        "start": "node app.js"
+        "start": "node app.js",
+        "free-port": "kill-port 3030"
     },
     "main": "app.js",
     "repository": {
@@ -44,5 +47,8 @@
     "bugs": {
         "url": "https://github.com/jhughescu/k2gamev2/issues"
     },
-    "homepage": "https://github.com/jhughescu/k2gamev2#readme"
+    "homepage": "https://github.com/jhughescu/k2gamev2#readme",
+    "devDependencies": {
+        "kill-port": "^2.0.1"
+    }
 }

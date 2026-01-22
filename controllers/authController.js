@@ -1,6 +1,7 @@
 const session = require('express-session');
 const MongoStore = require('connect-mongo').default;
 const rateLimit = require('express-rate-limit');
+const { doubleCsrfProtection } = require('./csrfConfig');
 require('dotenv').config();
 
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
@@ -150,6 +151,31 @@ const getEnvInfo = (req, res) => {
     });
 };
 
+// Get CSRF token
+const getCsrfToken = (req, res) => {
+    try {
+        // Run CSRF middleware to set cookies and add req.csrfToken method
+        doubleCsrfProtection(req, res, (err) => {
+            if (err) {
+                console.error('CSRF middleware error:', err);
+                return res.status(500).json({ error: 'CSRF setup failed' });
+            }
+            
+            try {
+                // After middleware runs, req.csrfToken() is available
+                const token = req.csrfToken();
+                res.json({ csrfToken: token });
+            } catch (tokenErr) {
+                console.error('Token generation error:', tokenErr);
+                res.status(500).json({ error: 'Token generation failed' });
+            }
+        });
+    } catch (err) {
+        console.error('CSRF token endpoint error:', err);
+        res.status(500).json({ error: 'CSRF token generation failed' });
+    }
+};
+
 module.exports = {
     sessionMiddleware,
     requireAuth,
@@ -159,5 +185,6 @@ module.exports = {
     checkAuth,
     loginLimiter,
     authLimiter,
-    getEnvInfo
+    getEnvInfo,
+    getCsrfToken
 };

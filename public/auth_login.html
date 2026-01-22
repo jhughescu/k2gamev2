@@ -165,6 +165,15 @@
         const passwordInput = document.getElementById('password');
         const loginButton = document.getElementById('loginButton');
         const errorMessage = document.getElementById('errorMessage');
+        let csrfToken = null;
+
+        // Fetch CSRF token on page load
+        fetch('/auth/csrf-token')
+            .then(res => res.json())
+            .then(data => {
+                csrfToken = data.csrfToken;
+            })
+            .catch(err => console.error('CSRF token fetch failed:', err));
 
         // Check environment mode on page load
         fetch('/auth/env-info')
@@ -203,10 +212,18 @@
             errorMessage.classList.remove('show');
 
             try {
+                                if (!csrfToken) {
+                                    showError('Security token not available. Please refresh the page.');
+                                    loginButton.disabled = false;
+                                    loginButton.textContent = 'Login';
+                                    return;
+                                }
+
                 const response = await fetch('/auth/login', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'x-csrf-token': csrfToken
                     },
                     body: JSON.stringify({ password })
                 });

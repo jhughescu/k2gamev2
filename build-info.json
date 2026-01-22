@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-01-21T14:36:52Z",
-  "commitHash": "bfa352a6ccfbc5581878b1a3606873b2195be282",
-  "commitMessage": "Ngrok knocked out. Consider new apparoach which doesn't require the manual switching off of the feature.",
+  "timestamp": "2026-01-22T12:15:30Z",
+  "commitHash": "c994c75f1169e68f352bf4b2599219bb8de33189",
+  "commitMessage": "v1.1.0: Add authentication, security hardening, and dev mode indicators",
   "branch": "master"
 }
