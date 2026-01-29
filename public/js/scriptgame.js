@@ -1404,7 +1404,19 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         } else {
             gameflow('no game in progress, start new game');
-            socket.emit('newSession', {forceTeam: window.getQueries().team || false}, sesh => {
+            // Extract institution and course from URL path (e.g., /game/cu/johnh)
+            const pathParts = window.location.pathname.split('/').filter(p => p);
+            const institution = pathParts.length >= 2 ? pathParts[1] : '';
+            const course = pathParts.length >= 3 ? pathParts[2] : '';
+            socket.emit('newSession', {
+                forceTeam: window.getQueries().team || false,
+                institution: institution,
+                course: course
+            }, sesh => {
+                if (sesh && sesh.error) {
+                    gameflow('invalid institution or course link', { style: 'warning' });
+                    return;
+                }
                 setSession(sesh, 'new');
                 const i = setInterval(() => {
                     if (gameData !== null) {
@@ -1450,7 +1462,13 @@ document.addEventListener('DOMContentLoaded', function () {
             socket.emit('deleteSessionLogs', session.uniqueID);
             const cs = getCurrentState();
             Climber.zeroAll(cs);
-            window.location.replace(window.location.origin);
+            // console.log('ok, this is the bit we want to know about', window.location);
+            // const obber = JSON.parse(JSON.stringify(window.location));
+            const obber = JSON.stringify(window.location);
+            // console.log('obber:', obber);
+            // console.log('new URL: ', `${window.location.origin}${window.location.pathname}`);
+            // window.location.replace(window.location.origin);
+            window.location.replace(`${window.location.origin}${window.location.pathname}`);
 
 
         });
@@ -3657,7 +3675,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (cheating) {
                     setTimeout(() => {
                         console.log('go again');
-//                        startNew();
+                       startNew();
                     }, 2000);
                 }
             });

@@ -66,12 +66,16 @@ form {
 
 /* List panel stays narrow and aligns with form */
 #resultsPanel {
+  display: flex;
   flex: 0 0 auto;
   width: auto;
   min-width: max-content;
   border-right: 1px solid #444;
-  display: flex;
   flex-direction: column;
+}
+
+#resultsPanel[style*="display: none"] {
+  display: none !important;
 }
 
 .resultsHeader {
@@ -158,14 +162,18 @@ form {
 
 /* Detail panel fills the rest */
 #detailPanel {
+  display: flex;
   flex: 1;
   padding: 30px;
   background-color: #2a2a2a;
 /*  background-color: #b92323;*/
-  display: flex;
   flex-direction: column;
   overflow-y: auto;
     position: relative;
+}
+
+#detailPanel[style*="display: none"] {
+  display: none !important;
 }
 #detailPanel h2 {
 /*    color: green;*/

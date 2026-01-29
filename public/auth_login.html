@@ -189,11 +189,12 @@
         fetch('/auth/check')
             .then(res => res.json())
             .then(data => {
-                if (data.authenticated) {
-                    // Already logged in, redirect
+                if (data.authenticated && (data.role === 'admin' || data.role === 'superuser')) {
+                    // Already logged in as admin/superuser, redirect
                     const redirectUrl = new URLSearchParams(window.location.search).get('redirect') || '/admin/dashboard';
                     window.location.href = redirectUrl;
                 }
+                // If authenticated but not admin (e.g., role === 'access'), don't redirect - let them login
             })
             .catch(err => console.error('Auth check failed:', err));
 

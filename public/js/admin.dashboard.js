@@ -14,7 +14,10 @@ document.addEventListener('DOMContentLoaded', function () {
         .then(res => res.json())
         .then(data => {
             if (data.isDev) {
-                document.querySelector('header').classList.add('dev-mode');
+                const header = document.querySelector('header');
+                if (header) {
+                    header.classList.add('dev-mode');
+                }
             }
         })
         .catch(err => console.error('Env info fetch failed:', err));
@@ -63,13 +66,35 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     };
     const enableButton = (b, a = true) => {
-        const $b = b instanceof jQuery ? b : $(`#${b}`);
-//        if (b instanceof)
-        if ($b.length > 0) {
+        let $b;
+        
+        // Handle if b is undefined or not initialized
+        if (!b) {
+            console.warn(`enableButton called with undefined button`);
+            return;
+        }
+        
+        if (b && b.jquery) {
+            // Already a jQuery object
+            $b = b;
+            // If it's empty, try to get it fresh by ID
+            if ($b.length === 0 && b.attr && b.attr('id')) {
+                const id = b.attr('id');
+                $b = $(`#${id}`);
+            }
+        } else if (typeof b === 'string') {
+            // String selector
+            $b = $(`#${b}`);
+        } else {
+            console.warn(`button parameter is not a valid jQuery object or string:`, b);
+            return;
+        }
+        
+        if ($b && $b.length > 0) {
             $b.prop('disabled', !a);
             $b.css({opacity: a ? 1 : 0.5});
         } else {
-            console.warn(`button #${b} does not exist`);
+            // Silently ignore if button doesn't exist yet - it may not be initialized
         }
     };
     const propMap = {
@@ -407,8 +432,9 @@ document.addEventListener('DOMContentLoaded', function () {
         const display = $(`#${displayID}`);
 
         window.removeTemplate(displayID, () => {
-            zone.hide();
+            zone.show();
             display.hide();
+            display.empty();
         });
     };
     const reduceSession = (s) => {
@@ -862,6 +888,8 @@ document.addEventListener('DOMContentLoaded', function () {
         generateQR();
         initQuiz();
         setupInterface();
+        $('#resultsPanel').show();
+        $('#detailPanel').show();
         ///*
         if ($dateFrom.val() && $dateTo.val()) {
             $bSubmit.click();

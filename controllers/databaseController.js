@@ -31,7 +31,18 @@ async function dbConnect() {
             return;
         }
 
-        await mongoose.connect(uri);
+        await mongoose.connect(uri, {
+            serverSelectionTimeoutMS: 10000,
+            socketTimeoutMS: 45000,
+            retryWrites: true,
+            maxPoolSize: 10,
+            // Handle connection issues
+            serverApi: {
+                version: '1',
+                strict: false,
+                deprecationErrors: true,
+            }
+        });
         console.log('DB connected');
 
         try {
@@ -41,8 +52,21 @@ async function dbConnect() {
     console.error('Error initializing Session indexes:', err);
 }
 
-
+        // Add connection event handlers for better diagnostics
         const db = mongoose.connection;
+        
+        db.on('error', (err) => {
+            console.error('MongoDB connection error:', err.code || err.message);
+        });
+        
+        db.on('disconnected', () => {
+            console.warn('MongoDB disconnected. Will attempt to reconnect...');
+        });
+        
+        db.on('reconnected', () => {
+            console.log('MongoDB reconnected successfully.');
+        });
+
         const collection = db.collection(collectionName);
 
         startChangeStream(collection); // resilient listener

@@ -1,5 +1,6 @@
 const fs = require('fs');
 const Session = require('../models/session');
+const Institution = require('../models/institution');
 const tools = require('./tools');
 const { getEventEmitter } = require('./../controllers/eventController');
 //const gameController = require('./controllers/gameController');
@@ -13,6 +14,25 @@ const developData = (d) => {
 //    d.activeTeams = d.teams.slice(0);
 //    console.log(d.activeTeams);
     return d;
+};
+const validateInstitutionCourse = async (institutionSlug, courseSlug) => {
+    const instSlug = (institutionSlug || '').toLowerCase();
+    const course = (courseSlug || '').toLowerCase();
+    if (!instSlug && !course) {
+        return { inst: null, course: null };
+    }
+    if (!instSlug || !course) {
+        return null;
+    }
+    const inst = await Institution.findOne({ slug: instSlug }).lean();
+    if (!inst || !Array.isArray(inst.courses)) {
+        return null;
+    }
+    const courseMatch = inst.courses.find(c => (c.slug || '').toLowerCase() === course);
+    if (!courseMatch) {
+        return null;
+    }
+    return { inst, course: courseMatch };
 };
 const developSession = (s) => {
     // converts & expands the raw session model
@@ -80,6 +100,16 @@ const newSession = async (ob, cb) => {
         do {
             st = Math.floor(at.length * Math.random());
         } while (st === cc);
+        const institutionSlug = (ob.institution || '').toLowerCase();
+        const courseSlug = (ob.course || '').toLowerCase();
+        const validation = await validateInstitutionCourse(institutionSlug, courseSlug);
+        if (validation === null) {
+            console.warn(`Invalid institution/course combination`, { institutionSlug, courseSlug });
+            if (cb) {
+                return cb({ error: 'invalid institution/course' });
+            }
+            return;
+        }
         try {
 //            const fakeDate = 20250707112532;
             const s = await Session.create({
@@ -96,7 +126,9 @@ const newSession = async (ob, cb) => {
                 time: 0,
                 profile0: {blank: true},
                 profile1: {blank: true},
-                profile2: {blank: true}
+                profile2: {blank: true},
+                institution: institutionSlug,
+                course: courseSlug
             });
             console.log(s)
             cb(developSession(s));
@@ -474,6 +506,31 @@ const deleteSessionsV1 = async (sOb = {}, cb) => {
     }
 };
 
+// REST handler for access-filtered session listing
+const listSessionsForAccess = async (req, res) => {
+    try {
+        const filter = req.accessFilter || {};
+        console.log('listSessionsForAccess filter:', JSON.stringify(filter));
+        console.log('req.session.access:', req.session.access);
+        const sessions = await Session.find(filter).lean();
+        console.log(`Found ${sessions.length} sessions matching filter`);
+        
+        // Enrich sessions with team country data
+        getGameData((gameData) => {
+            const enrichedSessions = sessions.map(s => {
+                if (s.teamRef !== undefined && gameData.teams && gameData.teams[s.teamRef]) {
+                    s.teamCountry = gameData.teams[s.teamRef].country;
+                }
+                return s;
+            });
+            res.json({ sessions: enrichedSessions });
+        });
+    } catch (err) {
+        console.error('Error listing sessions for access:', err);
+        res.status(500).json({ error: 'Failed to fetch sessions' });
+    }
+};
+
 module.exports = {
     newSession,
     restoreSession,
@@ -483,5 +540,6 @@ module.exports = {
     deleteSessions,
     getSessions,
     getGameData,
-    changeSupportTeam
+    changeSupportTeam,
+    listSessionsForAccess
 };

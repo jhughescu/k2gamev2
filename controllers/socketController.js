@@ -9,7 +9,7 @@ const gfxController = require('./../controllers/gfxController');
 const quizController = require('./../controllers/quizController');
 
 const tools = require('./../controllers/tools');
-const { sessionMiddleware } = require('./../controllers/authController');
+const { sessionMiddleware, buildAccessFilter } = require('./../controllers/authController');
 
 const eventEmitter = getEventEmitter();
 
@@ -62,6 +62,7 @@ function initSocket(server) {
         
         // Get session from socket request
         const session = socket.request.session || {};
+        const getAccessFilter = () => buildAccessFilter(session || {});
         socket.on('checkSocket', (o, cb) => {
             const sock = `${o.address}-${o.sock}`;
             const ro = {total: showRoomSize(sock)};
@@ -86,7 +87,13 @@ function initSocket(server) {
         if (Boolean(sType)) {
             // common methods
             socket.on('getSessions', (sOb, cb) => {
-                sessionController.getSessions(sOb, cb);
+                const filter = getAccessFilter();
+                if (filter === null) {
+                    return cb ? cb({ error: 'unauthorized' }, null) : null;
+                }
+                const query = { ...(sOb || {}) };
+                Object.assign(query, filter);
+                sessionController.getSessions(query, cb);
             });
             // end common
             // game clients
@@ -213,7 +220,7 @@ function initSocket(server) {
             // admin clients
             if (sType.includes('admin')) {
                 // Verify admin authentication
-                if (!session.isAuthenticated || session.role !== 'admin') {
+                if (!session.isAuthenticated || (session.role !== 'admin' && session.role !== 'superuser')) {
                     console.warn('Unauthorized admin socket connection attempt');
                     socket.emit('authError', { message: 'Admin authentication required' });
                     socket.disconnect(true);

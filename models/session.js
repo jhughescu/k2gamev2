@@ -22,7 +22,9 @@ const sessionSchema = new Schema({
     profile0: Object,
     profile1: Object,
     profile2: Object,
-    quiz: Array
+    quiz: Array,
+    institution: String,
+    course: String
 });
 
 // Debug hook: log whenever a document is about to be saved

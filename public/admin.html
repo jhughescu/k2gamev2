@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Institution Manager</title>
+    <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+    <div class="container">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+            <h1>Institution Manager</h1>
+            <button class="logout-btn" id="logoutBtn" style="display: none;">Logout</button>
+        </div>
+
+        <div id="errorMsg" class="error"></div>
+        <div id="successMsg" class="success"></div>
+
+        <!-- Login Section -->
+        <div id="loginSection" class="login-section active">
+            <h2>Admin Login</h2>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="password">Password:</label>
+                    <input type="password" id="password" placeholder="Enter admin password" autocomplete="new-password">
+                </div>
+                <button type="button" id="loginBtn">Login</button>
+            </form>
+        </div>
+
+        <!-- Admin Section -->
+        <div id="adminSection" style="display: none;">
+            <!-- Create Institution Form -->
+            <div class="section-card">
+                <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+                    <h2 id="formTitle">Create Institution</h2>
+                    <button type="button" id="cancelEditBtn" class="secondary" style="display: none;">Cancel Edit</button>
+                </div>
+                <form id="institutionForm" novalidate>
+                    <div class="form-group">
+                        <label for="instSlug">Slug (e.g., cu):</label>
+                        <input type="text" id="instSlug" placeholder="cu" autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <label for="instTitle">Title (e.g., Colorado University):</label>
+                        <input type="text" id="instTitle" placeholder="Colorado University" autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <label>Courses</label>
+                        <div class="course-form-row">
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label for="courseName">Name</label>
+                                <input type="text" id="courseName" placeholder="CS101 Intro" required>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label for="courseSlug">Stub</label>
+                                <input type="text" id="courseSlug" placeholder="cs101" required>
+                            </div>
+                            <button type="button" id="addCourseBtn">Add Course</button>
+                        </div>
+                        <div class="course-list" id="courseList">
+                            <p class="muted">No courses added yet.</p>
+                        </div>
+                    </div>
+                    <button type="submit" id="saveInstitutionBtn">Create Institution</button>
+                </form>
+            </div>
+
+            <!-- Institutions List -->
+            <div id="institutionList" class="institution-list active">
+                <h2>Institutions</h2>
+                <div id="institutionsContainer"></div>
+            </div>
+
+            <!-- Access Keys Section -->
+            <div class="section-card" style="margin-top: 32px;">
+                <h2>Access Keys (INS/COU)</h2>
+                <form id="accessKeyForm" novalidate>
+                    <div class="form-group">
+                        <label for="accessType">Type</label>
+                        <select id="accessType">
+                            <option value="institution">Institution (INS)</option>
+                            <option value="course">Course (COU)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="accessInstSlug">Institution slug (e.g., cu)</label>
+                        <input type="text" id="accessInstSlug" placeholder="cu" autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <label for="accessCourseSlug">Course slug (only for COU)</label>
+                        <input type="text" id="accessCourseSlug" placeholder="lead" autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <label for="accessPassword">Password</label>
+                        <input type="text" id="accessPassword" placeholder="set a password" autocomplete="new-password">
+                    </div>
+                    <div class="form-group">
+                        <label for="accessLabel">Label (optional)</label>
+                        <input type="text" id="accessLabel" placeholder="For reporting">
+                    </div>
+                    <button type="submit" id="createAccessKeyBtn">Create Access Key</button>
+                </form>
+
+                <div style="margin-top: 16px;">
+                    <h3 style="margin-bottom: 8px;">Existing Access Keys</h3>
+                    <div id="accessKeysContainer"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/admin.js"></script>
+</body>
+</html>

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>K2 Facilitator Dashboard</title>
+    <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+    <div class="container">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+            <h1>Facilitator Dashboard</h1>
+            <button class="logout-btn" id="logoutBtn" style="display: none; padding: 8px 16px; background: #2196F3; color: white; border: 1px solid #1565c0; border-radius: 3px; cursor: pointer; font-size: 13px; font-weight: 500;">Logout</button>
+        </div>
+
+        <div id="errorMsg" class="error"></div>
+        <div id="successMsg" class="success"></div>
+
+        <!-- Login Section -->
+        <div id="loginSection" class="login-section" style="display: none;">
+            <h2>Access Login</h2>
+            <p style="color: #666; margin-bottom: 16px;">Enter your institution or course access credentials.</p>
+            <form id="loginForm" novalidate>
+                <div class="form-group">
+                    <label for="accessType">Type</label>
+                    <select id="accessType">
+                        <option value="institution">Institution (INS)</option>
+                        <option value="course">Course (COU)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="institutionSlug">Institution slug (e.g., cu)</label>
+                    <input type="text" id="institutionSlug" placeholder="cu" autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label for="courseSlug">Course slug (only for COU)</label>
+                    <input type="text" id="courseSlug" placeholder="lead" autocomplete="off" disabled>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" placeholder="Enter password" autocomplete="new-password">
+                </div>
+                <button type="submit" id="loginBtn">Login</button>
+            </form>
+        </div>
+
+        <!-- Sessions Section -->
+        <div id="sessionsSection" style="display: none;">
+            <div class="section-card">
+                <h2 id="accessTitle" style="margin-bottom: 6px;"></h2>
+                <p id="accessSubtitle" style="color: #666; margin-bottom: 16px;"></p>
+                <div style="margin-bottom: 16px; padding: 12px; background: #f5f5f5; border-radius: 4px;">
+                    <div style="display: flex; gap: 16px; align-items: center; flex-wrap: wrap; justify-content: space-between;">
+                        <div style="display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">
+                            <div style="display: flex; gap: 8px; align-items: center;">
+                                <label style="font-weight: 500; font-size: 14px;">From:</label>
+                                <input type="date" id="dateFrom" style="padding: 6px; border: 1px solid #ccc; border-radius: 3px;">
+                            </div>
+                            <div style="display: flex; gap: 8px; align-items: center;">
+                                <label style="font-weight: 500; font-size: 14px;">To:</label>
+                                <input type="date" id="dateTo" style="padding: 6px; border: 1px solid #ccc; border-radius: 3px;">
+                            </div>
+                            <button id="clearDatesBtn" style="padding: 6px 12px; background: #2196F3; color: white; border: 1px solid #1565c0; border-radius: 3px; cursor: pointer; font-size: 13px; font-weight: 500;">Clear</button>
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                <input type="checkbox" id="showCompletedOnly" style="cursor: pointer;">
+                                <span>Show completed only</span>
+                            </label>
+                        </div>
+                        <button id="deleteSelectedBtn" style="padding: 6px 12px; background: #d32f2f; color: white; border: 1px solid #b71c1c; border-radius: 3px; cursor: pointer; font-size: 13px; font-weight: 500;">Delete Selected</button>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 20px; align-items: flex-start;">
+                    <div style="flex: 2; min-width: 0;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <h3 style="margin: 0;">Sessions</h3>
+                                <span id="sessionsCount" style="color: #999; font-size: 14px;"></span>
+                            </div>
+                            <div style="display: flex; gap: 12px; font-size: 13px;">
+                                <label style="display: flex; align-items: center; gap: 4px; cursor: pointer;">
+                                    <input type="radio" name="selectMode" value="all" style="cursor: pointer;">
+                                    <span>All</span>
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 4px; cursor: pointer;">
+                                    <input type="radio" name="selectMode" value="thispage" style="cursor: pointer;">
+                                    <span>This Page</span>
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 4px; cursor: pointer;">
+                                    <input type="radio" name="selectMode" value="none" style="cursor: pointer;">
+                                    <span>None</span>
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 4px; cursor: pointer;">
+                                    <input type="radio" name="selectMode" value="selection" style="cursor: pointer;">
+                                    <span>Selection</span>
+                                </label>
+                            </div>
+                        </div>
+                        <div id="sessionsContainer"></div>
+                    </div>
+                    <div id="selectedSessionsPanel" style="flex: 3; min-height: 200px; border: 1px solid #ddd; background: #fff; border-radius: 4px; padding: 12px;">
+                        <h3 style="margin-bottom: 10px;">Selected Sessions</h3>
+                        <div id="selectedSessionsList" class="muted">None selected.</div>
+                        <div id="quizChartsGrid" style="display: none; margin-top: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/access.js"></script>
+</body>
+</html>
