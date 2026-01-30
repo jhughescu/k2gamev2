@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-01-30T09:14:39Z",
-  "commitHash": "ebbd301b8bd3fd2b6a253229f5b70c5eb153ed74",
-  "commitMessage": "superuser, admin and facilitator roles introduced. Institution/Course level facilitator dashboard introduced",
+  "timestamp": "2026-01-30T10:39:41Z",
+  "commitHash": "d1949cf45b6e88ba213916485beb047691aae713",
+  "commitMessage": "auth tokens moved to accessKeys MDB Collection to resolve login issues (online test required)",
   "branch": "master"
 }

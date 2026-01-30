@@ -51,7 +51,13 @@ const authenticateAdmin = (req, res) => {
         req.session.isAuthenticated = true;
         req.session.role = req.session.role || 'admin';
         req.session.username = req.session.username || 'legacy-admin';
-        res.json({ success: true });
+        return req.session.save((err) => {
+            if (err) {
+                console.error('Session save error:', err);
+                return res.status(500).json({ error: 'Session save failed' });
+            }
+            res.json({ success: true });
+        });
     } else {
         res.status(403).json({ error: 'Invalid password' });
     }

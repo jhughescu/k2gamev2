@@ -17,6 +17,12 @@ const chalk = require('chalk');
 const tools = require('./controllers/tools');
 require('dotenv').config();
 
+// Trust proxy when deployed behind a reverse proxy (e.g., Render/Heroku)
+// Use 1 hop; keep default false in local unless explicitly set
+if (process.env.TRUST_PROXY === 'true' || process.env.NODE_ENV === 'production') {
+    app.set('trust proxy', 1);
+}
+
 // Export app early so other modules can import it
 // IMPORTANT: Middleware must be set up before routeController is loaded
 module.exports = { app };
