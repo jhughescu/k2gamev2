@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-01-29T14:00:02Z",
-  "commitHash": "3fb9a08cd11ffaebd1d3b4a82e5a9364b1077b29",
-  "commitMessage": "all required game events added to dispatch table",
+  "timestamp": "2026-01-30T09:14:39Z",
+  "commitHash": "ebbd301b8bd3fd2b6a253229f5b70c5eb153ed74",
+  "commitMessage": "superuser, admin and facilitator roles introduced. Institution/Course level facilitator dashboard introduced",
   "branch": "master"
 }

@@ -56,6 +56,7 @@ const sessionMiddleware = session({
     saveUninitialized: false,
     store: new MongoStore({
         mongoUrl: MONGODB_URI,
+        collectionName: 'authSessions', // Use separate collection for auth/cookie sessions
         touchAfter: 24 * 3600 // Lazy session update (in seconds)
     }),
     cookie: {
