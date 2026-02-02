@@ -2,6 +2,48 @@ const API_BASE = '/access';
 const doc = (id) => document.getElementById(id);
 const STORAGE_KEY = 'facilitator_dashboard_state';
 
+// Global fetch wrapper that handles session expiration (401/403)
+async function secureApiCall(url, options = {}) {
+    try {
+        // Ensure Accept header is set for JSON
+        const headers = options.headers || {};
+        if (!headers['Accept']) {
+            headers['Accept'] = 'application/json';
+        }
+        
+        const response = await fetch(url, { ...options, headers });
+        
+        // Handle session expiration / unauthorized access
+        if (response.status === 401 || response.status === 403) {
+            try {
+                const errorData = await response.json();
+                if (errorData.loginUrl) {
+                    // Session expired - redirect to login
+                    console.warn(`Session expired (${response.status}). Redirecting to login...`);
+                    showError('Your session has expired. Redirecting to login...');
+                    setTimeout(() => {
+                        window.location.href = errorData.loginUrl + '?redirect=' + encodeURIComponent(window.location.pathname);
+                    }, 1500);
+                    return { ok: false, expired: true, status: response.status };
+                }
+            } catch (e) {
+                // If response isn't JSON, still redirect
+                console.warn(`Auth error (${response.status}). Redirecting to login...`);
+                showError('Your session has expired. Redirecting to login...');
+                setTimeout(() => {
+                    window.location.href = '/auth/login?redirect=' + encodeURIComponent(window.location.pathname);
+                }, 1500);
+                return { ok: false, expired: true, status: response.status };
+            }
+        }
+        
+        return response;
+    } catch (err) {
+        console.error('API call failed:', err);
+        throw err;
+    }
+}
+
 let currentAccess = null;
 let sessions = [];
 let selectedSessionIds = new Set();
@@ -123,7 +165,7 @@ async function login(event) {
     }
 
     try {
-        const res = await fetch(`${API_BASE}/login`, {
+        const res = await secureApiCall(`${API_BASE}/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
@@ -231,7 +273,13 @@ function showSessionsSection() {
 
 async function loadSessions() {
     try {
-        const res = await fetch(`${API_BASE}/sessions`);
+        const res = await secureApiCall(`${API_BASE}/sessions`);
+        
+        // Check for session expiration
+        if (res.expired) {
+            return;
+        }
+        
         if (!res.ok) {
             showError('Failed to load sessions');
             return;
@@ -246,7 +294,12 @@ async function loadSessions() {
 
 async function loadGameData() {
     try {
-        const res = await fetch(`${API_BASE}/gamedata`);
+        const res = await secureApiCall(`${API_BASE}/gamedata`);
+        
+        if (res.expired) {
+            return;
+        }
+        
         if (!res.ok) {
             console.warn('Failed to load gamedata');
             return;
@@ -257,7 +310,12 @@ async function loadGameData() {
         // Load quiz questions from quiz1 bank
         try {
             console.log('Fetching quiz questions from:', `${API_BASE}/quiz/quiz1`);
-            const quizRes = await fetch(`${API_BASE}/quiz/quiz1`);
+            const quizRes = await secureApiCall(`${API_BASE}/quiz/quiz1`);
+            
+            if (quizRes.expired) {
+                return;
+            }
+            
             console.log('Quiz response status:', quizRes.status);
             
             if (quizRes.ok) {
@@ -759,7 +817,7 @@ function renderAllQuizCharts() {
 
 async function logout() {
     try {
-        await fetch(`${API_BASE}/logout`, { method: 'POST' });
+        await secureApiCall(`${API_BASE}/logout`, { method: 'POST' });
     } catch (err) {
         console.error('Logout error:', err);
     }
@@ -778,7 +836,12 @@ async function logout() {
 
 async function checkAuth() {
     try {
-        const res = await fetch(`${API_BASE}/check`);
+        const res = await secureApiCall(`${API_BASE}/check`);
+        
+        if (res.expired) {
+            return;
+        }
+        
         if (res.ok) {
             const data = await res.json();
             if (data.authenticated && data.access) {
@@ -808,13 +871,17 @@ async function deleteSelectedSessions() {
     }
     
     try {
-        const res = await fetch(`${API_BASE}/sessions`, {
+        const res = await secureApiCall(`${API_BASE}/sessions`, {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({ sessionIds: ids })
         });
+        
+        if (res.expired) {
+            return;
+        }
         
         if (!res.ok) {
             const error = await res.json();

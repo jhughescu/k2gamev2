@@ -92,6 +92,14 @@ const requireAuth = (req, res, next) => {
 
 // Middleware to check if user is admin
 const requireAdmin = (req, res, next) => {
+    console.log('requireAdmin check:', {
+        hasSession: !!req.session,
+        isAuthenticated: req.session?.isAuthenticated,
+        role: req.session?.role,
+        path: req.path,
+        sessionID: req.sessionID
+    });
+    
     if (req.session && req.session.isAuthenticated && (req.session.role === 'admin' || req.session.role === 'superuser')) {
         return next();
     }
@@ -101,6 +109,7 @@ const requireAdmin = (req, res, next) => {
     const isAjax = req.xhr || req.headers['accept']?.includes('application/json');
     
     if (wantsJson || isAjax) {
+        console.log('Blocking API request - not authenticated');
         return res.status(403).json({ 
             error: 'Forbidden', 
             message: 'Admin access required',
@@ -109,6 +118,7 @@ const requireAdmin = (req, res, next) => {
     }
     
     // HTML requests get redirected to login
+    console.log('Redirecting HTML request to login');
     const redirectUrl = encodeURIComponent(req.originalUrl);
     return res.redirect(`/auth/login?redirect=${redirectUrl}`);
 };
@@ -199,13 +209,27 @@ const login = async (req, res) => {
 
 // Logout handler
 const logout = (req, res) => {
+    // Store session ID for logging
+    const sessionId = req.sessionID;
+    
     req.session.destroy((err) => {
         if (err) {
+            console.error('Session destroy error:', err);
             return res.status(500).json({ 
                 error: 'Server Error', 
                 message: 'Logout failed' 
             });
         }
+        
+        // Clear the session cookie from the browser
+        res.clearCookie('connect.sid', {
+            path: '/',
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production'
+        });
+        
+        console.log(`Session ${sessionId} destroyed and cookie cleared`);
+        
         res.json({ 
             success: true, 
             message: 'Logout successful' 

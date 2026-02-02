@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Session Expiration Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #555;
+            margin-top: 30px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-left: 4px solid #007bff;
+            border-radius: 4px;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 15px 0;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button.danger {
+            background-color: #dc3545;
+        }
+        button.danger:hover {
+            background-color: #c82333;
+        }
+        button.success {
+            background-color: #28a745;
+        }
+        button.success:hover {
+            background-color: #218838;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .status.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status.info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .console {
+            background-color: #1e1e1e;
+            color: #00ff00;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+            margin: 10px 0;
+        }
+        .console-line {
+            margin: 2px 0;
+            word-break: break-word;
+        }
+        .console-error {
+            color: #ff6b6b;
+        }
+        .console-warn {
+            color: #ffd93d;
+        }
+        .console-info {
+            color: #6bceff;
+        }
+        .code {
+            background-color: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+        .instructions {
+            background-color: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+        .instructions h3 {
+            margin-top: 0;
+            color: #004085;
+        }
+        ol {
+            margin: 10px 0;
+            padding-left: 25px;
+        }
+        li {
+            margin: 8px 0;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Session Expiration Test Suite</h1>
+        
+        <div class="instructions">
+            <h3>How to use this test:</h3>
+            <ol>
+                <li>Go to <span class="code">/facilitator/dashboard</span> and log in with your credentials</li>
+                <li>The session cookie (<span class="code">connect.sid</span>) is created with <span class="code">HttpOnly</span> flag (a security feature)
+                    <ul>
+                        <li>This means JavaScript cannot delete it directly</li>
+                        <li>Instead, you can use the logout endpoint to destroy the session server-side</li>
+                    </ul>
+                </li>
+                <li>Use <strong>"Clear Session Cookie"</strong> or <strong>"Expire Session Cookie"</strong> buttons below
+                    <ul>
+                        <li>These will call the logout endpoint to destroy the session</li>
+                        <li>The session cookie will still exist in the browser but will be invalid on the server</li>
+                    </ul>
+                </li>
+                <li>Run the automated tests to verify API calls properly redirect when session is invalid</li>
+                <li>For advanced troubleshooting, you can manually delete the cookie via DevTools (Application → Cookies)</li>
+            </ol>
+        </div>
+
+        <h2>Test Controls</h2>
+        
+        <div class="test-section">
+            <h3>Manual Session Manipulation</h3>
+            <p>Use these buttons to manually test session timeout scenarios:</p>
+            <p><small>📌 <strong>Note:</strong> The session cookie is protected with <span class="code">HttpOnly</span> flag (security feature). 
+            JavaScript cannot directly delete HttpOnly cookies. Instead, these buttons call the logout endpoint to destroy the 
+            session server-side. The cookie may still be visible in DevTools but will be invalid.</small></p>
+            
+            <div style="margin: 15px 0;">
+                <label style="font-weight: bold; margin-right: 10px;">Session Type:</label>
+                <label style="margin-right: 15px;">
+                    <input type="radio" name="sessionType" value="admin" id="radioAdmin" checked> 
+                    Admin/Superuser
+                </label>
+                <label>
+                    <input type="radio" name="sessionType" value="facilitator" id="radioFacilitator"> 
+                    Facilitator/Access
+                </label>
+            </div>
+            
+            <div class="button-group">
+                <button id="btnShowCookies">Show All Cookies</button>
+                <button id="btnTestValid">Test with Valid Session</button>
+                <button class="danger" id="btnClearCookies">Clear Session Cookie</button>
+                <button class="danger" id="btnExpireCookies">Expire Session Cookie</button>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>Automated Tests</h3>
+            <p>These tests automatically simulate API calls with expired sessions:</p>
+            <div class="button-group">
+                <button class="success" id="btnTestCheck">Test: Session Check Endpoint</button>
+                <button class="success" id="btnTestLoad">Test: Load Sessions (with expired session)</button>
+                <button class="success" id="btnTestMultiple">Test: Multiple Requests</button>
+                <button class="success" id="btnTestAll">Run All Tests</button>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>Server-Side Session Timeout</h3>
+            <p>For deeper testing, you can configure a server-side timeout:</p>
+            <div class="button-group">
+                <button id="btnSetupTimeout">Setup 5s Timeout (testing only)</button>
+                <button id="btnResetTimeout">Reset to Default Timeout</button>
+            </div>
+            <p><small>⚠️ These only work if server supports the timeout configuration endpoint.</small></p>
+        </div>
+
+        <h2>Test Results</h2>
+        <div id="status" class="status info">Ready to run tests...</div>
+        
+        <h2>Console Output</h2>
+        <div class="console" id="console"></div>
+
+        <h2>Test Details</h2>
+        <div id="details" style="white-space: pre-wrap; font-family: monospace; background-color: #f4f4f4; padding: 15px; border-radius: 4px; max-height: 300px; overflow-y: auto;"></div>
+    </div>
+
+    <script>
+        const consoleEl = document.getElementById('console');
+        const statusEl = document.getElementById('status');
+        const detailsEl = document.getElementById('details');
+
+        // Intercept console logs
+        const originalLog = console.log;
+        const originalError = console.error;
+        const originalWarn = console.warn;
+
+        function addConsoleLine(message, type = 'log') {
+            const line = document.createElement('div');
+            line.className = `console-line console-${type}`;
+            line.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            consoleEl.appendChild(line);
+            consoleEl.scrollTop = consoleEl.scrollHeight;
+        }
+
+        console.log = function(...args) {
+            originalLog(...args);
+            addConsoleLine(args.join(' '), 'info');
+        };
+
+        console.error = function(...args) {
+            originalError(...args);
+            addConsoleLine(args.join(' '), 'error');
+        };
+
+        console.warn = function(...args) {
+            originalWarn(...args);
+            addConsoleLine(args.join(' '), 'warn');
+        };
+
+        function setStatus(message, type = 'info') {
+            statusEl.textContent = message;
+            statusEl.className = `status ${type}`;
+        }
+
+        function addDetails(message) {
+            detailsEl.textContent += message + '\n';
+            detailsEl.scrollTop = detailsEl.scrollHeight;
+        }
+
+        function clearDetails() {
+            detailsEl.textContent = '';
+        }
+
+        function getAllCookies() {
+            return document.cookie.split(';').map(c => c.trim()).filter(c => c);
+        }
+
+        function showAllCookies() {
+            clearDetails();
+            const cookies = getAllCookies();
+            addDetails('Current cookies accessible to JavaScript:');
+            if (cookies.length === 0) {
+                addDetails('  (no cookies found)');
+                addDetails('\n⚠️ Note: Cookies with HttpOnly flag are NOT visible to JavaScript');
+                addDetails('(This is a security feature)');
+                setStatus('No JavaScript-accessible cookies found', 'info');
+            } else {
+                cookies.forEach((c, i) => {
+                    const [name] = c.split('=');
+                    addDetails(`  ${i + 1}. ${c}`);
+                });
+                setStatus(`✓ Found ${cookies.length} JavaScript-accessible cookie(s)`, 'success');
+            }
+            addDetails('\nTo see ALL cookies (including HttpOnly):');
+            addDetails('1. Open DevTools (F12)');
+            addDetails('2. Go to Application → Cookies → http://localhost:3000');
+            addDetails('3. Look for "connect.sid" cookie');
+        }
+
+        function clearSessionCookie() {
+            clearDetails();
+            console.log('Attempting to clear session cookies...');
+            
+            const cookiesBefore = getAllCookies();
+            addDetails('JavaScript-accessible cookies before:');
+            if (cookiesBefore.length === 0) {
+                addDetails('  (none)');
+            } else {
+                cookiesBefore.forEach(c => addDetails(`  ${c}`));
+            }
+            
+            addDetails('\n⚠️ IMPORTANT: The session cookie (connect.sid) is HttpOnly');
+            addDetails('This means JavaScript CANNOT delete it for security reasons.');
+            addDetails('\n✓ SOLUTION: Use logout endpoint instead:');
+            addDetails('This will destroy the session server-side.');
+            
+            // Instead of trying to delete an HttpOnly cookie, call logout
+            logoutAndClearSession();
+        }
+
+        function expireSessionCookie() {
+            clearDetails();
+            console.log('Attempting to expire session cookies...');
+            
+            addDetails('⚠️ IMPORTANT: The session cookie (connect.sid) is HttpOnly');
+            addDetails('This means JavaScript CANNOT modify it for security reasons.');
+            addDetails('\n✓ SOLUTION: Use logout endpoint instead:');
+            addDetails('This will expire and destroy the session server-side.');
+            
+            // Instead of trying to expire an HttpOnly cookie, call logout
+            logoutAndClearSession();
+        }
+
+        async function logoutAndClearSession() {
+            const sessionType = document.querySelector('input[name="sessionType"]:checked')?.value || 'admin';
+            const isAdmin = sessionType === 'admin';
+            
+            const logoutUrl = isAdmin ? '/auth/logout' : '/access/logout';
+            const checkUrl = isAdmin ? '/auth/check' : '/access/check';
+            
+            addDetails(`\nSession type: ${isAdmin ? 'Admin/Superuser' : 'Facilitator/Access'}`);
+            addDetails(`Logout URL: ${logoutUrl}`);
+            addDetails('\nCalling logout endpoint...');
+            
+            try {
+                // For admin logout, we need CSRF token
+                let headers = {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                };
+                
+                if (isAdmin) {
+                    // Fetch CSRF token first
+                    addDetails('Fetching CSRF token...');
+                    try {
+                        const csrfRes = await fetch('/auth/csrf-token');
+                        const csrfData = await csrfRes.json();
+                        headers['x-csrf-token'] = csrfData.csrfToken;
+                        addDetails('✓ CSRF token obtained');
+                    } catch (err) {
+                        addDetails('⚠️ Failed to get CSRF token, trying without it...');
+                    }
+                }
+                
+                const res = await fetch(logoutUrl, {
+                    method: 'POST',
+                    headers: headers,
+                    credentials: 'include'
+                });
+                
+                if (res.ok) {
+                    addDetails('✓ Logout successful - session destroyed on server');
+                    addDetails(`\nVerifying session is gone by calling ${checkUrl}...`);
+                    
+                    // Wait a moment for logout to process
+                    await new Promise(r => setTimeout(r, 500));
+                    
+                    const checkRes = await fetch(checkUrl);
+                    const checkData = await checkRes.json();
+                    
+                    if (checkData.authenticated === false || !checkData.authenticated) {
+                        addDetails('✓ Confirmed: Session is no longer valid');
+                        setStatus('✓ Session destroyed! Tests will now fail as expected.', 'success');
+                    } else {
+                        addDetails('⚠️ Session check returned authenticated=true');
+                        addDetails(`Full response: ${JSON.stringify(checkData)}`);
+                        setStatus('⚠️ Session may still be valid', 'error');
+                    }
+                } else {
+                    const text = await res.text();
+                    addDetails(`✗ Logout failed (${res.status}): ${text}`);
+                    setStatus('Logout failed', 'error');
+                }
+            } catch (err) {
+                console.error('Logout error:', err);
+                addDetails(`✗ Error: ${err.message}`);
+                setStatus('Error during logout', 'error');
+            }
+        }
+
+        async function testWithValidSession() {
+            clearDetails();
+            const sessionType = document.querySelector('input[name="sessionType"]:checked')?.value || 'admin';
+            const isAdmin = sessionType === 'admin';
+            const checkUrl = isAdmin ? '/auth/check' : '/access/check';
+            
+            console.log(`Testing API call with current ${sessionType} session...`);
+            setStatus(`Testing with current ${sessionType} session...`, 'info');
+            addDetails(`Session type: ${isAdmin ? 'Admin/Superuser' : 'Facilitator/Access'}`);
+            addDetails(`Check URL: ${checkUrl}\n`);
+            
+            try {
+                const res = await fetch(checkUrl);
+                addDetails(`Response status: ${res.status}`);
+                addDetails(`Response headers: ${JSON.stringify([...res.headers.entries()], null, 2)}`);
+                
+                if (res.ok) {
+                    const data = await res.json();
+                    addDetails(`\nResponse data:\n${JSON.stringify(data, null, 2)}`);
+                    setStatus('✓ Session is valid!', 'success');
+                } else {
+                    const text = await res.text();
+                    addDetails(`Response body: ${text.substring(0, 500)}`);
+                    setStatus('✗ Session check failed!', 'error');
+                }
+            } catch (err) {
+                console.error('Test error:', err);
+                setStatus('Test failed: ' + err.message, 'error');
+            }
+        }
+
+        async function runSessionCheckTest() {
+            clearDetails();
+            console.log('Running session check test with expired session...');
+            setStatus('Running test...', 'info');
+            
+            // Clear the session first
+            clearSessionCookie();
+            
+            // Wait a moment for cookie to be cleared
+            await new Promise(r => setTimeout(r, 500));
+            
+            console.log('Making request to /access/check with no session...');
+            
+            try {
+                const res = await fetch('/access/check');
+                addDetails(`Response status: ${res.status}`);
+                addDetails(`Response type: ${res.type}`);
+                addDetails(`Response URL: ${res.url}`);
+                
+                const contentType = res.headers.get('content-type');
+                addDetails(`Content-Type: ${contentType}`);
+                
+                const body = await res.text();
+                addDetails(`\nResponse body (first 1000 chars):\n${body.substring(0, 1000)}`);
+                
+                if (contentType && contentType.includes('application/json')) {
+                    try {
+                        const json = JSON.parse(body);
+                        addDetails(`\nParsed JSON:\n${JSON.stringify(json, null, 2)}`);
+                    } catch (e) {
+                        addDetails('\nNote: Failed to parse as JSON');
+                    }
+                }
+                
+                if (res.status === 401 || res.status === 403) {
+                    setStatus('✓ Correctly returned 401/403 error!', 'success');
+                } else {
+                    setStatus('✗ Expected 401/403, got ' + res.status, 'error');
+                }
+            } catch (err) {
+                console.error('Request failed:', err);
+                setStatus('✗ Test failed: ' + err.message, 'error');
+            }
+        }
+
+        async function runLoadSessionsTest() {
+            clearDetails();
+            console.log('Running load sessions test with expired session...');
+            setStatus('Running test...', 'info');
+            
+            // Clear the session first
+            clearSessionCookie();
+            
+            // Wait a moment for cookie to be cleared
+            await new Promise(r => setTimeout(r, 500));
+            
+            console.log('Making request to /access/sessions with no session...');
+            
+            try {
+                const res = await fetch('/access/sessions');
+                addDetails(`Response status: ${res.status}`);
+                addDetails(`Response type: ${res.type}`);
+                
+                const contentType = res.headers.get('content-type');
+                addDetails(`Content-Type: ${contentType}`);
+                
+                const body = await res.text();
+                addDetails(`\nResponse body (first 1500 chars):\n${body.substring(0, 1500)}`);
+                
+                // Check what was returned
+                if (res.status === 401 || res.status === 403) {
+                    addDetails(`\n✓ Server correctly returned ${res.status} status`);
+                    
+                    if (contentType && contentType.includes('application/json')) {
+                        addDetails('✓ Response is JSON (not HTML login page)');
+                        setStatus('✓ Test PASSED: Correct error handling!', 'success');
+                    } else if (contentType && contentType.includes('text/html')) {
+                        addDetails('✗ Response is HTML (likely login page redirected by old code)');
+                        setStatus('✗ Test FAILED: Received HTML instead of JSON', 'error');
+                    }
+                } else if (res.status === 200) {
+                    addDetails('✗ Server returned 200 even though session is invalid!');
+                    setStatus('✗ Test FAILED: No session validation', 'error');
+                } else {
+                    addDetails(`Note: Unexpected status ${res.status}`);
+                }
+            } catch (err) {
+                console.error('Request failed:', err);
+                setStatus('✗ Test failed: ' + err.message, 'error');
+            }
+        }
+
+        async function runMultipleRequestsTest() {
+            clearDetails();
+            console.log('Running multiple sequential requests with expired session...');
+            setStatus('Running test...', 'info');
+            
+            // Clear the session first
+            clearSessionCookie();
+            
+            // Wait a moment for cookie to be cleared
+            await new Promise(r => setTimeout(r, 500));
+            
+            const endpoints = [
+                '/access/check',
+                '/access/sessions',
+                '/access/gamedata'
+            ];
+            
+            const results = [];
+            
+            for (const endpoint of endpoints) {
+                console.log(`Testing ${endpoint}...`);
+                try {
+                    const res = await fetch(endpoint);
+                    const contentType = res.headers.get('content-type');
+                    results.push({
+                        endpoint,
+                        status: res.status,
+                        contentType,
+                        success: res.status === 401 || res.status === 403
+                    });
+                    addDetails(`${endpoint}: ${res.status} (${contentType})`);
+                } catch (err) {
+                    results.push({
+                        endpoint,
+                        error: err.message,
+                        success: false
+                    });
+                    addDetails(`${endpoint}: ERROR - ${err.message}`);
+                }
+            }
+            
+            const allPass = results.every(r => r.success);
+            if (allPass) {
+                setStatus('✓ All endpoints correctly returned 401/403!', 'success');
+            } else {
+                const failed = results.filter(r => !r.success);
+                setStatus(`✗ ${failed.length} endpoint(s) failed the test`, 'error');
+            }
+        }
+
+        async function runAllTests() {
+            clearDetails();
+            console.log('Running all tests...\n');
+            
+            console.log('=== Test 1: Session Check ===');
+            await runSessionCheckTest();
+            
+            await new Promise(r => setTimeout(r, 1000));
+            
+            console.log('\n=== Test 2: Load Sessions ===');
+            await runLoadSessionsTest();
+            
+            await new Promise(r => setTimeout(r, 1000));
+            
+            console.log('\n=== Test 3: Multiple Requests ===');
+            await runMultipleRequestsTest();
+            
+            console.log('\n=== All tests completed ===');
+            setStatus('All tests completed. Check results above.', 'info');
+        }
+
+        async function setupShortSessionTimeout() {
+            console.log('Attempting to setup 5 second session timeout...');
+            setStatus('Attempting to configure server timeout...', 'info');
+            
+            try {
+                const res = await fetch('/test/session-timeout/5000', {
+                    method: 'POST'
+                });
+                
+                if (res.ok) {
+                    setStatus('✓ Server timeout configured to 5 seconds. Sessions will expire quickly for testing!', 'success');
+                    console.log('Session timeout configured');
+                    addDetails('Server will now expire sessions after 5 seconds of inactivity.\n\nTo test:\n1. Log in at /facilitator/dashboard\n2. Wait 6 seconds without making requests\n3. Try to load sessions - you should be redirected to login\n\nNote: This only works if the server supports this endpoint.');
+                } else {
+                    setStatus('Server does not support timeout configuration', 'error');
+                    addDetails('Endpoint /test/session-timeout not available on this server');
+                }
+            } catch (err) {
+                console.error('Error:', err);
+                setStatus('Failed: ' + err.message, 'error');
+            }
+        }
+
+        function resetSessionTimeout() {
+            console.log('Attempting to reset session timeout to default...');
+            setStatus('Attempting to reset timeout...', 'info');
+            
+            fetch('/test/session-timeout/reset', {
+                method: 'POST'
+            }).then(res => {
+                if (res.ok) {
+                    setStatus('✓ Session timeout reset to default (24 hours)', 'success');
+                } else {
+                    setStatus('Failed to reset timeout', 'error');
+                }
+            }).catch(err => {
+                setStatus('Error: ' + err.message, 'error');
+            });
+        }
+
+        // Initialize event listeners when DOM is ready
+        document.addEventListener('DOMContentLoaded', () => {
+            // Manual session manipulation buttons
+            const btnShowCookies = document.getElementById('btnShowCookies');
+            const btnTestValid = document.getElementById('btnTestValid');
+            const btnClearCookies = document.getElementById('btnClearCookies');
+            const btnExpireCookies = document.getElementById('btnExpireCookies');
+
+            // Automated test buttons
+            const btnTestCheck = document.getElementById('btnTestCheck');
+            const btnTestLoad = document.getElementById('btnTestLoad');
+            const btnTestMultiple = document.getElementById('btnTestMultiple');
+            const btnTestAll = document.getElementById('btnTestAll');
+
+            // Server-side timeout buttons
+            const btnSetupTimeout = document.getElementById('btnSetupTimeout');
+            const btnResetTimeout = document.getElementById('btnResetTimeout');
+
+            // Attach event listeners
+            if (btnShowCookies) btnShowCookies.addEventListener('click', showAllCookies);
+            if (btnTestValid) btnTestValid.addEventListener('click', testWithValidSession);
+            if (btnClearCookies) btnClearCookies.addEventListener('click', clearSessionCookie);
+            if (btnExpireCookies) btnExpireCookies.addEventListener('click', expireSessionCookie);
+            if (btnTestCheck) btnTestCheck.addEventListener('click', runSessionCheckTest);
+            if (btnTestLoad) btnTestLoad.addEventListener('click', runLoadSessionsTest);
+            if (btnTestMultiple) btnTestMultiple.addEventListener('click', runMultipleRequestsTest);
+            if (btnTestAll) btnTestAll.addEventListener('click', runAllTests);
+            if (btnSetupTimeout) btnSetupTimeout.addEventListener('click', setupShortSessionTimeout);
+            if (btnResetTimeout) btnResetTimeout.addEventListener('click', resetSessionTimeout);
+        });
+    </script>
+</body>
+</html>

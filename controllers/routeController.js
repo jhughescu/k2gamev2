@@ -184,6 +184,9 @@ app.get('/data/routemap.json', (req, res) => {
 app.get('/test', (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'testing', 'pointer.html'));
 });
+app.get('/test/session-expiration', (req, res) => {
+    res.sendFile(path.join(basePath, 'session-expiration-test.html'));
+});
 app.get('/map', (req, res) => {
     res.render('map');
 });
@@ -272,7 +275,7 @@ app.get('/admin/superuser', (req, res) => {
     res.sendFile(path.join(basePath, 'admin.html'));
 });
 
-app.get('/admin/dashboard', authController.requireAdmin, (req, res) => {
+app.get('/admin/dashboard', (req, res) => {
     res.sendFile(path.join(basePath, 'admin.html'));
 });
 

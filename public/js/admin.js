@@ -1,6 +1,7 @@
 const API_BASE = '/admin/api';
 const STORAGE_KEY = 'admin_institution_state';
 const doc = (id) => document.getElementById(id);
+let csrfToken = null;
 let formMode = 'create';
 let editingId = null;
 let courseList = [];
@@ -71,6 +72,24 @@ function showSuccess(message) {
     el.textContent = message;
     el.classList.add('active');
     setTimeout(() => el.classList.remove('active'), 3000);
+}
+
+async function loadCsrfToken() {
+    try {
+        const res = await fetch('/auth/csrf-token', {
+            cache: 'no-store',
+            headers: {
+                'Cache-Control': 'no-cache, no-store, must-revalidate',
+                'Pragma': 'no-cache'
+            }
+        });
+        if (res.ok) {
+            const data = await res.json();
+            csrfToken = data.csrfToken || null;
+        }
+    } catch (err) {
+        console.error('CSRF token fetch failed:', err);
+    }
 }
 
 function updateFormLabels() {
@@ -624,12 +643,37 @@ function handleAccessTypeChange() {
     }
 }
 
-document.getElementById('logoutBtn').addEventListener('click', () => {
-    document.getElementById('loginSection').classList.add('active');
-    document.getElementById('adminSection').style.display = 'none';
-    document.getElementById('logoutBtn').style.display = 'none';
-    document.getElementById('password').value = '';
-    showSuccess('Logged out');
+document.getElementById('logoutBtn').addEventListener('click', async () => {
+    try {
+        if (!csrfToken) {
+            await loadCsrfToken();
+        }
+        if (!csrfToken) {
+            showError('Security token not available. Please refresh the page.');
+            return;
+        }
+        const resp = await fetch('/auth/logout', {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+                'x-csrf-token': csrfToken
+            }
+        });
+        if (!resp.ok) {
+            const text = await resp.text();
+            console.error('Logout failed:', resp.status, text);
+            showError('Logout failed');
+            return;
+        }
+        document.getElementById('loginSection').classList.add('active');
+        document.getElementById('adminSection').style.display = 'none';
+        document.getElementById('logoutBtn').style.display = 'none';
+        document.getElementById('password').value = '';
+        showSuccess('Logged out');
+    } catch (err) {
+        console.error('Logout error', err);
+        showError('Logout failed');
+    }
 });
 
 // Event listeners for form submission and button clicks
@@ -675,7 +719,13 @@ window.addEventListener('beforeunload', (e) => {
 // Check if already authenticated on page load
 async function checkAuth() {
     try {
-        const res = await fetch(`${API_BASE}/institutions`);
+        const res = await fetch(`${API_BASE}/institutions`, {
+            cache: 'no-store',
+            headers: {
+                'Cache-Control': 'no-cache, no-store, must-revalidate',
+                'Pragma': 'no-cache'
+            }
+        });
         if (res.ok) {
             // Already authenticated, show admin section
             showAdminSection();
@@ -687,12 +737,14 @@ async function checkAuth() {
             } else {
                 resetForm();
             }
-        } else if (res.status === 401) {
+        } else if (res.status === 401 || res.status === 403) {
             // Not authenticated; show login form (default state)
+            console.log('Not authenticated, status:', res.status);
             resetForm();
         } else {
             // Other error
             console.error('Auth check failed:', res.status);
+            resetForm();
         }
     } catch (err) {
         console.error('Auth check error:', err);
@@ -702,6 +754,7 @@ async function checkAuth() {
 
 // Check authentication on page load - only initialize UI after auth check completes
 (async () => {
+    await loadCsrfToken();
     await checkAuth();
     updateAddCourseButtonState();
     handleAccessTypeChange();
