@@ -133,7 +133,21 @@ const requireSuperuser = (req, res, next) => {
 const requireSessionAccess = (req, res, next) => {
     const filter = buildAccessFilter(req.session || {});
     if (filter === null) {
-        return res.status(401).json({ error: 'Unauthorized', message: 'Access login required' });
+        // Check if request wants JSON (AJAX/fetch requests)
+        const wantsJson = req.accepts('json') && !req.accepts('html');
+        const isAjax = req.xhr || req.headers['accept']?.includes('application/json');
+        
+        if (wantsJson || isAjax) {
+            return res.status(401).json({ 
+                error: 'Unauthorized', 
+                message: 'Access login required',
+                loginUrl: '/facilitator/login'
+            });
+        }
+        
+        // HTML requests get redirected to login
+        const redirectUrl = encodeURIComponent(req.originalUrl);
+        return res.redirect(`/facilitator/login?redirect=${redirectUrl}`);
     }
     req.accessFilter = filter;
     req.accessContext = req.session.access || null;
