@@ -29,6 +29,7 @@ module.exports = { app };
 
 const PORT = process.env.PORT || 3000;
 const HOST = process.env.HOST || 'localhost';
+const isDevMode = process.env.ISDEV === 'true' || process.env.isDev === 'true';
 
 const databaseController = require('./controllers/databaseController');
 const versionController = require('./controllers/versionController');
@@ -126,7 +127,7 @@ require('./controllers/routeController');
 
 databaseController.dbConnect();
 initSocket(server);
-if (Boolean(process.env.isDev)) {
+if (isDevMode) {
     server.listen(PORT, HOST, () => {
         printServerStartup({
             host: HOST,
