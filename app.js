@@ -16,6 +16,19 @@ const server = http.createServer(app);
 const tools = require('./controllers/tools');
 require('dotenv').config();
 
+// Process-level diagnostics to understand Azure restarts/crashes.
+process.on('uncaughtException', (err) => {
+    console.error('[process] uncaughtException:', err && err.stack ? err.stack : err);
+});
+
+process.on('unhandledRejection', (reason) => {
+    console.error('[process] unhandledRejection:', reason);
+});
+
+process.on('SIGTERM', () => {
+    console.warn('[process] SIGTERM received - instance is being stopped/recycled by platform.');
+});
+
 // Liveness/readiness probe endpoints for Azure health checks.
 // Keep these dependency-free so platform probes do not fail during transient DB issues.
 app.get('/healthz', (req, res) => {

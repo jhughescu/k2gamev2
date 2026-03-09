@@ -227,7 +227,9 @@ async function monitorDocument(uri, dbName, collectionName, documentId) {
     }
 }
 
-monitorDocument(uri, dbName, collectionName, documentId);
+if (process.env.ISDEV === 'true') {
+    monitorDocument(uri, dbName, collectionName, documentId);
+}
 
 // Optional: validate collections
 async function validateConnection() {
