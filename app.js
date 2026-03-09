@@ -29,6 +29,23 @@ process.on('SIGTERM', () => {
     console.warn('[process] SIGTERM received - instance is being stopped/recycled by platform.');
 });
 
+process.on('SIGINT', () => {
+    console.warn('[process] SIGINT received.');
+});
+
+process.on('beforeExit', (code) => {
+    console.warn(`[process] beforeExit with code ${code}`);
+});
+
+process.on('exit', (code) => {
+    console.warn(`[process] exit with code ${code}`);
+});
+
+setInterval(() => {
+    const memMb = Math.round(process.memoryUsage().rss / 1024 / 1024);
+    console.log(`[process] heartbeat uptime=${Math.floor(process.uptime())}s rss=${memMb}MB`);
+}, 30000);
+
 // Liveness/readiness probe endpoints for Azure health checks.
 // Keep these dependency-free so platform probes do not fail during transient DB issues.
 app.get('/healthz', (req, res) => {
