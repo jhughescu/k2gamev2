@@ -26,7 +26,10 @@ body.role-admin .container {
 }
 
 body.role-superuser #dashboardHeading {
-    color: #9a5b12;
+    color: #ffd84d;
+    background-color: #3a3a3a;
+    padding: 6px 12px;
+    border-radius: 6px;
 }
 
 body.role-admin #dashboardHeading {
