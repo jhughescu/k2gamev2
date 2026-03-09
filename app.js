@@ -17,6 +17,23 @@ const server = http.createServer(app);
 const tools = require('./controllers/tools');
 require('dotenv').config();
 
+// Liveness/readiness probe endpoints for Azure health checks.
+// Keep these dependency-free so platform probes do not fail during transient DB issues.
+app.get('/healthz', (req, res) => {
+    res.status(200).json({
+        ok: true,
+        uptimeSec: Math.floor(process.uptime()),
+        timestamp: new Date().toISOString()
+    });
+});
+
+app.get('/readyz', (req, res) => {
+    res.status(200).json({
+        ok: true,
+        timestamp: new Date().toISOString()
+    });
+});
+
 // Trust proxy when deployed behind a reverse proxy (e.g., Render/Heroku)
 // Use 1 hop; keep default false in local unless explicitly set
 if (process.env.TRUST_PROXY === 'true' || process.env.NODE_ENV === 'production') {
