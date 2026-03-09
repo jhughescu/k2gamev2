@@ -8,6 +8,30 @@ body {
     background-color: #f5f5f5;
     padding: 20px;
 }
+
+body.role-superuser {
+    background-color: #fff4e6;
+}
+
+body.role-admin {
+    background-color: #eaf4ff;
+}
+
+body.role-superuser .container {
+    border: 2px solid #f0b35e;
+}
+
+body.role-admin .container {
+    border: 2px solid #7aa7de;
+}
+
+body.role-superuser #dashboardHeading {
+    color: #9a5b12;
+}
+
+body.role-admin #dashboardHeading {
+    color: #1f4f8a;
+}
 .container {
     max-width: 1200px;
     margin: 0 auto;
@@ -105,6 +129,22 @@ button.disabled:hover {
     border-radius: 4px;
     background: #fafafa;
     position: relative;
+    transition: all 0.3s ease;
+}
+.institution-item.collapsed {
+    padding: 10px 15px;
+}
+.institution-item .institution-header {
+    cursor: pointer;
+    user-select: none;
+}
+.institution-item.collapsed .institution-header h3 {
+    font-size: 16px;
+}
+.institution-item.collapsed .courses-list,
+.institution-item.collapsed .button-group,
+.institution-item.collapsed > div:not(.institution-header) {
+    display: none;
 }
 #sessionsContainer {
     /* Width controlled by parent flex container */
@@ -137,23 +177,41 @@ button.disabled:hover {
     margin-top: 10px;
 }
 .error {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+    max-width: 600px;
+    width: 90%;
     color: #dc3545;
     background: #f8d7da;
-    padding: 10px;
+    padding: 15px 20px;
     border-radius: 4px;
-    margin-bottom: 15px;
+    border: 1px solid #f5c6cb;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     display: none;
+    font-weight: 500;
 }
 .error.active {
     display: block;
 }
 .success {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+    max-width: 600px;
+    width: 90%;
     color: #155724;
     background: #d4edda;
-    padding: 10px;
+    padding: 15px 20px;
     border-radius: 4px;
-    margin-bottom: 15px;
+    border: 1px solid #c3e6cb;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     display: none;
+    font-weight: 500;
 }
 .success.active {
     display: block;

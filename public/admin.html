@@ -9,7 +9,7 @@
 <body>
     <div class="container">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
-            <h1>Institution Manager</h1>
+            <h1 id="dashboardHeading">Admin Portal</h1>
             <button class="logout-btn" id="logoutBtn" style="display: none;">Logout</button>
         </div>
 
@@ -19,13 +19,16 @@
         <!-- Login Section -->
         <div id="loginSection" class="login-section active">
             <h2>Admin Login</h2>
-            <form id="loginForm">
-                <input type="text" style="display: none;" autocomplete="username">
+            <form id="loginForm" name="loginForm" action="/admin/api/auth" method="post">
+                <div class="form-group">
+                    <label for="username">Username:</label>
+                    <input type="text" id="username" name="username" placeholder="Enter your username" autocomplete="username" required>
+                </div>
                 <div class="form-group">
                     <label for="password">Password:</label>
-                    <input type="password" id="password" placeholder="Enter admin password" autocomplete="new-password">
+                    <input type="password" id="password" name="password" placeholder="Enter your password" autocomplete="current-password" required>
                 </div>
-                <button type="button" id="loginBtn">Login</button>
+                <button type="submit" id="loginBtn">Login</button>
             </form>
         </div>
 
@@ -85,12 +88,16 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <label for="accessInstSlug">Institution slug (e.g., cu)</label>
-                        <input type="text" id="accessInstSlug" placeholder="cu" autocomplete="off">
+                        <label for="accessInstSlug">Institution</label>
+                        <select id="accessInstSlug">
+                            <option value="">Select institution...</option>
+                        </select>
                     </div>
                     <div class="form-group">
-                        <label for="accessCourseSlug">Course slug (only for COU)</label>
-                        <input type="text" id="accessCourseSlug" placeholder="lead" autocomplete="off">
+                        <label for="accessCourseSlug">Course (only for COU)</label>
+                        <select id="accessCourseSlug">
+                            <option value="">Select course...</option>
+                        </select>
                     </div>
                     <div class="form-group">
                         <label for="accessPassword">Password</label>
@@ -106,6 +113,34 @@
                 <div style="margin-top: 16px;">
                     <h3 style="margin-bottom: 8px;">Existing Access Keys</h3>
                     <div id="accessKeysContainer"></div>
+                </div>
+            </div>
+
+            <!-- Admin Users Section (Superuser only) -->
+            <div class="section-card" id="adminUsersSection" style="margin-top: 32px; display: none;">
+                <h2>Admin Users <span style="color: #e74c3c; font-size: 0.8em;">(Superuser Only)</span></h2>
+                <form id="adminUserForm" novalidate>
+                    <div class="form-group">
+                        <label for="adminUsername">Username</label>
+                        <input type="text" id="adminUsername" placeholder="admin_username" autocomplete="off" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="adminPassword">Password</label>
+                        <input type="password" id="adminPassword" placeholder="set a secure password" autocomplete="new-password" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="adminRole">Role</label>
+                        <select id="adminRole">
+                            <option value="admin">Admin</option>
+                            <option value="superuser">Superuser</option>
+                        </select>
+                    </div>
+                    <button type="submit" id="createAdminUserBtn">Create Admin User</button>
+                </form>
+
+                <div style="margin-top: 16px;">
+                    <h3 style="margin-bottom: 8px;">Existing Admin Users</h3>
+                    <div id="adminUsersContainer"></div>
                 </div>
             </div>
         </div>

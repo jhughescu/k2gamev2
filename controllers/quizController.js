@@ -36,7 +36,7 @@ async function getQuestion(bank, qId = false, excludeIds = [], includeAnswer = f
     let question;
 
     if (qId !== false) {
-        console.log('indexed question return', qId, excludeIds);
+        // console.log('indexed question return', qId, excludeIds);
         // Deterministic fetch by index
         const query = { _id: { $nin: objectIds } };
         const projection = includeAnswer ? {} : { correctAnswerIndex: 0 };
@@ -45,7 +45,7 @@ async function getQuestion(bank, qId = false, excludeIds = [], includeAnswer = f
             .sort({ _id: 1 }) // or any other consistent order
             .skip(qId)
             .limit(1);
-        console.log(question);
+        // console.log(question);
     } else {
 
 //        console.log('random question return');
@@ -69,7 +69,7 @@ async function getQuestion(bank, qId = false, excludeIds = [], includeAnswer = f
 async function getQuestionV1(bank, qId = false, excludeIds = [], includeAnswer = false) {
     const conn = await getQuizDbConnection();
     const questionSchema = require('../models/questionSchema2');
-    console.log(`getQuestion`, bank);
+    // console.log(`getQuestion`, bank);
     if (!conn.models['Question']) {
         Question = conn.model('Question', questionSchema, bank);
     } else {
@@ -92,7 +92,7 @@ async function getQuestionV1(bank, qId = false, excludeIds = [], includeAnswer =
     }
 
     const question = await Question.aggregate(pipeline);
-    console.log(question)
+    // console.log(question)
     return question[0] || null;
 }
 
@@ -117,7 +117,7 @@ async function checkAnswer(bank, questionId, selectedIndexes) {
     if (!question) {
         throw new Error('Question not found');
     }
-    console.log(question);
+    // console.log(question);
 //    console.log(selectedIndexes.toString());
     const ci = question.correctAnswerIndexes;
     const ui = selectedIndexes;

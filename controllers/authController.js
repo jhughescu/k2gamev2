@@ -127,7 +127,22 @@ const requireSuperuser = (req, res, next) => {
     if (req.session && req.session.isAuthenticated && req.session.role === 'superuser') {
         return next();
     }
-    res.status(403).json({ error: 'Forbidden', message: 'Superuser access required' });
+    
+    // Check if request wants JSON (AJAX/fetch requests)
+    const wantsJson = req.accepts('json') && !req.accepts('html');
+    const isAjax = req.xhr || req.headers['accept']?.includes('application/json');
+    
+    if (wantsJson || isAjax) {
+        return res.status(403).json({ 
+            error: 'Forbidden', 
+            message: 'Superuser access required',
+            loginUrl: '/auth/login'
+        });
+    }
+    
+    // HTML requests get redirected to login
+    const redirectUrl = encodeURIComponent(req.originalUrl);
+    return res.redirect(`/auth/login?redirect=${redirectUrl}`);
 };
 
 const requireSessionAccess = (req, res, next) => {
@@ -184,7 +199,7 @@ const login = async (req, res) => {
                 console.error('Session save error:', err);
                 return res.status(500).json({ error: 'Session save failed' });
             }
-            res.json({ success: true, message: 'Login successful', role: user.role, redirectUrl: '/admin/dashboard' });
+            res.json({ success: true, message: 'Login successful', role: user.role, redirectUrl: '/admin' });
         });
     }
 
@@ -210,7 +225,7 @@ const login = async (req, res) => {
                 success: true, 
                 message: 'Login successful',
                 role: 'superuser',
-                redirectUrl: '/admin/dashboard'
+                redirectUrl: '/admin'
             });
         });
     } else {

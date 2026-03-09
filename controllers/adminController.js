@@ -1,7 +1,8 @@
 const Institution = require('../models/institution');
 const User = require('../models/user');
 const AccessKey = require('../models/accessKey');
-const { hashPassword } = require('./authController');
+const { hashPassword, verifyPassword } = require('./authController');
+const crypto = require('crypto');
 
 const normalizeCourses = (courses = []) => {
     if (!Array.isArray(courses)) {
@@ -41,25 +42,101 @@ const adminAuth = (req, res, next) => {
     }
     res.status(401).json({ error: 'Unauthorized' });
 };
-
+// GET /admin/api/check-auth - check authentication and return role
+const checkAdminAuth = (req, res) => {
+    if (req.session && (req.session.adminAuth === true || req.session.role === 'admin' || req.session.role === 'superuser')) {
+        return res.json({ 
+            authenticated: true, 
+            role: req.session.role,
+            username: req.session.username 
+        });
+    }
+    return res.status(401).json({ authenticated: false });
+};
 // POST /admin/auth - authenticate with password
-const authenticateAdmin = (req, res) => {
-    const password = req.body.password || '';
-    const adminPassword = process.env.ADMIN_PASSWORD || 'admin';
-    if (password === adminPassword) {
+const authenticateAdmin = async (req, res) => {
+    const { username, password } = req.body || {};
+    const wantsJson = req.accepts('json') && !req.accepts('html');
+    const isAjax = req.xhr || req.headers['accept']?.includes('application/json');
+    const respondJson = wantsJson || isAjax;
+
+    if (!username || !password) {
+        if (respondJson) {
+            return res.status(400).json({ error: 'username and password are required' });
+        }
+        return res.redirect('/admin?error=required');
+    }
+    try {
+        // Check environment variable superuser password first
+        const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+        if (ADMIN_PASSWORD && password === ADMIN_PASSWORD) {
+            req.session.adminAuth = true;
+            req.session.isAuthenticated = true;
+            req.session.role = 'superuser';
+            req.session.username = username || 'env-superuser';
+            return req.session.save((err) => {
+                if (err) {
+                    console.error('Session save error:', err);
+                    if (respondJson) {
+                        return res.status(500).json({ error: 'Session save failed' });
+                    }
+                    return res.redirect('/admin?error=invalid');
+                }
+                if (respondJson) {
+                    return res.json({ success: true, username: req.session.username, role: 'superuser' });
+                }
+                return res.redirect('/admin');
+            });
+        }
+
+        // Check database user
+        const user = await User.findOne({ username: username.toLowerCase() });
+        if (!user) {
+            if (respondJson) {
+                return res.status(403).json({ error: 'Invalid username or password' });
+            }
+            return res.redirect('/admin?error=invalid');
+        }
+        // Check if user is admin or superuser
+        if (!['admin', 'superuser'].includes(user.role)) {
+            if (respondJson) {
+                return res.status(403).json({ error: 'User does not have admin access' });
+            }
+            return res.redirect('/admin?error=invalid');
+        }
+        // Verify password
+        const isValidPassword = await verifyPassword(password, user.passwordHash);
+        if (!isValidPassword) {
+            if (respondJson) {
+                return res.status(403).json({ error: 'Invalid username or password' });
+            }
+            return res.redirect('/admin?error=invalid');
+        }
+        // Set session
         req.session.adminAuth = true;
         req.session.isAuthenticated = true;
-        req.session.role = req.session.role || 'admin';
-        req.session.username = req.session.username || 'legacy-admin';
+        req.session.role = user.role;
+        req.session.username = user.username;
+        req.session.userId = user._id.toString();
         return req.session.save((err) => {
             if (err) {
                 console.error('Session save error:', err);
-                return res.status(500).json({ error: 'Session save failed' });
+                if (respondJson) {
+                    return res.status(500).json({ error: 'Session save failed' });
+                }
+                return res.redirect('/admin?error=invalid');
             }
-            res.json({ success: true });
+            if (respondJson) {
+                return res.json({ success: true, username: user.username, role: user.role });
+            }
+            return res.redirect('/admin');
         });
-    } else {
-        res.status(403).json({ error: 'Invalid password' });
+    } catch (err) {
+        console.error('Admin authentication error:', err);
+        if (respondJson) {
+            return res.status(500).json({ error: 'Authentication failed' });
+        }
+        return res.redirect('/admin?error=invalid');
     }
 };
 
@@ -184,6 +261,44 @@ const listAdminUsers = async (_req, res) => {
     res.json(users);
 };
 
+const resetAdminPassword = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const user = await User.findById(id);
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+        // Generate a random password
+        const newPassword = generateRandomPassword();
+        const passwordHash = await hashPassword(newPassword);
+        user.passwordHash = passwordHash;
+        await user.save();
+        
+        res.json({ 
+            success: true, 
+            username: user.username, 
+            newPassword: newPassword,
+            message: 'Password reset successfully. User should change this password after login.' 
+        });
+    } catch (err) {
+        console.error('Error resetting password:', err);
+        res.status(500).json({ error: 'Failed to reset password' });
+    }
+};
+
+// Helper function to generate a secure random password
+function generateRandomPassword() {
+    const length = 16;
+    const charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*';
+    let password = '';
+    const array = new Uint8Array(length);
+    crypto.getRandomValues(array);
+    for (let i = 0; i < length; i++) {
+        password += charset[array[i] % charset.length];
+    }
+    return password;
+}
+
 // -- Access key management (admin/superuser) --
 const createAccessKey = async (req, res) => {
     try {
@@ -249,8 +364,31 @@ const setAccessKeyActive = async (req, res) => {
     }
 };
 
+
+const updateAccessKeyPassword = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { password } = req.body || {};
+        if (!password) {
+            return res.status(400).json({ error: 'password is required' });
+        }
+        const key = await AccessKey.findById(id);
+        if (!key) {
+            return res.status(404).json({ error: 'Access key not found' });
+        }
+        const passwordHash = await hashPassword(password);
+        key.passwordHash = passwordHash;
+        await key.save();
+        res.json({ success: true, message: 'Password updated successfully' });
+    } catch (err) {
+        console.error('Error updating access key password:', err);
+        res.status(500).json({ error: 'Failed to update password' });
+    }
+};
+
 module.exports = {
     adminAuth,
+    checkAdminAuth,
     authenticateAdmin,
     getInstitutions,
     createInstitution,
@@ -258,7 +396,10 @@ module.exports = {
     deleteInstitution,
     createAdminUser,
     listAdminUsers,
+    resetAdminPassword,
     createAccessKey,
     listAccessKeys,
-    setAccessKeyActive
+    setAccessKeyActive,
+    updateAccessKeyPassword
 };
+

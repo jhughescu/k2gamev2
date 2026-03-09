@@ -74,6 +74,16 @@ function showSuccess(message) {
     setTimeout(() => el.classList.remove('active'), 3000);
 }
 
+function showLoginErrorFromUrl() {
+    const params = new URLSearchParams(window.location.search);
+    const error = params.get('error');
+    if (error === 'invalid') {
+        showError('Invalid username or password');
+    } else if (error === 'required') {
+        showError('Please enter username and password');
+    }
+}
+
 async function loadCsrfToken() {
     try {
         const res = await fetch('/auth/csrf-token', {
@@ -324,37 +334,57 @@ function addCourse() {
     updateButtonState();
 }
 
-async function login() {
+async function login(event) {
+    if (event) event.preventDefault();
+    const username = doc('username').value.trim();
     const password = doc('password').value;
-    if (!password) {
-        showError('Please enter a password');
-        return;
+    if (!username || !password) {
+        showError('Please enter username and password');
+        return false;
     }
     try {
         const res = await fetch(`${API_BASE}/auth`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ password })
+            body: JSON.stringify({ username, password })
         });
         if (res.ok) {
+            const data = await res.json();
+            console.log('Login response:', data);
             showSuccess('Authenticated');
-            showAdminSection();
+            showAdminSection(data.role);
             loadInstitutions();
             loadAccessKeys();
+            loadAdminUsers(); // Check if user is superuser
             // Update browser URL to admin/dashboard
-            window.history.pushState({ page: 'admin' }, 'Admin Dashboard', '/admin/dashboard');
+            window.history.pushState({ page: 'admin' }, 'Admin Dashboard', '/admin');
+                    return true;
         } else {
-            showError('Invalid password');
+            showError('Invalid username or password');
+                    return false;
         }
     } catch (err) {
         showError('Authentication failed: ' + err.message);
+        return false;
     }
 }
 
-function showAdminSection() {
+function showAdminSection(role) {
     document.getElementById('loginSection').classList.remove('active');
     document.getElementById('adminSection').style.display = 'block';
     document.getElementById('logoutBtn').style.display = 'block';
+    document.body.classList.remove('role-superuser', 'role-admin');
+    if (role === 'superuser') {
+        document.body.classList.add('role-superuser');
+    } else if (role === 'admin') {
+        document.body.classList.add('role-admin');
+    }
+    
+    // Update heading with role
+    if (role) {
+        const roleLabel = role.charAt(0).toUpperCase() + role.slice(1);
+        document.getElementById('dashboardHeading').textContent = `Dashboard (${roleLabel})`;
+    }
 }
 
 async function loadInstitutions() {
@@ -364,6 +394,7 @@ async function loadInstitutions() {
         const institutions = await res.json();
         institutionsCache = institutions;
         renderInstitutions(institutions);
+        populateAccessKeyInstitutionDropdown(institutions);
         return institutions;
     } catch (err) {
         showError('Failed to load institutions: ' + err.message);
@@ -402,7 +433,7 @@ function renderInstitutions(institutions) {
         return;
     }
     container.innerHTML = institutions.map(inst => `
-        <div class="institution-item">
+        <div class="institution-item collapsed" data-id="${inst._id}">
             <div class="institution-header">
                 <div>
                     <h3>${inst.title}</h3>
@@ -423,12 +454,28 @@ function renderInstitutions(institutions) {
         </div>
     `).join('');
 
+    // Attach event listeners for collapse/expand
+    document.querySelectorAll('.institution-item .institution-header').forEach(header => {
+        header.addEventListener('click', (e) => {
+            // Don't toggle if clicking on ID text (for copying)
+            if (e.target.tagName === 'DIV' && e.target.textContent.startsWith('ID:')) return;
+            const item = header.closest('.institution-item');
+            item.classList.toggle('collapsed');
+        });
+    });
+
     // Attach event listeners to edit and delete buttons
     document.querySelectorAll('.edit-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => startEditInstitution(e.target.dataset.id));
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            startEditInstitution(e.target.dataset.id);
+        });
     });
     document.querySelectorAll('.delete-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => deleteInstitution(e.target.dataset.id));
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            deleteInstitution(e.target.dataset.id);
+        });
     });
 }
 
@@ -544,7 +591,7 @@ function renderAccessKeys() {
         const label = k.label ? ` • ${k.label}` : '';
         const created = k.createdAt ? new Date(k.createdAt).toLocaleString() : '';
         return `
-            <div class="institution-item" data-id="${k._id}">
+            <div class="institution-item collapsed" data-id="${k._id}">
                 <div class="institution-header">
                     <div>
                         <h3>${scope}${label}</h3>
@@ -553,19 +600,63 @@ function renderAccessKeys() {
                     <div>${created}</div>
                 </div>
                 <div class="button-group">
+                    <button class="secondary small edit-key-password" data-id="${k._id}">Edit Password</button>
                     <button class="secondary small toggle-key" data-id="${k._id}" data-active="${k.active ? '1' : '0'}">${k.active ? 'Disable' : 'Enable'}</button>
                 </div>
             </div>
         `;
     }).join('');
 
+    // Attach event listeners for collapse/expand
+    container.querySelectorAll('.institution-item .institution-header').forEach(header => {
+        header.addEventListener('click', (e) => {
+            if (e.target.tagName === 'DIV' && e.target.textContent.match(/^\d{4}/)) return;
+            const item = header.closest('.institution-item');
+            item.classList.toggle('collapsed');
+        });
+    });
+
+    container.querySelectorAll('.edit-key-password').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            editAccessKeyPassword(e.target.dataset.id);
+        });
+    });
+
     container.querySelectorAll('.toggle-key').forEach(btn => {
         btn.addEventListener('click', async (e) => {
+            e.stopPropagation();
             const id = e.target.dataset.id;
             const currentlyActive = e.target.dataset.active === '1';
             await setAccessKeyActive(id, !currentlyActive);
         });
     });
+}
+
+async function editAccessKeyPassword(keyId) {
+    const newPassword = prompt('Enter new password for this access key:');
+    if (!newPassword) return;
+    
+    if (newPassword.length < 4) {
+        showError('Password must be at least 4 characters');
+        return;
+    }
+    
+    try {
+        const res = await fetch(`${API_BASE}/access-keys/${keyId}/password`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ password: newPassword })
+        });
+        if (!res.ok) {
+            const err = await res.json();
+            showError(err.error || 'Failed to update password');
+            return;
+        }
+        showSuccess('Access key password updated successfully');
+    } catch (err) {
+        showError('Failed to update password: ' + err.message);
+    }
 }
 
 async function setAccessKeyActive(id, active) {
@@ -590,8 +681,8 @@ async function setAccessKeyActive(id, active) {
 async function createAccessKey(event) {
     if (event) event.preventDefault();
     const type = doc('accessType').value;
-    const institutionSlug = doc('accessInstSlug').value.trim().toLowerCase();
-    const courseSlug = doc('accessCourseSlug').value.trim().toLowerCase();
+    const institutionSlug = doc('accessInstSlug').value;
+    const courseSlug = doc('accessCourseSlug').value;
     const password = doc('accessPassword').value;
     const label = doc('accessLabel').value.trim();
 
@@ -632,14 +723,212 @@ async function createAccessKey(event) {
     }
 }
 
+function populateAccessKeyInstitutionDropdown(institutions) {
+    const instSelect = doc('accessInstSlug');
+    if (!instSelect) return;
+    
+    instSelect.innerHTML = '<option value="">Select institution...</option>' +
+        institutions.map(inst => `<option value="${inst.slug}">${inst.title} (${inst.slug})</option>`).join('');
+}
+
+function populateAccessKeyCourseDropdown(institutionSlug) {
+    const courseSelect = doc('accessCourseSlug');
+    if (!courseSelect || !institutionSlug) {
+        courseSelect.innerHTML = '<option value="">Select course...</option>';
+        return;
+    }
+    
+    const institution = institutionsCache.find(inst => inst.slug === institutionSlug);
+    if (!institution || !institution.courses || institution.courses.length === 0) {
+        courseSelect.innerHTML = '<option value="">No courses available</option>';
+        courseSelect.disabled = true;
+        return;
+    }
+    
+    courseSelect.disabled = false;
+    courseSelect.innerHTML = '<option value="">Select course...</option>' +
+        institution.courses.map(course => `<option value="${course.slug}">${course.name} (${course.slug})</option>`).join('');
+}
+
 function handleAccessTypeChange() {
     const type = doc('accessType').value;
-    const courseInput = doc('accessCourseSlug');
+    const courseSelect = doc('accessCourseSlug');
+    const instSelect = doc('accessInstSlug');
+    
     if (type === 'institution') {
-        courseInput.value = '';
-        courseInput.disabled = true;
+        courseSelect.value = '';
+        courseSelect.disabled = true;
     } else {
-        courseInput.disabled = false;
+        courseSelect.disabled = false;
+        // Populate courses for currently selected institution
+        const selectedInst = instSelect.value;
+        if (selectedInst) {
+            populateAccessKeyCourseDropdown(selectedInst);
+        }
+    }
+}
+
+// Admin User Management (Superuser only)
+async function loadAdminUsers() {
+    try {
+        const res = await fetch(`${API_BASE}/admin-users`, {
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
+        if (!res.ok) {
+            if (res.status === 403) {
+                // Not a superuser, hide the section
+                doc('adminUsersSection').style.display = 'none';
+                return;
+            }
+            throw new Error('Failed to fetch admin users');
+        }
+        // If we got here, user is a superuser
+        doc('adminUsersSection').style.display = 'block';
+        const users = await res.json();
+        renderAdminUsers(users);
+    } catch (err) {
+        console.error('Failed to load admin users:', err.message);
+        doc('adminUsersSection').style.display = 'none';
+    }
+}
+
+function renderAdminUsers(users) {
+    const container = doc('adminUsersContainer');
+    if (!users || users.length === 0) {
+        container.innerHTML = '<p>No admin users yet. Create one above.</p>';
+        return;
+    }
+    container.innerHTML = users.map(user => `
+        <div class="institution-item collapsed" data-id="${user._id}">
+            <div class="institution-header">
+                <div>
+                    <h3>${user.username}</h3>
+                    <span class="institution-slug">Role: ${user.role}</span>
+                </div>
+                <div>ID: ${user._id}</div>
+            </div>
+            <div style="color: #999; font-size: 0.9em; margin-top: 8px;">
+                Created: ${new Date(user.createdAt).toLocaleString()}
+            </div>
+            <div class="button-group" style="margin-top: 12px;">
+                <button class="secondary small reset-password-btn" data-id="${user._id}" data-username="${user.username}">Reset Password</button>
+            </div>
+        </div>
+    `).join('');
+
+    // Attach event listeners for collapse/expand
+    container.querySelectorAll('.institution-item .institution-header').forEach(header => {
+        header.addEventListener('click', (e) => {
+            if (e.target.tagName === 'DIV' && e.target.textContent.startsWith('ID:')) return;
+            const item = header.closest('.institution-item');
+            item.classList.toggle('collapsed');
+        });
+    });
+    
+    // Attach event listeners to reset password buttons
+    document.querySelectorAll('.reset-password-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            resetUserPassword(e.target.dataset.id, e.target.dataset.username);
+        });
+    });
+}
+
+async function createAdminUser(event) {
+    console.log('createAdminUser called with event:', event);
+    if (event) event.preventDefault();
+    const username = doc('adminUsername').value.trim();
+    const password = doc('adminPassword').value;
+    const role = doc('adminRole').value;
+    
+    console.log('Creating admin user:', { username, role, passwordLength: password.length });
+
+    if (!username || !password) {
+        console.log('Validation failed: username or password missing');
+        showError('Username and password are required');
+        return;
+    }
+
+    if (password.length < 8) {
+        console.log('Validation failed: password too short');
+        showError('Password must be at least 8 characters');
+        return;
+    }
+
+    try {
+        console.log('Posting to', `${API_BASE}/admin-users`);
+        const res = await fetch(`${API_BASE}/admin-users`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password, role })
+        });
+        
+        console.log('Response status:', res.status, 'ok:', res.ok);
+        
+        if (!res.ok) {
+            const err = await res.json();
+            console.log('Error response:', err);
+            if (res.status === 409) {
+                showError('Username already exists');
+            } else if (res.status === 403) {
+                showError('Only superusers can create admin users');
+                doc('adminUsersSection').style.display = 'none';
+            } else {
+                showError(err.error || 'Failed to create admin user');
+            }
+            return;
+        }
+        
+        const result = await res.json();
+        console.log('Success response:', result);
+        showSuccess(`Admin user "${result.username}" created successfully`);
+        doc('adminUsername').value = '';
+        doc('adminPassword').value = '';
+        doc('adminRole').value = 'admin';
+        loadAdminUsers();
+    } catch (err) {
+        console.error('Error creating admin user:', err);
+        showError('Failed to create admin user: ' + err.message);
+    }
+}
+
+async function resetUserPassword(userId, username) {
+    if (!confirm(`Reset password for user "${username}"?\n\nA new random password will be generated and displayed once. Make sure to save it!`)) {
+        return;
+    }
+    
+    try {
+        const res = await fetch(`${API_BASE}/admin-users/${userId}/reset-password`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        
+        if (!res.ok) {
+            const err = await res.json();
+            showError(err.error || 'Failed to reset password');
+            return;
+        }
+        
+        const result = await res.json();
+        
+        // Show password in a prompt that can be copied
+        const message = `Password reset successful for "${result.username}"!\n\nNew password: ${result.newPassword}\n\nIMPORTANT: Copy this password now. It will not be shown again.\nThe user should change this password after logging in.`;
+        
+        // Try to copy to clipboard
+        try {
+            await navigator.clipboard.writeText(result.newPassword);
+            alert(message + '\n\n✓ Password copied to clipboard!');
+        } catch (clipErr) {
+            // Clipboard API failed, just show the message
+            alert(message);
+        }
+        
+        showSuccess(`Password reset for "${result.username}". New password copied to clipboard.`);
+    } catch (err) {
+        console.error('Error resetting password:', err);
+        showError('Failed to reset password: ' + err.message);
     }
 }
 
@@ -668,6 +957,9 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
         document.getElementById('loginSection').classList.add('active');
         document.getElementById('adminSection').style.display = 'none';
         document.getElementById('logoutBtn').style.display = 'none';
+        document.getElementById('dashboardHeading').textContent = 'Admin Portal';
+        document.body.classList.remove('role-superuser', 'role-admin');
+        document.getElementById('username').value = '';
         document.getElementById('password').value = '';
         showSuccess('Logged out');
     } catch (err) {
@@ -677,7 +969,6 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
 });
 
 // Event listeners for form submission and button clicks
-document.getElementById('loginBtn').addEventListener('click', login);
 document.getElementById('saveInstitutionBtn').addEventListener('click', submitInstitution);
 document.getElementById('institutionForm').addEventListener('submit', submitInstitution);
 document.getElementById('addCourseBtn').addEventListener('click', addCourse);
@@ -691,6 +982,13 @@ document.getElementById('cancelEditBtn').addEventListener('click', () => {
 });
 document.getElementById('accessKeyForm').addEventListener('submit', createAccessKey);
 document.getElementById('accessType').addEventListener('change', handleAccessTypeChange);
+document.getElementById('accessInstSlug').addEventListener('change', function() {
+    const type = doc('accessType').value;
+    if (type === 'course') {
+        populateAccessKeyCourseDropdown(this.value);
+    }
+});
+document.getElementById('adminUserForm').addEventListener('submit', createAdminUser);
 document.getElementById('courseName').addEventListener('input', () => {
     maybeAutofillCourseSlug();
     updateAddCourseButtonState();
@@ -719,7 +1017,7 @@ window.addEventListener('beforeunload', (e) => {
 // Check if already authenticated on page load
 async function checkAuth() {
     try {
-        const res = await fetch(`${API_BASE}/institutions`, {
+        const res = await fetch(`${API_BASE}/check-auth`, {
             cache: 'no-store',
             headers: {
                 'Cache-Control': 'no-cache, no-store, must-revalidate',
@@ -728,9 +1026,12 @@ async function checkAuth() {
         });
         if (res.ok) {
             // Already authenticated, show admin section
-            showAdminSection();
+            const data = await res.json();
+            console.log('Already authenticated:', data);
+            showAdminSection(data.role);
             await loadInstitutions();
             await loadAccessKeys();
+            await loadAdminUsers(); // Check if user is superuser and load admin users
             // Restore state after institutions are loaded
             if (restoreState() && formMode === 'edit') {
                 window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -755,7 +1056,11 @@ async function checkAuth() {
 // Check authentication on page load - only initialize UI after auth check completes
 (async () => {
     await loadCsrfToken();
+    showLoginErrorFromUrl();
     await checkAuth();
     updateAddCourseButtonState();
     handleAccessTypeChange();
 })();
+
+
+

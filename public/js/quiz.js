@@ -172,7 +172,8 @@ class Quiz {
             questionId,
             selectedIndexes
         }
-//        console.log(o);
+       console.log('Submitting answer:', o);
+        // console.log(o);
         this.socket.emit('submitAnswer', o, (response) => {
             if (cb) cb(response);
         });

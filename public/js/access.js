@@ -608,7 +608,9 @@ function updateSelectedSessionsPanel() {
         timeChartHTML = `
             <div style="border: 1px solid #e0e0e0; border-radius: 4px; padding: 12px; background: #fafafa; margin-bottom: 15px;">
                 <h4 style="margin: 0 0 12px 0; font-size: 13px; font-weight: 600; color: #333;">Session Times</h4>
-                ${bars}
+                <div style="max-height: 320px; overflow-y: auto; padding-right: 4px;">
+                    ${bars}
+                </div>
             </div>
         `;
     }

@@ -192,7 +192,7 @@
             .then(data => {
                 if (data.authenticated && (data.role === 'admin' || data.role === 'superuser')) {
                     // Already logged in as admin/superuser, redirect
-                    const redirectUrl = new URLSearchParams(window.location.search).get('redirect') || '/admin/dashboard';
+                    const redirectUrl = new URLSearchParams(window.location.search).get('redirect') || '/admin';
                     window.location.href = redirectUrl;
                 }
                 // If authenticated but not admin (e.g., role === 'access'), don't redirect - let them login
@@ -234,7 +234,7 @@
 
                 if (response.ok && data.success) {
                     // Login successful
-                    const redirectUrl = new URLSearchParams(window.location.search).get('redirect') || data.redirectUrl || '/admin/dashboard';
+                    const redirectUrl = new URLSearchParams(window.location.search).get('redirect') || data.redirectUrl || '/admin';
                     window.location.href = redirectUrl;
                 } else {
                     // Login failed

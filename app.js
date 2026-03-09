@@ -10,10 +10,10 @@ const jwt = require('jsonwebtoken');
 const helmet = require('helmet');
 const cookieParser = require('cookie-parser');
 const { doubleCsrfProtection } = require('./controllers/csrfConfig');
+const { printServerStartup } = require('./controllers/startupLogger');
 //const gfxController = require('./controllers/gfxController');
 const app = express();
 const server = http.createServer(app);
-const chalk = require('chalk');
 const tools = require('./controllers/tools');
 require('dotenv').config();
 
@@ -128,11 +128,23 @@ databaseController.dbConnect();
 initSocket(server);
 if (Boolean(process.env.isDev)) {
     server.listen(PORT, HOST, () => {
-        console.log(`Server running at http://${HOST}:${PORT} ${getTimeStamp()}`);
+        printServerStartup({
+            host: HOST,
+            port: PORT,
+            rootDir: __dirname,
+            trustProxy: app.get('trust proxy') === 1,
+            isDev: true
+        });
     });
 } else {
     server.listen(PORT, () => {
-        console.log(`Server running at http://${HOST}:${PORT} ${getTimeStamp()}`);
+        printServerStartup({
+            host: HOST,
+            port: PORT,
+            rootDir: __dirname,
+            trustProxy: app.get('trust proxy') === 1,
+            isDev: false
+        });
     });
 }
 

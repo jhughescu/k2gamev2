@@ -50,7 +50,7 @@ app.get('/facilitator/login', (req, res) => {
     res.sendFile(path.join(basePath, 'access.html'));
 });
 
-app.get('/facilitator/dashboard', authController.requireSessionAccess, (req, res) => {
+app.get('/facilitator', authController.requireSessionAccess, (req, res) => {
     res.sendFile(path.join(basePath, 'access.html'));
 });
 
@@ -258,7 +258,7 @@ app.get('/admin/dashboard1', authController.requireAdmin, (req, res) => {
     res.sendFile(path.join(basePath, 'admin_dashboard.html'));
     //    res.sendFile(path.join(basePath, 'admin_dashboard_layout.html'));
 });
-// Legacy dashboard route - commented out; now using institution manager at /admin/dashboard
+// Legacy dashboard route - commented out; now using institution manager at /admin
 // app.get('/admin/dashboard', authController.requireAdmin, (req, res) => {
 //     res.sendFile(path.join(basePath, 'admin_dashboard_layout.html'));
 // });
@@ -270,16 +270,13 @@ app.get('/dev/logdisplay', authController.requireAdmin, (req, res) => {
     res.sendFile(path.join(basePath, 'log_display.html'));
 });
 
-// Admin institution management routes
-app.get('/admin/superuser', (req, res) => {
-    res.sendFile(path.join(basePath, 'admin.html'));
-});
-
-app.get('/admin/dashboard', (req, res) => {
+// Admin institution management route
+app.get('/admin', (req, res) => {
     res.sendFile(path.join(basePath, 'admin.html'));
 });
 
 app.post('/admin/api/auth', adminController.authenticateAdmin);
+app.get('/admin/api/check-auth', adminController.checkAdminAuth);
 app.get('/admin/api/institutions', adminController.adminAuth, adminController.getInstitutions);
 app.post('/admin/api/institutions', adminController.adminAuth, adminController.createInstitution);
 app.put('/admin/api/institutions/:id', adminController.adminAuth, adminController.updateInstitution);
@@ -288,9 +285,17 @@ app.delete('/admin/api/institutions/:id', adminController.adminAuth, adminContro
 // Admin user and access key management
 app.post('/admin/api/admin-users', authController.requireSuperuser, adminController.createAdminUser);
 app.get('/admin/api/admin-users', authController.requireSuperuser, adminController.listAdminUsers);
+app.post('/admin/api/admin-users/:id/reset-password', authController.requireSuperuser, adminController.resetAdminPassword);
 app.post('/admin/api/access-keys', authController.requireAdmin, adminController.createAccessKey);
 app.get('/admin/api/access-keys', authController.requireAdmin, adminController.listAccessKeys);
 app.patch('/admin/api/access-keys/:id/active', authController.requireAdmin, adminController.setAccessKeyActive);
+app.patch('/admin/api/access-keys/:id/password', authController.requireAdmin, adminController.updateAccessKeyPassword);
+
+// 404 handler - must be last
+app.use((req, res) => {
+    res.status(404).sendFile(path.join(basePath, '404.html'));
+});
 
 // Export createRoute function
 module.exports = {};
+
