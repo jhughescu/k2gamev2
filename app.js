@@ -154,7 +154,7 @@ app.get('/views/:templateName', (req, res) => {
 // Load route controller AFTER middleware is set up
 require('./controllers/routeController');
 
-initLocalAccess();
+//initLocalAccess();
 databaseController.dbConnect();
 initSocket(server);
 if (isDevMode) {
