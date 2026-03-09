@@ -1,5 +1,4 @@
 const express = require('express');
-const ngrok = require('ngrok');
 const fs = require('fs');
 const handlebars = require('handlebars');
 const exphbs = require('express-handlebars');
@@ -50,7 +49,7 @@ const isDevMode = process.env.ISDEV === 'true' || process.env.isDev === 'true';
 
 const databaseController = require('./controllers/databaseController');
 const versionController = require('./controllers/versionController');
-const localAccessController = require('./controllers/localAccessController');
+const { initLocalAccess } = require('./controllers/localAccessController');
 const authController = require('./controllers/authController');
 const { initSocket } = require('./controllers/socketController');
 
@@ -142,6 +141,7 @@ app.get('/views/:templateName', (req, res) => {
 // Load route controller AFTER middleware is set up
 require('./controllers/routeController');
 
+initLocalAccess();
 databaseController.dbConnect();
 initSocket(server);
 if (isDevMode) {

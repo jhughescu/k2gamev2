@@ -1,29 +1,44 @@
-
 const { spawn, execSync } = require('child_process');
+
 const ngrokPath = 'C:\\Users\\j.hughes\\AppData\\Roaming\\npm\\node_modules\\ngrok\\bin\\ngrok.exe';
-const startNgrok = () => {
-    // Start a new ngrok tunnel
-    const ngrokProcess = spawn(ngrokPath, ['start', '--config=./ngrok.yml', 'myapp'], {
-        stdio: 'inherit',
+let ngrokProcess = null;
+
+function startNgrok() {
+    ngrokProcess = spawn(ngrokPath, ['start', '--config=./ngrok.yml', 'myapp'], {
+        stdio: 'inherit'
     });
-    console.log(`startNgrok:`);
-    console.log(ngrokProcess);
+    console.log('ngrok tunnel started.');
 }
-// Kill any existing ngrok processes
-try {
-    execSync('taskkill /IM ngrok.exe /F', { stdio: 'ignore' }); // Silently kill
-} catch (err) {
-    console.warn('No existing ngrok process to kill.');
-    if (process.env.ISLOCAL) {
-//        startNgrok();
+
+function initLocalAccess() {
+    const isLocal = process.env.ISLOCAL === 'true';
+    const isWindows = process.platform === 'win32';
+
+    // Never run ngrok/taskkill logic in cloud Linux environments.
+    if (!isLocal || !isWindows) {
+        return;
     }
+
+    try {
+        execSync('taskkill /IM ngrok.exe /F', { stdio: 'ignore' });
+        console.log('Stopped existing ngrok process.');
+    } catch (err) {
+        console.warn('No existing ngrok process to kill.');
+    }
+
+    // Uncomment if you want ngrok auto-start locally.
+    // startNgrok();
+
+    process.on('SIGINT', () => {
+        console.log('Shutting down...');
+        if (ngrokProcess) {
+            ngrokProcess.kill();
+        }
+        process.exit();
+    });
 }
 
-
-
-// Optional: Clean shutdown on Ctrl+C
-process.on('SIGINT', () => {
-    console.log('Shutting down...');
-    ngrokProcess.kill(); // Kill the spawned ngrok process
-    process.exit();
-});
+module.exports = {
+    initLocalAccess,
+    startNgrok
+};
