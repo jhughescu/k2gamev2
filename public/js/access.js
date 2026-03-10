@@ -1,6 +1,7 @@
 const API_BASE = '/access';
 const doc = (id) => document.getElementById(id);
 const STORAGE_KEY = 'facilitator_dashboard_state';
+const FACILITATOR_QUIZ_BANK = 'k2questionbank2';
 
 // Global fetch wrapper that handles session expiration (401/403)
 async function secureApiCall(url, options = {}) {
@@ -181,8 +182,8 @@ async function login(event) {
         currentAccess = data.access;
         showSuccess('Logged in');
         showSessionsSection();
-        // Update browser URL to facilitator/dashboard
-        window.history.pushState({ page: 'facilitator' }, 'Facilitator Dashboard', '/facilitator/dashboard');
+        // Update browser URL to facilitator
+        window.history.pushState({ page: 'facilitator' }, 'Facilitator Dashboard', '/facilitator');
         loadSessions();
     } catch (err) {
         showError('Login failed: ' + err.message);
@@ -307,10 +308,10 @@ async function loadGameData() {
         gameData = await res.json();
         console.log('GameData loaded:', gameData);
         
-        // Load quiz questions from quiz1 bank
+        // Load quiz questions from the active facilitator bank.
         try {
-            console.log('Fetching quiz questions from:', `${API_BASE}/quiz/quiz1`);
-            const quizRes = await secureApiCall(`${API_BASE}/quiz/quiz1`);
+            console.log('Fetching quiz questions from:', `${API_BASE}/quiz/${FACILITATOR_QUIZ_BANK}`);
+            const quizRes = await secureApiCall(`${API_BASE}/quiz/${FACILITATOR_QUIZ_BANK}`);
             
             if (quizRes.expired) {
                 return;

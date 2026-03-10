@@ -1,16 +1,24 @@
 const { getQuizDbConnection } = require('../controllers/databaseController');
 const mongoose = require('mongoose');
 
-let Question = null;
-async function getQuestionRefs(bank) {
+function getQuestionModelName(bank) {
+    return `Question_${String(bank).replace(/[^a-zA-Z0-9_]/g, '_')}`;
+}
+
+async function getQuestionModel(bank) {
     const conn = await getQuizDbConnection();
     const questionSchema = require('../models/questionSchema2');
+    const modelName = getQuestionModelName(bank);
 
-    if (!conn.models['Question']) {
-        Question = conn.model('Question', questionSchema, bank);
-    } else {
-        Question = conn.models['Question'];
+    if (!conn.models[modelName]) {
+        conn.model(modelName, questionSchema, bank);
     }
+
+    return conn.models[modelName];
+}
+
+async function getQuestionRefs(bank) {
+    const Question = await getQuestionModel(bank);
 
     const refs = await Question.find({}, { _id: 1 });
     const list = refs.map(doc => doc._id.toString());
@@ -18,16 +26,14 @@ async function getQuestionRefs(bank) {
     return list;
 }
 
-async function getQuestion(bank, qId = false, excludeIds = [], includeAnswer = false) {
-    const conn = await getQuizDbConnection();
-    const questionSchema = require('../models/questionSchema2');
-//    console.log(`getQuestion`, bank, qId);
+async function getAllQuestions(bank) {
+    const Question = await getQuestionModel(bank);
+    return Question.find({}, { correctAnswerIndexes: 0 }).sort({ _id: 1 }).lean();
+}
 
-    if (!conn.models['Question']) {
-        Question = conn.model('Question', questionSchema, bank);
-    } else {
-        Question = conn.models['Question'];
-    }
+async function getQuestion(bank, qId = false, excludeIds = [], includeAnswer = false) {
+    const Question = await getQuestionModel(bank);
+//    console.log(`getQuestion`, bank, qId);
 
     const objectIds = excludeIds
         .filter(id => mongoose.Types.ObjectId.isValid(id))
@@ -67,14 +73,8 @@ async function getQuestion(bank, qId = false, excludeIds = [], includeAnswer = f
 
 
 async function getQuestionV1(bank, qId = false, excludeIds = [], includeAnswer = false) {
-    const conn = await getQuizDbConnection();
-    const questionSchema = require('../models/questionSchema2');
+    const Question = await getQuestionModel(bank);
     // console.log(`getQuestion`, bank);
-    if (!conn.models['Question']) {
-        Question = conn.model('Question', questionSchema, bank);
-    } else {
-        Question = conn.models['Question'];
-    }
 
     const objectIds = excludeIds
         .filter(id => mongoose.Types.ObjectId.isValid(id))
@@ -98,14 +98,7 @@ async function getQuestionV1(bank, qId = false, excludeIds = [], includeAnswer =
 
 async function checkAnswer(bank, questionId, selectedIndexes) {
 //    console.log(`checkAnswer`, questionId, selectedIndexes);
-    const conn = await getQuizDbConnection();
-    const questionSchema = require('../models/questionSchema2');
-
-    if (!conn.models['Question']) {
-        Question = conn.model('Question', questionSchema, bank);
-    } else {
-        Question = conn.models['Question'];
-    }
+    const Question = await getQuestionModel(bank);
 
     if (!mongoose.Types.ObjectId.isValid(questionId)) {
         throw new Error('Invalid question ID');
@@ -130,5 +123,6 @@ async function checkAnswer(bank, questionId, selectedIndexes) {
 module.exports = {
     getQuestion,
     getQuestionRefs,
-    checkAnswer
+    checkAnswer,
+    getAllQuestions
 };

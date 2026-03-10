@@ -70,29 +70,15 @@ app.get('/access/quiz/:bank', authController.requireSessionAccess, async (req, r
     // Return quiz questions for a specific bank (e.g., quiz1, quiz2)
     try {
         console.log(`Fetching quiz questions for bank: ${req.params.bank}`);
-        
-        // For now, return static quiz questions until MongoDB connection is verified
-        const staticQuestions = [
-            {
-                question: "Which mathematical concept did Georg Cantor develop?",
-                options: ["Set theory", "Topology", "Number theory", "Calculus"]
-            },
-            {
-                question: "Which element has the highest melting point?",
-                options: ["Rhenium", "Carbon", "Tungsten", "Osmium"]
-            },
-            {
-                question: "What is the main function of mitochondria in cells?",
-                options: ["Digest cellular waste", "Synthesize proteins", "Store genetic information", "Produce energy (ATP)"]
-            },
-            {
-                question: "In economics, what does the Gini coefficient measure?",
-                options: ["Gross Domestic Product", "Consumer confidence", "Income inequality", "Inflation rate"]
-            }
-        ];
-        
-        console.log(`Returning ${staticQuestions.length} questions`);
-        res.json(staticQuestions);
+
+        const bank = (req.params.bank || '').trim();
+        if (!bank) {
+            return res.status(400).json({ error: 'Missing question bank name' });
+        }
+
+        const questions = await quizController.getAllQuestions(bank);
+        console.log(`Returning ${questions.length} questions from bank ${bank}`);
+        res.json(questions);
     } catch (err) {
         console.error('Error fetching quiz questions:', err);
         res.status(500).json({ error: err.message });
