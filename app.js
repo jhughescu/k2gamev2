@@ -77,6 +77,15 @@ const PORT = process.env.PORT || 3000;
 const HOST = process.env.HOST || 'localhost';
 const isDevMode = process.env.ISDEV === 'true' || process.env.isDev === 'true';
 
+console.log('[startup] runtime identity', {
+    websiteInstanceId: process.env.WEBSITE_INSTANCE_ID || 'n/a',
+    hostname: process.env.HOSTNAME || 'n/a',
+    nodeEnv: process.env.NODE_ENV || 'n/a',
+    ISDEV: process.env.ISDEV || 'unset',
+    isDev: process.env.isDev || 'unset',
+    isDevMode
+});
+
 const databaseController = require('./controllers/databaseController');
 const versionController = require('./controllers/versionController');
 const { initLocalAccess } = require('./controllers/localAccessController');
