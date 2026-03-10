@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-03-09T16:30:19Z",
-  "commitHash": "75cdd79b723f16e0484eb85d4d558e24b56b0d88",
-  "commitMessage": "fix(azure): add process diagnostics and disable prod debug monitor",
+  "timestamp": "2026-03-10T11:26:36Z",
+  "commitHash": "3ac58868259f94a8d07bc6348d81f6760197d2fc",
+  "commitMessage": "fix(routing): disable static index fallback for root path",
   "branch": "master"
 }

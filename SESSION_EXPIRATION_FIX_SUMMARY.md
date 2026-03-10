@@ -66,7 +66,7 @@ Interactive test page with:
 ## How It Works
 
 ### User Perspective
-1. User logs in at `/facilitator/dashboard`
+1. User logs in at `/facilitator`
 2. Session is active for 24 hours (default)
 3. After session expires (or manually cleared):
    - User tries any action (load sessions, delete, etc.)
@@ -113,7 +113,7 @@ http://localhost:3000/test/session-expiration
 npm start
 
 # 2. Go to facilitator dashboard
-http://localhost:3000/facilitator/dashboard
+http://localhost:3000/facilitator
 
 # 3. Log in with your credentials
 # (Watch it load sessions successfully)
@@ -222,7 +222,7 @@ The fix uses:
    ```
 
 2. **Verify in real usage:**
-   - Log in at `/facilitator/dashboard`
+   - Log in at `/facilitator`
    - Clear session cookie
    - Try any action
    - Should redirect to login

@@ -53,7 +53,7 @@ This ensures the client always gets JSON with a loginUrl when the session expire
 #### Method 1: Manual Session Manipulation
 Perfect for quick testing:
 
-1. Go to `/facilitator/dashboard` and log in
+1. Go to `/facilitator` and log in
 2. Open the test page: `/test/session-expiration`
 3. Click **"Clear Session Cookie"** to simulate session expiration
 4. Try to interact with the dashboard - you should see:
@@ -86,7 +86,7 @@ For the most realistic test:
 
 1. **Step 1: Start a logged-in session**
    ```
-   Go to /facilitator/dashboard
+   Go to /facilitator
    Log in with your access key (institution + password)
    Wait for the dashboard to fully load
    ```
@@ -123,7 +123,7 @@ For the most realistic test:
 
 When deployed (e.g., to Render.com), the same protection applies:
 
-1. User logs in at `/facilitator/dashboard`
+1. User logs in at `/facilitator`
 2. User leaves browser open for 24 hours (session timeout)
 3. User tries to interact with dashboard
 4. **Instead of seeing:** `{"error": "Unauthorized", ...}`
@@ -179,7 +179,7 @@ POST /test/session-timeout/reset
 
 Use these to test timeout scenarios without manual cookie deletion:
 1. Click "Setup 5s Timeout"
-2. Log in at `/facilitator/dashboard`
+2. Log in at `/facilitator`
 3. Wait 6 seconds without making requests
 4. Try to load sessions
 5. Should redirect to login

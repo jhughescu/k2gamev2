@@ -144,7 +144,7 @@
         <div class="instructions">
             <h3>How to use this test:</h3>
             <ol>
-                <li>Go to <span class="code">/facilitator/dashboard</span> and log in with your credentials</li>
+                <li>Go to <span class="code">/facilitator</span> and log in with your credentials</li>
                 <li>The session cookie (<span class="code">connect.sid</span>) is created with <span class="code">HttpOnly</span> flag (a security feature)
                     <ul>
                         <li>This means JavaScript cannot delete it directly</li>
@@ -602,7 +602,7 @@
                 if (res.ok) {
                     setStatus('✓ Server timeout configured to 5 seconds. Sessions will expire quickly for testing!', 'success');
                     console.log('Session timeout configured');
-                    addDetails('Server will now expire sessions after 5 seconds of inactivity.\n\nTo test:\n1. Log in at /facilitator/dashboard\n2. Wait 6 seconds without making requests\n3. Try to load sessions - you should be redirected to login\n\nNote: This only works if the server supports this endpoint.');
+                    addDetails('Server will now expire sessions after 5 seconds of inactivity.\n\nTo test:\n1. Log in at /facilitator\n2. Wait 6 seconds without making requests\n3. Try to load sessions - you should be redirected to login\n\nNote: This only works if the server supports this endpoint.');
                 } else {
                     setStatus('Server does not support timeout configuration', 'error');
                     addDetails('Endpoint /test/session-timeout not available on this server');

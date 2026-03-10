@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-03-09T09:48:30Z",
-  "commitHash": "0cf1e42b537fea72e5fd3287e4fb423c56dbd602",
-  "commitMessage": "sorted out facilitator dashboard logout/login",
+  "timestamp": "2026-03-10T11:26:36Z",
+  "commitHash": "3ac58868259f94a8d07bc6348d81f6760197d2fc",
+  "commitMessage": "fix(routing): disable static index fallback for root path",
   "branch": "master"
 }

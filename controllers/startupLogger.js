@@ -47,7 +47,7 @@ function printServerStartup(options = {}) {
     console.log(`${chalk.cyan('│')} ${chalk.gray('Tip:')} ${chalk.white('Press')} ${chalk.bold('rs')} ${chalk.white('to restart nodemon')}`);
     console.log(`${chalk.cyan('│')} ${chalk.bold('Routes')}`);
     console.log(`${chalk.cyan('│')} ${chalk.green(`localhost:${port}/admin`)} ${chalk.gray('- login for superuser/admin')}`);
-    console.log(`${chalk.cyan('│')} ${chalk.green(`localhost:${port}/facilitator/dashboard`)} ${chalk.gray('- login for facilitators')}`);
+    console.log(`${chalk.cyan('│')} ${chalk.green(`localhost:${port}/facilitator`)} ${chalk.gray('- login for facilitators')}`);
     console.log(`${chalk.cyan('│')} ${chalk.green(`localhost:${port}/game/[ins]/[cou]`)} ${chalk.gray('- course-specific game entry point')}`);
     console.log(chalk.cyan('└─────────────────────────────────────────────────────────────────────────┘'));
     console.log('');
