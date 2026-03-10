@@ -22,8 +22,8 @@ const authController = require('./authController');
 const Institution = require('../models/institution');
 const adminController = require('./adminController');
 
-// Static files
-app.use(express.static(basePath));
+// Static files (disable automatic index.html fallback so '/' always uses explicit route below)
+app.use(express.static(basePath, { index: false }));
 
 // Cookie parser
 app.use(cookieParser());
