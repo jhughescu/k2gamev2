@@ -113,7 +113,17 @@ function initSocket(server) {
                 });
                 socket.on('newSession', (ob = {}, cb) => {
 //                    console.log('new session');
-                    sessionController.newSession(ob, cb);
+                    sessionController.newSession(ob, (createdSession) => {
+                        if (io) {
+                            io.to('facilitators').emit('facilitatorSessionCreated', {
+                                uniqueID: createdSession && createdSession.uniqueID ? createdSession.uniqueID : null,
+                                timestamp: Date.now()
+                            });
+                        }
+                        if (cb) {
+                            cb(createdSession);
+                        }
+                    });
                 });
                 socket.on('restoreSession', (sOb, cb) => {
 //                    console.log('restored session');
@@ -208,6 +218,16 @@ function initSocket(server) {
 //                            console.log('update sent, check DB')
                         });
 
+                        if (io) {
+                            io.to('facilitators').emit('facilitatorQuizAnswer', {
+                                sessionID,
+                                bank,
+                                questionId,
+                                selectedIndexes,
+                                timestamp: Date.now()
+                            });
+                        }
+
                         callback(result); // returns { correct: true/false }
                     } catch (err) {
                         callback({ error: err.message });
@@ -292,6 +312,21 @@ function initSocket(server) {
 
             }
             // end admin clients
+            // facilitator dashboard clients
+            if (sType === 'facilitator') {
+                const filter = getAccessFilter();
+                if (filter === null) {
+                    socket.emit('authError', { message: 'Facilitator authentication required' });
+                    socket.disconnect(true);
+                    return;
+                }
+
+                socket.join('facilitators');
+                socket.on('disconnect', () => {
+//                    console.log('facilitator disconnected');
+                });
+            }
+            // end facilitator dashboard clients
             // mapper clients
             if (sType === 'mapper') {
                 console.log('mapper client')

@@ -56,6 +56,64 @@ const sessionsPerPage = 5;
 let dateFromFilter = null;
 let dateToFilter = null;
 let pinnedSessionId = null; // Track pinned/toggled session highlight
+let facilitatorSocket = null;
+let refreshTimer = null;
+
+function scheduleRealtimeRefresh(delayMs = 300) {
+    if (refreshTimer) {
+        clearTimeout(refreshTimer);
+    }
+    refreshTimer = setTimeout(async () => {
+        refreshTimer = null;
+        await loadSessions();
+    }, delayMs);
+}
+
+function connectFacilitatorSocket() {
+    if (typeof io === 'undefined') {
+        console.warn('Socket.IO client not available for facilitator realtime updates');
+        return;
+    }
+    if (facilitatorSocket && facilitatorSocket.connected) {
+        return;
+    }
+
+    facilitatorSocket = io('', {
+        query: { role: 'facilitator' }
+    });
+
+    facilitatorSocket.on('connect', () => {
+        console.log('Facilitator realtime socket connected');
+    });
+
+    facilitatorSocket.on('facilitatorQuizAnswer', () => {
+        scheduleRealtimeRefresh();
+    });
+
+    facilitatorSocket.on('facilitatorSessionCreated', () => {
+        scheduleRealtimeRefresh();
+    });
+
+    facilitatorSocket.on('authError', (data) => {
+        console.warn('Facilitator socket authentication failed:', data && data.message ? data.message : 'unknown reason');
+    });
+
+    facilitatorSocket.on('disconnect', () => {
+        console.log('Facilitator realtime socket disconnected');
+    });
+}
+
+function disconnectFacilitatorSocket() {
+    if (refreshTimer) {
+        clearTimeout(refreshTimer);
+        refreshTimer = null;
+    }
+    if (facilitatorSocket) {
+        facilitatorSocket.disconnect();
+        facilitatorSocket = null;
+    }
+}
+
 function loadSavedState() {
     try {
         const raw = localStorage.getItem(STORAGE_KEY);
@@ -208,6 +266,8 @@ function showSessionsSection() {
 
     if (accessTitle) accessTitle.textContent = institutionLabel;
     if (accessSubtitle) accessSubtitle.textContent = `Course: ${courseLabel}`;
+
+    connectFacilitatorSocket();
     
     // Load game data for quiz display
     loadGameData();
@@ -826,6 +886,7 @@ async function logout() {
     }
     currentAccess = null;
     sessions = [];
+    disconnectFacilitatorSocket();
     selectedSessionIds.clear();
     saveState();
     doc('loginSection').style.display = 'block';
