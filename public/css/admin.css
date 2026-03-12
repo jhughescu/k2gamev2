@@ -47,6 +47,11 @@ h1 {
     color: #333;
     margin-bottom: 30px;
 }
+.build-info-line {
+    font-size: 12px;
+    color: #666;
+    margin-top: 6px;
+}
 .login-section {
     display: none;
     background: #f9f9f9;

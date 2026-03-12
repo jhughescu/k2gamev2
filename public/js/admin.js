@@ -13,6 +13,37 @@ let originalInstSlug = '';
 let originalInstTitle = '';
 let accessKeys = [];
 
+function formatBuildTimestamp(isoString) {
+    if (!isoString) return 'Unknown build time';
+    const dt = new Date(isoString);
+    if (Number.isNaN(dt.getTime())) return isoString;
+    return dt.toLocaleString();
+}
+
+async function loadBuildInfo(role) {
+    const buildInfoLine = doc('buildInfoLine');
+    if (!buildInfoLine) return;
+
+    if (role !== 'superuser') {
+        buildInfoLine.style.display = 'none';
+        buildInfoLine.textContent = '';
+        return;
+    }
+
+    try {
+        const res = await fetch('/data/build-info.json', { cache: 'no-store' });
+        if (!res.ok) throw new Error('Build info unavailable');
+        const buildInfo = await res.json();
+        const buildTime = formatBuildTimestamp(buildInfo.timestamp);
+        const releaseNumber = buildInfo.releaseNumber || buildInfo.githubRunNumber || 'n/a';
+        buildInfoLine.textContent = `Build: ${buildTime} | Release: ${releaseNumber}`;
+        buildInfoLine.style.display = 'block';
+    } catch (err) {
+        buildInfoLine.textContent = 'Build: unavailable | Release: n/a';
+        buildInfoLine.style.display = 'block';
+    }
+}
+
 // State persistence helpers
 function saveState() {
     const state = {
@@ -369,7 +400,7 @@ async function login(event) {
     }
 }
 
-function showAdminSection(role) {
+async function showAdminSection(role) {
     document.getElementById('loginSection').classList.remove('active');
     document.getElementById('adminSection').style.display = 'block';
     document.getElementById('logoutBtn').style.display = 'block';
@@ -385,6 +416,8 @@ function showAdminSection(role) {
         const roleLabel = role.charAt(0).toUpperCase() + role.slice(1);
         document.getElementById('dashboardHeading').textContent = `Dashboard (${roleLabel})`;
     }
+
+    await loadBuildInfo(role);
 }
 
 async function loadInstitutions() {
@@ -958,6 +991,11 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
         document.getElementById('adminSection').style.display = 'none';
         document.getElementById('logoutBtn').style.display = 'none';
         document.getElementById('dashboardHeading').textContent = 'Admin Portal';
+        const buildInfoLine = doc('buildInfoLine');
+        if (buildInfoLine) {
+            buildInfoLine.style.display = 'none';
+            buildInfoLine.textContent = '';
+        }
         document.body.classList.remove('role-superuser', 'role-admin');
         document.getElementById('username').value = '';
         document.getElementById('password').value = '';
