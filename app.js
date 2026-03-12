@@ -16,6 +16,30 @@ const server = http.createServer(app);
 const tools = require('./controllers/tools');
 require('dotenv').config();
 
+let isShuttingDown = false;
+
+const gracefulShutdown = (signalName) => {
+    if (isShuttingDown) return;
+    isShuttingDown = true;
+    console.warn(`[process] ${signalName} received. Starting graceful shutdown...`);
+
+    server.close((err) => {
+        if (err) {
+            console.error('[process] server close error:', err);
+            process.exit(1);
+            return;
+        }
+        console.warn('[process] server closed. Exiting now.');
+        process.exit(0);
+    });
+
+    // Safety timeout in case close callbacks never return.
+    setTimeout(() => {
+        console.error('[process] forced exit after shutdown timeout.');
+        process.exit(1);
+    }, 5000);
+};
+
 // Process-level diagnostics to understand Azure restarts/crashes.
 process.on('uncaughtException', (err) => {
     console.error('[process] uncaughtException:', err && err.stack ? err.stack : err);
@@ -25,13 +49,8 @@ process.on('unhandledRejection', (reason) => {
     console.error('[process] unhandledRejection:', reason);
 });
 
-process.on('SIGTERM', () => {
-    console.warn('[process] SIGTERM received - instance is being stopped/recycled by platform.');
-});
-
-process.on('SIGINT', () => {
-    console.warn('[process] SIGINT received.');
-});
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
 process.on('beforeExit', (code) => {
     console.warn(`[process] beforeExit with code ${code}`);
@@ -40,11 +59,6 @@ process.on('beforeExit', (code) => {
 process.on('exit', (code) => {
     console.warn(`[process] exit with code ${code}`);
 });
-
-setInterval(() => {
-    const memMb = Math.round(process.memoryUsage().rss / 1024 / 1024);
-    console.log(`[process] heartbeat uptime=${Math.floor(process.uptime())}s rss=${memMb}MB`);
-}, 30000);
 
 // Liveness/readiness probe endpoints for Azure health checks.
 // Keep these dependency-free so platform probes do not fail during transient DB issues.
