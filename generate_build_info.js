@@ -6,6 +6,7 @@ const buildInfo = {
     commitHash: execSync('git rev-parse HEAD').toString().trim(),
     commitMessage: execSync('git log -1 --pretty=%B').toString().trim(),
     branch: execSync('git rev-parse --abbrev-ref HEAD').toString().trim(),
+    githubReleaseTag: process.env.GITHUB_RELEASE_TAG || (process.env.GITHUB_REF_TYPE === 'tag' ? process.env.GITHUB_REF_NAME : null),
     githubRunNumber: process.env.GITHUB_RUN_NUMBER || null,
     releaseNumber: process.env.RELEASE_NUMBER || process.env.GITHUB_RUN_NUMBER || null,
 };

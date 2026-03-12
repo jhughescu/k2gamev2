@@ -24,7 +24,7 @@ async function loadBuildInfo(role) {
     const buildInfoLine = doc('buildInfoLine');
     if (!buildInfoLine) return;
 
-    if (role !== 'superuser') {
+    if (role !== 'superuser' && role !== 'admin') {
         buildInfoLine.style.display = 'none';
         buildInfoLine.textContent = '';
         return;
@@ -35,11 +35,12 @@ async function loadBuildInfo(role) {
         if (!res.ok) throw new Error('Build info unavailable');
         const buildInfo = await res.json();
         const buildTime = formatBuildTimestamp(buildInfo.timestamp);
-        const releaseNumber = buildInfo.releaseNumber || buildInfo.githubRunNumber || 'n/a';
-        buildInfoLine.textContent = `Build: ${buildTime} | Release: ${releaseNumber}`;
+        const releaseTag = buildInfo.githubReleaseTag || 'none';
+        const ciRunNumber = buildInfo.githubRunNumber || buildInfo.releaseNumber || 'n/a';
+        buildInfoLine.textContent = `Build: ${buildTime} | GitHub Release: ${releaseTag} | CI Run: ${ciRunNumber}`;
         buildInfoLine.style.display = 'block';
     } catch (err) {
-        buildInfoLine.textContent = 'Build: unavailable | Release: n/a';
+        buildInfoLine.textContent = 'Build: unavailable | GitHub Release: unavailable | CI Run: unavailable';
         buildInfoLine.style.display = 'block';
     }
 }

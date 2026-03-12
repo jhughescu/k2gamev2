@@ -23,6 +23,23 @@ jobs:
         with:
           node-version: '18.x'
 
+      - name: Resolve GitHub release tag
+        id: release_meta
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG=""
+          if [ -n "${{ github.event.release.tag_name }}" ]; then
+            TAG="${{ github.event.release.tag_name }}"
+          else
+            API_RESPONSE=$(curl -fsSL \
+              -H "Accept: application/vnd.github+json" \
+              -H "Authorization: Bearer ${GH_TOKEN}" \
+              "https://api.github.com/repos/${{ github.repository }}/releases/latest" || echo "{}")
+            TAG=$(echo "$API_RESPONSE" | node -e "let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{try{const j=JSON.parse(d);process.stdout.write(j.tag_name||'');}catch(e){process.stdout.write('');}})")
+          fi
+          echo "release_tag=${TAG}" >> "$GITHUB_OUTPUT"
+
       - name: npm ci, build, and test
         run: |
           npm ci
@@ -31,6 +48,7 @@ jobs:
           npm run test --if-present
         env:
           RELEASE_NUMBER: ${{ github.run_number }}
+          GITHUB_RELEASE_TAG: ${{ steps.release_meta.outputs.release_tag }}
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4

@@ -1,8 +1,9 @@
 {
-  "timestamp": "2026-03-12T09:35:26Z",
-  "commitHash": "4286edda193aa3e72fe4128675f25dd01ac05fa9",
-  "commitMessage": "chore(logging): remove heartbeat logs and keep graceful shutdown",
+  "timestamp": "2026-03-12T09:47:54Z",
+  "commitHash": "ffbeb016a138b84840c5ff528b5efb009944c9f7",
+  "commitMessage": "feat(admin): show superuser build and release details",
   "branch": "master",
+  "githubReleaseTag": null,
   "githubRunNumber": null,
   "releaseNumber": null
 }
