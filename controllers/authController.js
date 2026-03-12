@@ -33,6 +33,15 @@ const authLimiter = rateLimit({
 
 const hashPassword = async (plain) => bcrypt.hash(plain, 10);
 const verifyPassword = async (plain, hash) => bcrypt.compare(plain, hash);
+const normalizeUsername = (value) => (value || '').toString().trim().toLowerCase();
+const getEnvSuperuserUsername = () => normalizeUsername(process.env.ADMIN_USERNAME || 'env-superuser');
+const isEnvSuperuserLogin = (username, password) => {
+    const normalizedUsername = normalizeUsername(username);
+    if (!ADMIN_PASSWORD || !normalizedUsername) {
+        return false;
+    }
+    return normalizedUsername === getEnvSuperuserUsername() && password === ADMIN_PASSWORD;
+};
 
 const buildAccessFilter = (sessionObj = {}) => {
     if (sessionObj.isAuthenticated && (sessionObj.role === 'admin' || sessionObj.role === 'superuser')) {
@@ -172,6 +181,7 @@ const requireSessionAccess = (req, res, next) => {
 // Login handler
 const login = async (req, res) => {
     const { username, password } = req.body || {};
+    const normalizedUsername = normalizeUsername(username);
 
     if (!password) {
         return res.status(400).json({ 
@@ -180,9 +190,28 @@ const login = async (req, res) => {
         });
     }
 
+    if (isEnvSuperuserLogin(normalizedUsername, password)) {
+        req.session.isAuthenticated = true;
+        req.session.role = 'superuser';
+        req.session.username = getEnvSuperuserUsername();
+        req.session.save((err) => {
+            if (err) {
+                console.error('Session save error:', err);
+                return res.status(500).json({ error: 'Session save failed' });
+            }
+            res.json({
+                success: true,
+                message: 'Login successful',
+                role: 'superuser',
+                redirectUrl: '/admin'
+            });
+        });
+        return;
+    }
+
     // If username provided, authenticate against User collection
-    if (username) {
-        const user = await User.findOne({ username: username.toLowerCase(), active: true });
+    if (normalizedUsername) {
+        const user = await User.findOne({ username: normalizedUsername, active: true });
         if (!user) {
             return res.status(401).json({ error: 'Unauthorized', message: 'Invalid credentials' });
         }
@@ -201,39 +230,13 @@ const login = async (req, res) => {
             }
             res.json({ success: true, message: 'Login successful', role: user.role, redirectUrl: '/admin' });
         });
+        return;
     }
 
-    // Fallback: environment superuser password
-    if (!ADMIN_PASSWORD) {
-        console.error('ADMIN_PASSWORD not set in environment variables');
-        return res.status(500).json({ 
-            error: 'Server Error', 
-            message: 'Authentication not configured' 
-        });
-    }
-
-    if (password === ADMIN_PASSWORD) {
-        req.session.isAuthenticated = true;
-        req.session.role = 'superuser';
-        req.session.username = 'env-superuser';
-        req.session.save((err) => {
-            if (err) {
-                console.error('Session save error:', err);
-                return res.status(500).json({ error: 'Session save failed' });
-            }
-            res.json({ 
-                success: true, 
-                message: 'Login successful',
-                role: 'superuser',
-                redirectUrl: '/admin'
-            });
-        });
-    } else {
-        return res.status(401).json({ 
-            error: 'Unauthorized', 
-            message: 'Invalid password' 
-        });
-    }
+    return res.status(401).json({ 
+        error: 'Unauthorized', 
+        message: 'Invalid credentials' 
+    });
 };
 
 // Logout handler
@@ -404,5 +407,7 @@ module.exports = {
     checkAccess,
     hashPassword,
     verifyPassword,
-    buildAccessFilter
+    buildAccessFilter,
+    isEnvSuperuserLogin,
+    getEnvSuperuserUsername
 };

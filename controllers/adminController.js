@@ -1,7 +1,7 @@
 const Institution = require('../models/institution');
 const User = require('../models/user');
 const AccessKey = require('../models/accessKey');
-const { hashPassword, verifyPassword } = require('./authController');
+const { hashPassword, verifyPassword, isEnvSuperuserLogin, getEnvSuperuserUsername } = require('./authController');
 const crypto = require('crypto');
 
 const normalizeCourses = (courses = []) => {
@@ -67,13 +67,14 @@ const authenticateAdmin = async (req, res) => {
         return res.redirect('/admin?error=required');
     }
     try {
-        // Check environment variable superuser password first
-        const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
-        if (ADMIN_PASSWORD && password === ADMIN_PASSWORD) {
+        const normalizedUsername = username.toLowerCase().trim();
+
+        // Check environment variable superuser credentials first
+        if (isEnvSuperuserLogin(normalizedUsername, password)) {
             req.session.adminAuth = true;
             req.session.isAuthenticated = true;
             req.session.role = 'superuser';
-            req.session.username = username || 'env-superuser';
+            req.session.username = getEnvSuperuserUsername();
             return req.session.save((err) => {
                 if (err) {
                     console.error('Session save error:', err);
@@ -90,7 +91,7 @@ const authenticateAdmin = async (req, res) => {
         }
 
         // Check database user
-        const user = await User.findOne({ username: username.toLowerCase() });
+        const user = await User.findOne({ username: normalizedUsername, active: true });
         if (!user) {
             if (respondJson) {
                 return res.status(403).json({ error: 'Invalid username or password' });
