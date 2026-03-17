@@ -3,7 +3,7 @@
         <!-- Page Header -->
         <div class="nav-header-container dark-text" id="page-top">
             <div class="back-btn-title-bar">
-                <a class="back-btn" title="Previous page"><img alt="Previous page icon" src="assets/buttons/backButton-black.svg" /></a>
+                <button type="button" class="back-btn" title="Previous page" aria-label="Back to home"><img alt="Previous page icon" src="assets/buttons/backButton-black.svg" /></button>
                 <h1>Meet your team</h1>
             </div>
         </div>
@@ -11,14 +11,14 @@
         <!-- Main Content -->
         <div class="main-content" style="margin-bottom: 300px;" id="profile-menu">
             {{#each profiles}}
-            <div class="teamSelectButton" id="teamSelect{{profile}}">
+            <button type="button" class="teamSelectButton" id="teamSelect{{profile}}" aria-controls="teamProfile{{profile}}" aria-expanded="false">
                 <div class="teamSelectIcon"><img src='assets/profiles/profileimages_{{filename}}.png'></div>
                 <div class="teamSelectText">
                     <!-- Added wrapper div -->
                     <h4 class='{{#if hasDie}}canHelp{{/if}}'>{{name}}</h4>
                     <p>Profile {{OPTION}}</p>
                 </div>
-            </div>
+            </button>
             {{/each}}
         </div>
 
@@ -104,46 +104,44 @@
                             </div>
 
                             <div>
-                                <a type="button" class="btn btn-primary profileDetailTile" id='profileDetailTile0' data-target="goal">
+                                <button type="button" class="btn btn-primary profileDetailTile" id='profileDetailTile0' data-target="goal" aria-label="Open goal details">
                                     <img class="climbing-overview-icon" src="assets/icons/Icons_GoalIcon.png" alt="" />
-                                </a>
+                                </button>
                             </div>
                             <div>
-                                <a type="button" class="btn btn-primary profileDetailTile" id='profileDetailTile1' data-target="journey">
+                                <button type="button" class="btn btn-primary profileDetailTile" id='profileDetailTile1' data-target="journey" aria-label="Open journey details">
                                     <img class="climbing-overview-icon" src="assets/icons/Icons_JourneyIcon.png" alt="" />
-                                </a>
+                                </button>
                             </div>
-                            <!--
                             <div>
-                                <a type="button" class="btn btn-primary profileDetailTile" id='profileDetailTile2' data-target="rope">
+                                <button type="button" class="btn btn-primary profileDetailTile" id='profileDetailTile2' data-target="rope" aria-label="Open rope details">
                                     <img class="climbing-overview-icon" src="assets/icons/Icons_RopeIcon.png" alt="" />
-                                </a>
+                                </button>
                             </div>
-                            -->
                             <div>
-                                <a type="button" class="btn btn-primary profileDetailTile" id='profileDetailTile3' data-target="waitTime">
+                                <button type="button" class="btn btn-primary profileDetailTile" id='profileDetailTile3' data-target="waitTime" aria-label="Open wait time details">
                                     <img class="climbing-overview-icon" src="assets/icons/Icons_WaitTimesIcon.png" alt="" />
-                                </a>
+                                </button>
                             </div>
                             <div>
-                                <a type="button" class="btn btn-primary profileDetailTile" id='profileDetailTile4' data-target="resources">
+                                <button type="button" class="btn btn-primary profileDetailTile" id='profileDetailTile4' data-target="resources" aria-label="Open resources details">
                                     <img class="climbing-overview-icon" src="assets/icons/Icons_ResourceSharingIcon.png" alt="" />
-                                </a>
+                                </button>
                             </div>
                             <div>
-                                <a type="button" class="btn btn-primary profileDetailTile" id='profileDetailTile5' data-target="noResources">
+                                <button type="button" class="btn btn-primary profileDetailTile" id='profileDetailTile5' data-target="noResources" aria-label="Open no resources details">
                                     <img class="climbing-overview-icon" src="assets/icons/Icons_NoResourcesIcon.png" alt="" />
-                                </a>
+                                </button>
                             </div>
                             <div>
-                                <a type="button" class="btn btn-primary profileDetailTile" id='profileDetailTile6' data-target="sectionProblem">
+                                <button type="button" class="btn btn-primary profileDetailTile" id='profileDetailTile6' data-target="sectionProblem" aria-label="Open section problem details">
                                     <img class="climbing-overview-icon" src="assets/icons/Icons_SectionProblemIcon.png" alt="" />
-                                </a>
+                                </button>
                             </div>
                             <div>
-                                <a type="button" class="btn btn-primary profileDetailTile" id='profileDetailTile7' data-target="profileProblem">
+                                <button type="button" class="btn btn-primary profileDetailTile" id='profileDetailTile7' data-target="profileProblem" aria-label="Open profile problem details">
                                     <img class="climbing-overview-icon" src="assets/icons/Icons_ProfileProblemIcon.png" alt="" />
-                                </a>
+                                </button>
                             </div>
                         </div>
 

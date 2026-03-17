@@ -32,7 +32,7 @@
     display: none;
 }
 .wrong, p.wrong, .wrong .dyno {
-    color: red;
+    color: #8b0000;
 }
 .iframer {
     /* top-level fullscreen div for iframe render */

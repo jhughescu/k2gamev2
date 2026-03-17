@@ -158,6 +158,8 @@ p{
 			width: 70px;
 			padding: 15px;
 			background: none;
+			border: 0;
+			cursor: pointer;
 /*			transition: 0.5s;*/
 		z-index: 10;
 		}
@@ -199,11 +201,15 @@ p{
 		position: relative;
 		background-color: rgba(242,242,242,1.00);
 		font-size: 1.3em;
+		width: 100%;
 		max-width: 360px;
 		display: flex;
 		align-content: center;
 		justify-content: center;
 		padding: 18px;
+		border: 0;
+		cursor: pointer;
+		font-family: inherit;
 		border-radius: 10px;
 		box-shadow: 3px 3px 5px 0px rgba(0,0,0,0.30);
 		text-decoration: none !important;
@@ -215,12 +221,24 @@ p{
 	.set-up-btn:hover, .set-up-btn:focus{
 		background-color: rgba(212,212,212,1.00);
 	}
-.set-up-btn.disabled:hover, .set-up-btn.disabled:focus {
-    background-color: rgba(242,242,242,1.00);
-    transition: 0s;
-/*    background-color: red;*/
-/*    pointer-events: none;*/
-}
+	.set-up-btn.disabled,
+	.set-up-btn:disabled {
+		background-color: rgba(226,226,226,1.00);
+		color: #7a7a7a;
+		cursor: default;
+		opacity: 0.7;
+		box-shadow: 2px 2px 4px 0px rgba(0,0,0,0.18);
+	}
+
+	.set-up-btn.disabled:hover,
+	.set-up-btn.disabled:focus,
+	.set-up-btn:disabled:hover,
+	.set-up-btn:disabled:focus {
+		background-color: rgba(226,226,226,1.00);
+		color: #7a7a7a;
+		cursor: default;
+		transition: 0s;
+	}
 
 	.set-up-btn img{
 		width: 25px;
@@ -406,7 +424,11 @@ p{
 	display: block;
 	transition: 0.5s;
 	border-radius: 50%;
-background-color: none		}
+	background-color: transparent;
+	border: 0;
+	cursor: pointer;
+	font-family: inherit;
+}
 
 .profile-btn:hover, .profile-btn:focus{
 			background: rgba(0,0,0,0.2);
@@ -669,6 +691,8 @@ img.help-yes {
 		display: flex;
 		align-items: center;
 		background-color: transparent;
+		border: 0;
+		cursor: pointer;
 		transition: 0.5s;
 		}
 
@@ -729,7 +753,7 @@ img.help-yes {
 		grid-template-columns: auto auto;
 		grid-gap: 15px;
 		align-items: center;
-		background-color: rgba(128,128,128,1.00);
+		background-color: #4a4a4a;
 		padding: 20px;
 		margin: 20px 0px;
 		color: white;

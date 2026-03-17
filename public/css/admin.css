@@ -85,7 +85,7 @@ textarea {
     min-height: 80px;
 }
 button {
-    background-color: #007bff;
+    background-color: #0050a8;
     color: white;
     padding: 10px 20px;
     border: none;
@@ -95,7 +95,7 @@ button {
     font-weight: bold;
 }
 button:hover {
-    background-color: #0056b3;
+    background-color: #003f85;
 }
 button.danger {
     background-color: #dc3545;
@@ -108,6 +108,13 @@ button.secondary {
 }
 button.secondary:hover {
     background-color: #5a6268;
+}
+#createAccessKeyBtn {
+    background-color: #4a4f55;
+}
+#createAccessKeyBtn:hover,
+#createAccessKeyBtn:focus {
+    background-color: #363b40;
 }
 button.small {
     padding: 6px 10px;
@@ -153,9 +160,6 @@ button.disabled:hover {
 .institution-item.collapsed .button-group,
 .institution-item.collapsed > div:not(.institution-header) {
     display: none;
-}
-#sessionsContainer {
-    /* Width controlled by parent flex container */
 }
 .institution-header {
     display: flex;
@@ -235,6 +239,12 @@ button.disabled:hover {
     color: #777;
     font-size: 14px;
 }
+.course-list .muted {
+    color: #000;
+    background: none;
+    padding: 0;
+    border-radius: 0;
+}
 .course-form-row {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -264,6 +274,24 @@ button.disabled:hover {
     margin-left: 8px;
     color: #666;
     font-size: 12px;
+}
+.status-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.2;
+    background-color: #4a4f55;
+    text-transform: lowercase;
+}
+.status-badge.is-active {
+    color: #0f6b2f;
+    background-color: transparent;
+}
+.status-badge.is-inactive {
+    color: #fff;
+    background-color: #6b3131;
 }
 .course-pill.deleted {
     opacity: 0.5;

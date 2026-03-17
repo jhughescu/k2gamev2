@@ -22,6 +22,40 @@ const authController = require('./authController');
 const Institution = require('../models/institution');
 const adminController = require('./adminController');
 
+const hasGamePageAccess = (req, instSlug, courseSlug) => {
+    const session = req.session || {};
+
+    if (session.isAuthenticated && (session.role === 'admin' || session.role === 'superuser')) {
+        return true;
+    }
+
+    const access = session.access;
+    if (!access || !access.type || !access.institutionSlug) {
+        return false;
+    }
+
+    const accessInstitution = (access.institutionSlug || '').toLowerCase();
+    if (accessInstitution !== instSlug) {
+        return false;
+    }
+
+    if (access.type === 'institution') {
+        return true;
+    }
+
+    if (access.type === 'course') {
+        return (access.courseSlug || '').toLowerCase() === courseSlug;
+    }
+
+    return false;
+};
+
+const setNoStoreHeaders = (res) => {
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
+};
+
 // Static files (disable automatic index.html fallback so '/' always uses explicit route below)
 app.use(express.static(basePath, { index: false }));
 
@@ -126,25 +160,38 @@ app.get(`/ptest`, (req, res) => {
 app.get(`/route`, (req, res) => {
     res.sendFile(path.join(basePath, 'routemapper.html'));
 });
+
+app.get('/entry', (req, res) => {
+    setNoStoreHeaders(res);
+    res.redirect('/');
+});
+
 app.get(`/game/:institution/:course`, async (req, res, next) => {
     try {
         const instSlug = (req.params.institution || '').toLowerCase();
         const courseSlug = (req.params.course || '').toLowerCase();
         const inst = await Institution.findOne({ slug: instSlug }).lean();
         const courseOk = inst && Array.isArray(inst.courses) && inst.courses.some(c => (c.slug || '').toLowerCase() === courseSlug);
+
         if (!inst || !courseOk) {
-            return res.status(404).send('Invalid institution or course');
+            return res.redirect('/');
         }
+
+        if (!hasGamePageAccess(req, instSlug, courseSlug)) {
+            return res.redirect('/');
+        }
+
         res.sendFile(path.join(basePath, 'game.html'));
     } catch (err) {
         next(err);
     }
 });
 app.get(`/game`, (req, res) => {
-    res.sendFile(path.join(basePath, 'game.html'));
+    res.redirect('/');
 });
 app.get(`/`, (req, res) => {
-    res.sendFile(path.join(basePath, 'flat', 'home.html'));
+    setNoStoreHeaders(res);
+    res.sendFile(path.join(basePath, 'flat', 'entry.html'));
     //    res.sendFile('../public/flat/index.html');
 });
 app.get('/testuser', (req, res) => {

@@ -26,7 +26,9 @@
     <header>
         <form id="searchForm">
             <button id='showAll'>Show all</button>
+            <label for='dateFrom'>From date</label>
             <input type="date" id='dateFrom' name="fromDate" placeholder="From" />
+            <label for='dateTo'>To date</label>
             <input type="date" id='dateTo' name="toDate" placeholder="To" />
             <label>
                 <input type="checkbox" id='onlyComplete' name="completedOnly" />
@@ -37,7 +39,7 @@
         </form>
         <button id="logoutBtn" style="margin-left:auto; padding:8px 12px;">Logout</button>
     </header>
-    <div class="contentArea">
+    <main id="mainContent" class="contentArea">
         <section id="resultsPanel" style="display: none;">
             <div class="resultsHeader">
                 <button id='bDownload'>Download All</button>
@@ -56,7 +58,7 @@
                 <!-- session details will go here -->
             </div>
         </aside>
-    </div>
+    </main>
 </body>
 
 </html>

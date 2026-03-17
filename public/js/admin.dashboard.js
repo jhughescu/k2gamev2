@@ -351,7 +351,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const total = s[1].reduce((a, b) => a + b, 0);
 //            console.log(i, s)
 //            console.log(total)
-            const colours = ['#4CAF50', '#FF9800', '#2196F3', '#e200ff', '#9af321'];
+            const colours = ['#4CAF50', '#FF9800', '#0050a8', '#e200ff', '#9af321'];
             let cum = 0;
             rOb.quizPerc[s[0]] = s[1].map(value => (value / total) * 100);
             rOb.quizPercAcc[s[0]] = rOb.quizPerc[s[0]].map((p, idx) => {

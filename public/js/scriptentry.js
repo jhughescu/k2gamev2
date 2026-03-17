@@ -1,5 +1,19 @@
 document.addEventListener('DOMContentLoaded', function () {
     //    return;
+    window.addEventListener('pageshow', function (event) {
+        const isLandingPath = window.location.pathname === '/' || window.location.pathname === '/entry';
+        if (isLandingPath && event.persisted) {
+            window.location.reload();
+        }
+    });
+
+    const isLegacyEntryPath = window.location.pathname === '/entry';
+    if (isLegacyEntryPath) {
+        const canonicalLandingUrl = `/${window.location.search}${window.location.hash}`;
+        window.history.replaceState(window.history.state, '', canonicalLandingUrl);
+    }
+    const isEntryFallbackPage = isLegacyEntryPath || window.location.pathname === '/';
+
     const socket = io('', {
         query: {
             role: 'player'
@@ -61,7 +75,7 @@ document.addEventListener('DOMContentLoaded', function () {
 //            console.log('the click');
             localStorage.clear();
         });
-        if (window.getCheatState()) {
+        if (window.getCheatState() && !isEntryFallbackPage) {
             setTimeout(() => {
 //                console.log('auto go now');
                 bNew.click();

@@ -2189,7 +2189,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const setupOverlayIframe = (src = false, callback) => {
         removeOverlayIframe();
         pauseSession();
-        $('body').prepend('<div class="iframer" id="iframer"><iframe id="overlayIframe"></iframe></div>');
+        $('body').prepend('<div class="iframer" id="iframer"><iframe id="overlayIframe" title="In-game overlay content" aria-label="In-game overlay content"></iframe></div>');
         $('#iframer').css({'z-index': window.getMaxZIndex() + 1});
         const oif = $('#overlayIframe');
         if (src) {
@@ -2947,6 +2947,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 const tp = $('.teamProfile');
                 const homer = $($('.back-btn')[0]);
                 bt.off('click').on('click', function () {
+                    bt.attr('aria-expanded', 'false');
+                    $(this).attr('aria-expanded', 'true');
                     const i = window.justNumber($(this).attr('id'));
                     const p = $(tp[i]);
                     tp.hide();
@@ -2960,6 +2962,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                     homer.off('click').one('click', function () {
                         //                        console.log('back');
+                        bt.attr('aria-expanded', 'false');
                         pm.show();
                         tp.hide();
                         // Restore previous handler

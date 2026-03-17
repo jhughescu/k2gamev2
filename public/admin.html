@@ -8,32 +8,33 @@
 </head>
 <body>
     <div class="container">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
-            <div>
-                <h1 id="dashboardHeading">Admin Portal</h1>
-                <div id="buildInfoLine" class="build-info-line" style="display: none;"></div>
+        <main id="mainContent">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                <div>
+                    <h1 id="dashboardHeading">Admin Portal</h1>
+                    <div id="buildInfoLine" class="build-info-line" style="display: none;"></div>
+                </div>
+                <button class="logout-btn" id="logoutBtn" style="display: none;">Logout</button>
             </div>
-            <button class="logout-btn" id="logoutBtn" style="display: none;">Logout</button>
-        </div>
 
-        <div id="errorMsg" class="error"></div>
-        <div id="successMsg" class="success"></div>
+            <div id="errorMsg" class="error"></div>
+            <div id="successMsg" class="success"></div>
 
-        <!-- Login Section -->
-        <div id="loginSection" class="login-section active">
-            <h2>Admin Login</h2>
-            <form id="loginForm" name="loginForm" action="/admin/api/auth" method="post">
-                <div class="form-group">
-                    <label for="username">Username:</label>
-                    <input type="text" id="username" name="username" placeholder="Enter your username" autocomplete="username" required>
-                </div>
-                <div class="form-group">
-                    <label for="password">Password:</label>
-                    <input type="password" id="password" name="password" placeholder="Enter your password" autocomplete="current-password" required>
-                </div>
-                <button type="submit" id="loginBtn">Login</button>
-            </form>
-        </div>
+            <!-- Login Section -->
+            <div id="loginSection" class="login-section active">
+                <h2>Admin Login</h2>
+                <form id="loginForm" name="loginForm" action="/admin/api/auth" method="post">
+                    <div class="form-group">
+                        <label for="username">Username:</label>
+                        <input type="text" id="username" name="username" placeholder="Enter your username" autocomplete="username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Password:</label>
+                        <input type="password" id="password" name="password" placeholder="Enter your password" autocomplete="current-password" required>
+                    </div>
+                    <button type="submit" id="loginBtn">Login</button>
+                </form>
+            </div>
 
         <!-- Admin Section -->
         <div id="adminSection" style="display: none;">
@@ -147,6 +148,7 @@
                 </div>
             </div>
         </div>
+        </main>
     </div>
 
     <script src="/js/admin.js"></script>

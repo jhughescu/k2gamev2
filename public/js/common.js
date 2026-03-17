@@ -1213,6 +1213,15 @@ document.addEventListener('DOMContentLoaded', function () {
 
     document.querySelectorAll('a').forEach(anchor => {
         anchor.addEventListener('click', function (e) {
+            const nativeNav = this.getAttribute('data-native-nav') === 'true';
+            if (nativeNav) {
+                if (window.location.pathname === '/entry') {
+                    const canonicalLandingUrl = `/${window.location.search}${window.location.hash}`;
+                    window.history.replaceState(window.history.state, '', canonicalLandingUrl);
+                }
+                return;
+            }
+
             e.preventDefault(); // Stop browser from navigating
             const href = this.getAttribute('href');
 

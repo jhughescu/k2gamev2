@@ -22,21 +22,23 @@
 </head>
 
 <body>
-    <div id='qrCodes'></div>
-    <div id='form'>
-        <input type='button' value='show all' id='showAll'/>
-        <label for='dateFrom'>From:</label>
-        <input type='date' id='dateFrom' name='dateFrom' min='2025-01-02'/>
-        <label for='dateTo'>To:</label>
-        <input type='date' id='dateTo' name='dateTo' min='2025-01-02'/>
-        <input type='checkbox' id='onlyComplete' name='onlyComplete' checked>
-        <label for='onlyComplete'>only include completed</label>
-        <button id='bSubmit' disabled>Submit</button>
-        <button id='bClear' disabled>Clear</button>
-        <button id='bDownload' disabled>Download data</button>
-    </div>
-    <div id='sessions'></div>
-    <div id='session'></div>
+    <main id='mainContent'>
+        <div id='qrCodes'></div>
+        <div id='form'>
+            <input type='button' value='show all' id='showAll'/>
+            <label for='dateFrom'>From:</label>
+            <input type='date' id='dateFrom' name='dateFrom' min='2025-01-02'/>
+            <label for='dateTo'>To:</label>
+            <input type='date' id='dateTo' name='dateTo' min='2025-01-02'/>
+            <input type='checkbox' id='onlyComplete' name='onlyComplete' checked>
+            <label for='onlyComplete'>only include completed</label>
+            <button id='bSubmit' disabled>Submit</button>
+            <button id='bClear' disabled>Clear</button>
+            <button id='bDownload' disabled>Download data</button>
+        </div>
+        <div id='sessions'></div>
+        <div id='session'></div>
+    </main>
 </body>
 
 </html>

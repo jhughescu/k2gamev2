@@ -1,6 +1,6 @@
                 <div class="how2play-nav">
                     {{#each links}}
-                    <a href="../how{{this.link}}{{#if ../isExt}}/ext{{/if}}">
+                    <a href="../how{{this.link}}{{#if ../isExt}}/ext{{/if}}" aria-label="Go to how to play step {{this.link}}" title="How to play step {{this.link}}">
                         <div class="how2play-button{{#if this.active}} h2p-btn-active{{/if}}"></div>
                     </a>
                     {{/each}}

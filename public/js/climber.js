@@ -951,57 +951,61 @@ class Climber {
         }
     }
     showDead() {
-        this.view.css({'background-color': 'black'});
+        if (this.view) {
+            this.view.css({'background-color': 'black'});
+        }
     }
     updateView() {
-        if (this.view.length && Climber.routeMap) {
-            // only run if view has been correctly defined
-            const H = Climber.bounds.h;
-            let pos = (H / 50) * this.position;
-            if (this.position > 50) {
-                pos = H - (pos - H);
-            }
-//            console.log('updateView', this);
-            if (this.position === 100 && !this.finished) {
-                this.showFinished();
-                this.finished = true;
-                this.setProperty('finishTime', this.currentTime);
-//                console.log(`${this.name} has finished, ct: ${this.currentTime}, ft: ${this.finishTime}`);
-                this.storeSummary();
-                window.climberUpdate(this, true);
-            }
-            const scaleFactor = 200;
-            const div = pos === 0 & H === 0 ? 0 : pos / H;
-            const xFactor = Climber.routeMap[roundNumber(div * 100, 2)] * scaleFactor;
-            const xAdj = (-50 + (this.profile * 50)) * (1 - div);
-            const x = `${150 + (xFactor) + xAdj}px`;
-            const y = `${pos}px`;
-            let str = `updateView : ${this.profile} ${this.view.attr('id')} visible? ${this.view.is(':visible')}, x: ${x} y: ${y} at p=${this.position}`;
-            str += ` ${this.view.is(':visible') ? this.view.position().top : ''}`;
-            // dev code: change colour of climbers based on their position on the expedition
-            if (this.gameData.isDev) {
-                ///*
-                const cs = this.currentStage;
-//                const devInd = this.view.find('.climberDevIndicator');
-                const devInd = this.getView().find('.climberDevIndicator');
-                const cols = ['red', '#ff5800', '#ff9300', '#ffe200', '#baff00'];
-                devInd.css({'background-color': cols[cs]});
-                if (this.finished) {
-                    devInd.css({'background-color': 'green'});
+        if (this.view) {
+            if (this.view.length && Climber.routeMap) {
+                // only run if view has been correctly defined
+                const H = Climber.bounds.h;
+                let pos = (H / 50) * this.position;
+                if (this.position > 50) {
+                    pos = H - (pos - H);
                 }
-            }
-            //
-            if (this.view.length > 0) {
-                this.view.css({
-                    bottom: y,
-                    left: x
-                });
-            }
-        } else {
-            if (this.view.length === 0) {
-//                console.warn('updateView not possible: view not defined');
+    //            console.log('updateView', this);
+                if (this.position === 100 && !this.finished) {
+                    this.showFinished();
+                    this.finished = true;
+                    this.setProperty('finishTime', this.currentTime);
+    //                console.log(`${this.name} has finished, ct: ${this.currentTime}, ft: ${this.finishTime}`);
+                    this.storeSummary();
+                    window.climberUpdate(this, true);
+                }
+                const scaleFactor = 200;
+                const div = pos === 0 & H === 0 ? 0 : pos / H;
+                const xFactor = Climber.routeMap[roundNumber(div * 100, 2)] * scaleFactor;
+                const xAdj = (-50 + (this.profile * 50)) * (1 - div);
+                const x = `${150 + (xFactor) + xAdj}px`;
+                const y = `${pos}px`;
+                let str = `updateView : ${this.profile} ${this.view.attr('id')} visible? ${this.view.is(':visible')}, x: ${x} y: ${y} at p=${this.position}`;
+                str += ` ${this.view.is(':visible') ? this.view.position().top : ''}`;
+                // dev code: change colour of climbers based on their position on the expedition
+                if (this.gameData.isDev) {
+                    ///*
+                    const cs = this.currentStage;
+    //                const devInd = this.view.find('.climberDevIndicator');
+                    const devInd = this.getView().find('.climberDevIndicator');
+                    const cols = ['red', '#ff5800', '#ff9300', '#ffe200', '#baff00'];
+                    devInd.css({'background-color': cols[cs]});
+                    if (this.finished) {
+                        devInd.css({'background-color': 'green'});
+                    }
+                }
+                //
+                if (this.view.length > 0) {
+                    this.view.css({
+                        bottom: y,
+                        left: x
+                    });
+                }
             } else {
-//                console.warn(`updateView not possible: routeMap not defined`);
+                if (this.view.length === 0) {
+    //                console.warn('updateView not possible: view not defined');
+                } else {
+    //                console.warn(`updateView not possible: routeMap not defined`);
+                }
             }
         }
     }

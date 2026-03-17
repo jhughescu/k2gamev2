@@ -103,13 +103,17 @@ const requireAuth = (req, res, next) => {
 const requireAdmin = (req, res, next) => {
     console.log('requireAdmin check:', {
         hasSession: !!req.session,
+        adminAuth: req.session?.adminAuth,
         isAuthenticated: req.session?.isAuthenticated,
         role: req.session?.role,
         path: req.path,
         sessionID: req.sessionID
     });
-    
-    if (req.session && req.session.isAuthenticated && (req.session.role === 'admin' || req.session.role === 'superuser')) {
+
+    if (req.session && (
+        req.session.adminAuth === true ||
+        (req.session.isAuthenticated && (req.session.role === 'admin' || req.session.role === 'superuser'))
+    )) {
         return next();
     }
     

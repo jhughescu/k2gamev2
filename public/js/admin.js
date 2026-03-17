@@ -618,7 +618,9 @@ function renderAccessKeys() {
         return;
     }
     container.innerHTML = accessKeys.map(k => {
-        const activeBadge = k.active ? '<span class="pill-sub" style="color:#0a0;">active</span>' : '<span class="pill-sub" style="color:#a00;">inactive</span>';
+        const activeBadge = k.active
+            ? '<span class="status-badge is-active">active</span>'
+            : '<span class="status-badge is-inactive">inactive</span>';
         const scope = k.type === 'institution'
             ? `INS: ${k.institutionSlug}`
             : `COU: ${k.institutionSlug} / ${k.courseSlug}`;

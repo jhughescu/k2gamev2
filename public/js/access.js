@@ -486,7 +486,7 @@ function renderSessions() {
                     <div>ID: ${s.uniqueID}</div>
                 </div>
                 <div style="position: absolute; right: 10px; bottom: 10px;">
-                    <input type="checkbox" class="sessionSelect" data-id="${s.uniqueID}" ${isChecked}>
+                    <input type="checkbox" class="sessionSelect" data-id="${s.uniqueID}" aria-label="Select session ${s.name || s.uniqueID}" ${isChecked}>
                 </div>
             </div>
         `;
@@ -498,9 +498,9 @@ function renderSessions() {
         const nextDisabled = currentPage === totalPages ? 'disabled' : '';
         html += `
             <div style="display: flex; justify-content: center; gap: 8px; margin-top: 16px; padding-top: 12px; border-top: 1px solid #e0e0e0;">
-                <button id="prevPageBtn" class="pagination-btn" ${prevDisabled} style="padding: 6px 12px; background: #2196F3; color: white; border: 1px solid #1565c0; border-radius: 3px; cursor: pointer; font-size: 13px; font-weight: 500; opacity: ${currentPage === 1 ? '0.5' : '1'};">← Prev</button>
+                <button id="prevPageBtn" class="pagination-btn" ${prevDisabled} style="padding: 6px 12px; background: #0050a8; color: white; border: 1px solid #003f85; border-radius: 3px; cursor: pointer; font-size: 13px; font-weight: 500; opacity: ${currentPage === 1 ? '0.5' : '1'};">← Prev</button>
                 <span style="display: flex; align-items: center; padding: 6px 12px; font-size: 13px; color: #666;">Page ${currentPage} of ${totalPages}</span>
-                <button id="nextPageBtn" class="pagination-btn" ${nextDisabled} style="padding: 6px 12px; background: #2196F3; color: white; border: 1px solid #1565c0; border-radius: 3px; cursor: pointer; font-size: 13px; font-weight: 500; opacity: ${currentPage === totalPages ? '0.5' : '1'};">Next →</button>
+                <button id="nextPageBtn" class="pagination-btn" ${nextDisabled} style="padding: 6px 12px; background: #0050a8; color: white; border: 1px solid #003f85; border-radius: 3px; cursor: pointer; font-size: 13px; font-weight: 500; opacity: ${currentPage === totalPages ? '0.5' : '1'};">Next →</button>
             </div>
         `;
     }
@@ -638,7 +638,7 @@ function updateSelectedSessionsPanel() {
     if (!list) return;
     const ids = Array.from(selectedSessionIds);
     if (ids.length === 0) {
-        list.innerHTML = '<p class="muted">No sessions selected.</p>';
+        list.innerHTML = '<p style="color: #000;">No sessions selected.</p>';
         // Hide charts grid
         const grid = doc('quizChartsGrid');
         if (grid) grid.style.display = 'none';
@@ -659,7 +659,7 @@ function updateSelectedSessionsPanel() {
                 <div class="time-bar-row" data-session-id="${s.uniqueID}" style="display: flex; align-items: center; margin-bottom: 8px; gap: 8px; cursor: pointer; padding: 4px; border-radius: 3px; transition: background-color 0.2s ease;">
                     <div style="width: 150px; font-size: 12px; color: #666; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${s.name || s.uniqueID}">${s.name || s.uniqueID}</div>
                     <div style="flex: 1; background: #e0e0e0; height: 24px; border-radius: 3px; position: relative; overflow: hidden;">
-                        <div class="time-bar-fill" style="background: linear-gradient(90deg, #2196F3, #1976D2); height: 100%; width: ${percentage}%; border-radius: 3px; transition: all 0.3s ease;"></div>
+                        <div class="time-bar-fill" style="background: linear-gradient(90deg, #0050a8, #003f85); height: 100%; width: ${percentage}%; border-radius: 3px; transition: all 0.3s ease;"></div>
                     </div>
                     <div style="width: 60px; text-align: right; font-size: 12px; font-weight: 600; color: #333;">${time} min</div>
                 </div>
@@ -695,7 +695,7 @@ function updateSelectedSessionsPanel() {
             // Highlight the bar
             row.style.backgroundColor = '#f0f0f0';
             if (barFill) {
-                barFill.style.background = 'linear-gradient(90deg, #1976D2, #0d47a1)';
+                barFill.style.background = 'linear-gradient(90deg, #003f85, #002f63)';
                 barFill.style.transform = 'scaleY(1.1)';
             }
             
@@ -703,8 +703,8 @@ function updateSelectedSessionsPanel() {
             const sessionTile = document.querySelector(`.institution-item[data-session-id="${sessionId}"]`);
             if (sessionTile) {
                 sessionTile.style.backgroundColor = '#e3f2fd';
-                sessionTile.style.borderColor = '#2196F3';
-                sessionTile.style.boxShadow = '0 2px 8px rgba(33, 150, 243, 0.3)';
+                sessionTile.style.borderColor = '#0050a8';
+                sessionTile.style.boxShadow = '0 2px 8px rgba(0, 80, 168, 0.3)';
             }
         });
         
@@ -715,7 +715,7 @@ function updateSelectedSessionsPanel() {
             // Reset the bar
             row.style.backgroundColor = '';
             if (barFill) {
-                barFill.style.background = 'linear-gradient(90deg, #2196F3, #1976D2)';
+                barFill.style.background = 'linear-gradient(90deg, #0050a8, #003f85)';
                 barFill.style.transform = '';
             }
             
@@ -735,7 +735,7 @@ function updateSelectedSessionsPanel() {
                 pinnedSessionId = null;
                 row.style.backgroundColor = '';
                 if (barFill) {
-                    barFill.style.background = 'linear-gradient(90deg, #2196F3, #1976D2)';
+                    barFill.style.background = 'linear-gradient(90deg, #0050a8, #003f85)';
                     barFill.style.transform = '';
                 }
                 
@@ -753,7 +753,7 @@ function updateSelectedSessionsPanel() {
                         prevRow.style.backgroundColor = '';
                         const prevFill = prevRow.querySelector('.time-bar-fill');
                         if (prevFill) {
-                            prevFill.style.background = 'linear-gradient(90deg, #2196F3, #1976D2)';
+                            prevFill.style.background = 'linear-gradient(90deg, #0050a8, #003f85)';
                             prevFill.style.transform = '';
                         }
                     }
@@ -770,15 +770,15 @@ function updateSelectedSessionsPanel() {
                 pinnedSessionId = sessionId;
                 row.style.backgroundColor = '#f0f0f0';
                 if (barFill) {
-                    barFill.style.background = 'linear-gradient(90deg, #1976D2, #0d47a1)';
+                    barFill.style.background = 'linear-gradient(90deg, #003f85, #002f63)';
                     barFill.style.transform = 'scaleY(1.1)';
                 }
                 
                 const sessionTile = document.querySelector(`.institution-item[data-session-id="${sessionId}"]`);
                 if (sessionTile) {
                     sessionTile.style.backgroundColor = '#e3f2fd';
-                    sessionTile.style.borderColor = '#2196F3';
-                    sessionTile.style.boxShadow = '0 2px 8px rgba(33, 150, 243, 0.3)';
+                    sessionTile.style.borderColor = '#0050a8';
+                    sessionTile.style.boxShadow = '0 2px 8px rgba(0, 80, 168, 0.3)';
                 }
             }
         });
@@ -808,7 +808,7 @@ function renderAllQuizCharts() {
     grid.innerHTML = '';
     grid.style.display = 'grid';
     
-    const colours = ['#4CAF50', '#FF9800', '#2196F3', '#e200ff', '#9af321'];
+    const colours = ['#4CAF50', '#FF9800', '#0050a8', '#e200ff', '#9af321'];
     
     // Render pie chart for each question (limit to 4)
     const numQuestions = Math.min(4, questions.length);

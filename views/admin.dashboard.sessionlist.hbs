@@ -4,13 +4,13 @@
     <span class="resultID"></span>
     <span class="resultName"></span>
     <span class="status"></span>
-    <input id="checkAll" type="checkbox">
+    <input id="checkAll" type="checkbox" aria-label="Select all sessions">
 </p>
 {{#each sessions}}
     <p class='sClick resultItem resultOver ind ind_{{name}}' id='s_{{_id}}' style='display: none;'>
         <span class="sClicker resultID">{{uniqueID}}</span>
         <span class="sClicker resultName">{{name}}</span>
         <span class="status {{#if complete}}complete{{else}}incomplete{{/if}}">{{#if complete}}✔{{else}}✘{{/if}}</span>
-        <input type='checkbox' class='sessionCheck'>
+        <input type='checkbox' class='sessionCheck' aria-label='Select session {{uniqueID}}'>
     </p>
 {{/each}}

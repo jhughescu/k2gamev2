@@ -1,5 +1,5 @@
 <div class="leaderboard-runnersup" id="{{lbPlace}}">
-    <h3>{{#if finished}}{{lbPlace}}{{/if}}</h3>
+    {{#if finished}}<h3>{{lbPlace}}</h3>{{/if}}
     <div class="runnersup-info">
         <div class='imgstack'>
             {{#if finished}}{{else}}
@@ -19,7 +19,7 @@
                 </g>
             </svg>
             {{/if}}
-            <img id="2nd-team-flag" src="assets/profiles/profileimages_{{filename}}.png" />
+            <img id="2nd-team-flag" src="assets/profiles/profileimages_{{filename}}.png" alt="" aria-hidden="true"/>
         </div>
         <div>
             <h3>{{name}}</h3>

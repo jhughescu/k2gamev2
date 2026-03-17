@@ -7,11 +7,12 @@
     <link rel="stylesheet" href="/css/admin.css">
 </head>
 <body>
+    <main id="mainContent">
     <div class="container">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+        <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
             <h1>Facilitator Dashboard</h1>
-            <button class="logout-btn" id="logoutBtn" style="display: none; padding: 8px 16px; background: #2196F3; color: white; border: 1px solid #1565c0; border-radius: 3px; cursor: pointer; font-size: 13px; font-weight: 500;">Logout</button>
-        </div>
+            <button class="logout-btn" id="logoutBtn" style="display: none; padding: 8px 16px; background: #0050a8; color: white; border: 1px solid #003f85; border-radius: 3px; cursor: pointer; font-size: 13px; font-weight: 500;">Logout</button>
+        </header>
 
         <div id="errorMsg" class="error"></div>
         <div id="successMsg" class="success"></div>
@@ -21,7 +22,7 @@
             <h2>Access Login</h2>
             <p style="color: #666; margin-bottom: 16px;">Enter your institution or course access credentials.</p>
             <form id="loginForm" novalidate>
-                <input type="text" style="display: none;" autocomplete="username">
+                <input type="text" style="display: none;" autocomplete="username" aria-label="Username" tabindex="-1">
                 <div class="form-group">
                     <label for="accessType">Type</label>
                     <select id="accessType">
@@ -54,14 +55,14 @@
                     <div style="display: flex; gap: 16px; align-items: center; flex-wrap: wrap; justify-content: space-between;">
                         <div style="display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">
                             <div style="display: flex; gap: 8px; align-items: center;">
-                                <label style="font-weight: 500; font-size: 14px;">From:</label>
+                                <label for="dateFrom" style="font-weight: 500; font-size: 14px;">From:</label>
                                 <input type="date" id="dateFrom" style="padding: 6px; border: 1px solid #ccc; border-radius: 3px;">
                             </div>
                             <div style="display: flex; gap: 8px; align-items: center;">
-                                <label style="font-weight: 500; font-size: 14px;">To:</label>
+                                <label for="dateTo" style="font-weight: 500; font-size: 14px;">To:</label>
                                 <input type="date" id="dateTo" style="padding: 6px; border: 1px solid #ccc; border-radius: 3px;">
                             </div>
-                            <button id="clearDatesBtn" style="padding: 6px 12px; background: #2196F3; color: white; border: 1px solid #1565c0; border-radius: 3px; cursor: pointer; font-size: 13px; font-weight: 500;">Clear</button>
+                            <button id="clearDatesBtn" style="padding: 6px 12px; background: #0050a8; color: white; border: 1px solid #003f85; border-radius: 3px; cursor: pointer; font-size: 13px; font-weight: 500;">Clear</button>
                             <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
                                 <input type="checkbox" id="showCompletedOnly" style="cursor: pointer;">
                                 <span>Show completed only</span>
@@ -75,7 +76,7 @@
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                             <div style="display: flex; align-items: center; gap: 8px;">
                                 <h3 style="margin: 0;">Sessions</h3>
-                                <span id="sessionsCount" style="color: #999; font-size: 14px;"></span>
+                                <span id="sessionsCount" style="color: #000; font-size: 14px;"></span>
                             </div>
                             <div style="display: flex; gap: 12px; font-size: 13px;">
                                 <label style="display: flex; align-items: center; gap: 4px; cursor: pointer;">
@@ -107,6 +108,7 @@
             </div>
         </div>
     </div>
+    </main>
 
     <script src="/socket.io/socket.io.js"></script>
     <script src="/js/access.js"></script>
