@@ -1,6 +1,7 @@
 const session = require('express-session');
 const MongoStore = require('connect-mongo').default;
 const rateLimit = require('express-rate-limit');
+const { ipKeyGenerator } = rateLimit;
 const bcrypt = require('bcryptjs');
 const User = require('../models/user');
 const AccessKey = require('../models/accessKey');
@@ -26,7 +27,8 @@ const normalizeRateLimitIp = (rawIp) => {
 
 const authRateKeyGenerator = (req) => {
     const forwarded = req.headers['x-forwarded-for'];
-    return normalizeRateLimitIp(req.ip || forwarded || (req.socket && req.socket.remoteAddress));
+    const normalizedIp = normalizeRateLimitIp(forwarded || req.ip || (req.socket && req.socket.remoteAddress));
+    return ipKeyGenerator(normalizedIp);
 };
 
 // Rate limiter for login attempts - 5 attempts per 15 minutes
