@@ -12,11 +12,29 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 const SESSION_SECRET = process.env.SESSION_SECRET;
 const MONGODB_URI = process.env.MONGODB_URI;
 
+const normalizeRateLimitIp = (rawIp) => {
+    const ip = (rawIp || '').toString().trim();
+    if (!ip) {
+        return 'unknown';
+    }
+    const firstHop = ip.split(',')[0].trim();
+    if (/^\d+\.\d+\.\d+\.\d+:\d+$/.test(firstHop)) {
+        return firstHop.replace(/:\d+$/, '');
+    }
+    return firstHop;
+};
+
+const authRateKeyGenerator = (req) => {
+    const forwarded = req.headers['x-forwarded-for'];
+    return normalizeRateLimitIp(req.ip || forwarded || (req.socket && req.socket.remoteAddress));
+};
+
 // Rate limiter for login attempts - 5 attempts per 15 minutes
 const loginLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
     max: process.env.ISDEV === 'true' ? 100 : 5, // 5 attempts in prod, 100 in dev
     message: { error: 'Too Many Requests', message: 'Too many login attempts, please try again after 15 minutes' },
+    keyGenerator: authRateKeyGenerator,
     standardHeaders: true,
     legacyHeaders: false,
     skipSuccessfulRequests: true // Don't count successful logins
@@ -27,6 +45,7 @@ const authLimiter = rateLimit({
     windowMs: 60 * 1000, // 1 minute
     max: process.env.ISDEV === 'true' ? 1000 : 20, // Relaxed in dev
     message: { error: 'Too Many Requests', message: 'Too many requests, please slow down' },
+    keyGenerator: authRateKeyGenerator,
     standardHeaders: true,
     legacyHeaders: false
 });

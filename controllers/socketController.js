@@ -179,7 +179,13 @@ function initSocket(server) {
                 });
                 socket.on('newSession', (ob = {}, cb) => {
 //                    console.log('new session');
-                    sessionController.newSession(ob, (createdSession) => {
+                    const payload = { ...(ob || {}) };
+                    const accessScope = getCourseScopeFromSession(session);
+                    if (accessScope) {
+                        payload.institution = accessScope.institutionSlug;
+                        payload.course = accessScope.courseSlug;
+                    }
+                    sessionController.newSession(payload, (createdSession) => {
                         if (io) {
                             io.to('facilitators').emit('facilitatorSessionCreated', {
                                 uniqueID: createdSession && createdSession.uniqueID ? createdSession.uniqueID : null,
