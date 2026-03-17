@@ -21,6 +21,7 @@ const DEBUG_PIN = process.env.DEBUG_PIN || '2222';
 const authController = require('./authController');
 const Institution = require('../models/institution');
 const adminController = require('./adminController');
+const QRCode = require('qrcode');
 
 const hasGamePageAccess = (req, instSlug, courseSlug) => {
     const session = req.session || {};
@@ -142,6 +143,30 @@ app.delete('/access/sessions', authController.requireSessionAccess, async (req, 
 });
 
 
+app.get('/access/launch-url', authController.requireSessionAccess, async (req, res) => {
+    const access = req.session && req.session.access;
+    if (!access || access.type !== 'course' || !access.courseSlug) {
+        return res.status(400).json({ error: 'Launch URL is only available for course-level access' });
+    }
+    try {
+        const inst = await Institution.findOne({ slug: access.institutionSlug }).lean();
+        if (!inst) return res.status(404).json({ error: 'Institution not found' });
+        const course = (inst.courses || []).find(
+            c => (c.slug || '').toLowerCase() === access.courseSlug
+        );
+        if (!course || !course.launchToken) {
+            return res.status(404).json({ error: 'Launch token not found for this course' });
+        }
+        const baseUrl = `${req.protocol}://${req.get('host')}`;
+        const launchUrl = `${baseUrl}/play/${course.launchToken}`;
+        const qrDataUrl = await QRCode.toDataURL(launchUrl, { width: 300, margin: 2 });
+        res.json({ launchUrl, qrDataUrl });
+    } catch (err) {
+        console.error('Error generating launch URL:', err.message);
+        res.status(500).json({ error: 'Failed to generate launch URL' });
+    }
+});
+
 app.post('/getTemplate', (req, res) => {
     templateController.getTemplate(req, res);
 });
@@ -166,25 +191,46 @@ app.get('/entry', (req, res) => {
     res.redirect('/');
 });
 
-app.get(`/game/:institution/:course`, async (req, res, next) => {
-    try {
-        const instSlug = (req.params.institution || '').toLowerCase();
-        const courseSlug = (req.params.course || '').toLowerCase();
-        const inst = await Institution.findOne({ slug: instSlug }).lean();
-        const courseOk = inst && Array.isArray(inst.courses) && inst.courses.some(c => (c.slug || '').toLowerCase() === courseSlug);
-
-        if (!inst || !courseOk) {
-            return res.redirect('/');
-        }
-
-        if (!hasGamePageAccess(req, instSlug, courseSlug)) {
-            return res.redirect('/');
-        }
-
-        res.sendFile(path.join(basePath, 'game.html'));
-    } catch (err) {
-        next(err);
+app.get('/play/:token', async (req, res) => {
+    const token = (req.params.token || '').toLowerCase().trim();
+    if (!token) {
+        return res.redirect('/');
     }
+    try {
+        const inst = await Institution.findOne({ 'courses.launchToken': token }).lean();
+        if (!inst || !Array.isArray(inst.courses)) {
+            return res.redirect('/');
+        }
+        const course = inst.courses.find((c) => ((c.launchToken || '').toLowerCase() === token));
+        if (!course) {
+            return res.redirect('/');
+        }
+
+        req.session.access = {
+            type: 'course',
+            institutionSlug: (inst.slug || '').toLowerCase(),
+            institutionName: inst.title || inst.slug,
+            courseSlug: (course.slug || '').toLowerCase(),
+            courseName: course.name || course.slug,
+            label: 'launch-link'
+        };
+        req.session.isAuthenticated = true;
+        req.session.role = 'access';
+        req.session.save((err) => {
+            if (err) {
+                console.error('Session save failed on /play/:token:', err);
+                return res.redirect('/');
+            }
+            return res.sendFile(path.join(basePath, 'game.html'));
+        });
+    } catch (err) {
+        console.error('Error in /play/:token route:', err && err.message ? err.message : err);
+        return res.redirect('/');
+    }
+});
+
+app.get(`/game/:institution/:course`, (req, res) => {
+    res.redirect('/');
 });
 app.get(`/game`, (req, res) => {
     res.redirect('/');

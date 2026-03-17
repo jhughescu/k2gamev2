@@ -15,6 +15,65 @@ const eventEmitter = getEventEmitter();
 
 let io = null;
 
+const normalizeSlug = (value) => (value || '').toLowerCase().trim();
+
+const getCourseScopeFromSession = (session = {}) => {
+    const access = session.access || {};
+    const institutionSlug = normalizeSlug(access.institutionSlug);
+    const courseSlug = normalizeSlug(access.courseSlug);
+    if (!institutionSlug || !courseSlug) {
+        return null;
+    }
+    return { institutionSlug, courseSlug };
+};
+
+const getFacilitatorCourseRoom = (institutionSlug, courseSlug) => {
+    return `facilitator-course-${normalizeSlug(institutionSlug)}-${normalizeSlug(courseSlug)}`;
+};
+
+const countPlayersForCourse = (institutionSlug, courseSlug) => {
+    if (!io) {
+        return 0;
+    }
+    const inst = normalizeSlug(institutionSlug);
+    const course = normalizeSlug(courseSlug);
+    let count = 0;
+
+    io.of('/').sockets.forEach((connectedSocket) => {
+        const role = (connectedSocket.handshake && connectedSocket.handshake.query && connectedSocket.handshake.query.role) || '';
+        if (role !== 'player') {
+            return;
+        }
+        const scope = getCourseScopeFromSession(connectedSocket.request && connectedSocket.request.session ? connectedSocket.request.session : {});
+        if (!scope) {
+            return;
+        }
+        if (scope.institutionSlug === inst && scope.courseSlug === course) {
+            count += 1;
+        }
+    });
+
+    return count;
+};
+
+const emitFacilitatorPlayerCount = (institutionSlug, courseSlug) => {
+    if (!io) {
+        return;
+    }
+    const inst = normalizeSlug(institutionSlug);
+    const course = normalizeSlug(courseSlug);
+    if (!inst || !course) {
+        return;
+    }
+    const playerCount = countPlayersForCourse(inst, course);
+    io.to(getFacilitatorCourseRoom(inst, course)).emit('facilitatorPlayerCount', {
+        institutionSlug: inst,
+        courseSlug: course,
+        playerCount,
+        timestamp: Date.now()
+    });
+};
+
 const showRoomSize = (id) => {
     const roomName = id;
     const room = io.sockets.adapter.rooms.get(roomName);
@@ -99,16 +158,23 @@ function initSocket(server) {
             // game clients
             if (sType === 'player') {
                 console.log('player enters');
+                const playerScope = getCourseScopeFromSession(session);
 //                console.log('handshakeCheck', getPlayerHandshake());
 //                console.log(Q);
                 socket.join('players');
                 socket.emit('handshakeCheck', getPlayerHandshake());
+                if (playerScope) {
+                    emitFacilitatorPlayerCount(playerScope.institutionSlug, playerScope.courseSlug);
+                }
                 socket.on('joinRoom', (r) => {
                     const rid = `s-${r}`;
                     socket.join(rid);
                     console.log(`join room ${rid} ${showRoomSize(rid)}`);
                 });
                 socket.on('disconnect', () => {
+                    if (playerScope) {
+                        emitFacilitatorPlayerCount(playerScope.institutionSlug, playerScope.courseSlug);
+                    }
 //                    console.log('gone');
                 });
                 socket.on('newSession', (ob = {}, cb) => {
@@ -322,6 +388,17 @@ function initSocket(server) {
                 }
 
                 socket.join('facilitators');
+                const facilitatorScope = getCourseScopeFromSession(session);
+                if (facilitatorScope) {
+                    const room = getFacilitatorCourseRoom(facilitatorScope.institutionSlug, facilitatorScope.courseSlug);
+                    socket.join(room);
+                    socket.emit('facilitatorPlayerCount', {
+                        institutionSlug: facilitatorScope.institutionSlug,
+                        courseSlug: facilitatorScope.courseSlug,
+                        playerCount: countPlayersForCourse(facilitatorScope.institutionSlug, facilitatorScope.courseSlug),
+                        timestamp: Date.now()
+                    });
+                }
                 socket.on('disconnect', () => {
 //                    console.log('facilitator disconnected');
                 });

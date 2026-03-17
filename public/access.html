@@ -51,6 +51,31 @@
             <div class="section-card">
                 <h2 id="accessTitle" style="margin-bottom: 6px;"></h2>
                 <p id="accessSubtitle" style="color: #666; margin-bottom: 16px;"></p>
+
+                <!-- Game Launch URL (course-level access only) -->
+                <div id="launchUrlCard" style="display: none; margin-bottom: 20px; padding: 14px; background: #eef3f8; border: 1px solid #c5d8ef; border-radius: 4px;">
+                    <h3 style="margin: 0 0 8px 0; font-size: 15px;">Game Launch URL</h3>
+                    <p style="color: #555; font-size: 13px; margin: 0 0 12px 0;">Share this URL or QR code with participants to start the game.</p>
+                    <div style="display: flex; gap: 24px; align-items: flex-start; flex-wrap: wrap;">
+                        <div style="flex: 1; min-width: 260px;">
+                            <div style="display: flex; gap: 8px; align-items: center;">
+                                <input type="text" id="launchUrlInput" readonly aria-label="Game launch URL"
+                                    style="flex: 1; padding: 8px 10px; border: 1px solid #b0c8e8; border-radius: 3px; font-size: 12px; background: #fff; font-family: monospace;">
+                                <button id="copyLaunchUrlBtn"
+                                    style="padding: 8px 14px; background: #0050a8; color: white; border: 1px solid #003f85; border-radius: 3px; cursor: pointer; font-size: 13px; white-space: nowrap;">Copy</button>
+                            </div>
+                        </div>
+                        <div>
+                            <img id="launchUrlQr" src="" alt="QR code for game launch URL"
+                                style="width: 140px; height: 140px; display: block; border: 1px solid #c5d8ef; border-radius: 4px; background: #fff;">
+                        </div>
+                    </div>
+                    <div style="margin-top: 10px; display: flex; justify-content: flex-start; align-items: center; gap: 8px; color: #173a5e; font-size: 13px;">
+                        <span style="width: 8px; height: 8px; border-radius: 50%; background: #2e7d32; display: inline-block;"></span>
+                        <span id="launchPlayerCount">Players connected: 0</span>
+                    </div>
+                </div>
+
                 <div style="margin-bottom: 16px; padding: 12px; background: #f5f5f5; border-radius: 4px;">
                     <div style="display: flex; gap: 16px; align-items: center; flex-wrap: wrap; justify-content: space-between;">
                         <div style="display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">

@@ -478,7 +478,31 @@ function renderInstitutions(institutions) {
             ${inst.courses && inst.courses.length > 0 ? `
                 <div class="courses-list">
                     <strong>Courses:</strong>
-                    ${inst.courses.map(c => `<div class="course-item">• ${c.name} (${c.slug})</div>`).join('')}
+                    <table class="courses-table" aria-label="Courses for ${inst.title}">
+                        <thead>
+                            <tr>
+                                <th scope="col">Title</th>
+                                <th scope="col">Slug</th>
+                                <th scope="col">Sessions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${inst.courses.map(c => `
+                                <tr>
+                                    <td>${c.name}</td>
+                                    <td>
+                                        <div>${c.slug}</div>
+                                        ${c.launchToken ? `
+                                            <div style="margin-top: 4px;">
+                                                <button type="button" class="secondary small copy-launch-link" data-launch-token="${c.launchToken}">Copy launch URL</button>
+                                            </div>
+                                        ` : ''}
+                                    </td>
+                                    <td>${typeof c.sessionsCount === 'number' ? c.sessionsCount : 0}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
                 </div>
             ` : '<p style="color: #999;">No courses</p>'}
             <div class="button-group">
@@ -509,6 +533,21 @@ function renderInstitutions(institutions) {
         btn.addEventListener('click', (e) => {
             e.stopPropagation();
             deleteInstitution(e.target.dataset.id);
+        });
+    });
+
+    document.querySelectorAll('.copy-launch-link').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            const token = e.target.dataset.launchToken;
+            if (!token) return;
+            const launchUrl = `${window.location.origin}/play/${token}`;
+            try {
+                await navigator.clipboard.writeText(launchUrl);
+                showSuccess('Launch URL copied');
+            } catch (_err) {
+                showError('Could not copy launch URL');
+            }
         });
     });
 }

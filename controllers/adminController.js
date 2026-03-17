@@ -1,8 +1,37 @@
 const Institution = require('../models/institution');
 const User = require('../models/user');
 const AccessKey = require('../models/accessKey');
+const Session = require('../models/session');
 const { hashPassword, verifyPassword, isEnvSuperuserLogin, getEnvSuperuserUsername } = require('./authController');
 const crypto = require('crypto');
+
+const createLaunchToken = () => crypto.randomBytes(16).toString('hex');
+
+const getUniqueLaunchToken = async () => {
+    for (let i = 0; i < 6; i++) {
+        const token = createLaunchToken();
+        const exists = await Institution.exists({ 'courses.launchToken': token });
+        if (!exists) {
+            return token;
+        }
+    }
+    throw new Error('Failed to generate unique launch token');
+};
+
+const withCourseLaunchTokens = async (courses = [], existingTokenBySlug = new Map()) => {
+    const normalized = [];
+    for (const course of courses) {
+        const slug = (course.slug || '').toLowerCase();
+        const incoming = (course.launchToken || '').toString().trim().toLowerCase();
+        const preserved = existingTokenBySlug.get(slug);
+        const launchToken = incoming || preserved || await getUniqueLaunchToken();
+        normalized.push({
+            ...course,
+            launchToken
+        });
+    }
+    return normalized;
+};
 
 const normalizeCourses = (courses = []) => {
     if (!Array.isArray(courses)) {
@@ -144,8 +173,64 @@ const authenticateAdmin = async (req, res) => {
 // GET /admin/institutions - list all institutions
 const getInstitutions = async (req, res) => {
     try {
-        const institutions = await Institution.find().lean();
-        res.json(institutions);
+        const institutionDocs = await Institution.find();
+        for (const instDoc of institutionDocs) {
+            let changed = false;
+            const courses = Array.isArray(instDoc.courses) ? instDoc.courses : [];
+            for (const course of courses) {
+                if (!course.launchToken) {
+                    course.launchToken = await getUniqueLaunchToken();
+                    changed = true;
+                }
+            }
+            if (changed) {
+                await instDoc.save();
+            }
+        }
+        const institutions = institutionDocs.map((doc) => doc.toObject());
+        const counts = await Session.aggregate([
+            {
+                $match: {
+                    institution: { $type: 'string', $ne: '' },
+                    course: { $type: 'string', $ne: '' }
+                }
+            },
+            {
+                $group: {
+                    _id: {
+                        institution: { $toLower: '$institution' },
+                        course: { $toLower: '$course' }
+                    },
+                    count: { $sum: 1 }
+                }
+            }
+        ]);
+
+        const countMap = new Map();
+        counts.forEach((entry) => {
+            const inst = (entry?._id?.institution || '').toLowerCase();
+            const course = (entry?._id?.course || '').toLowerCase();
+            const key = `${inst}::${course}`;
+            countMap.set(key, entry.count || 0);
+        });
+
+        const withCounts = institutions.map((inst) => {
+            const instSlug = (inst.slug || '').toLowerCase();
+            const courses = Array.isArray(inst.courses) ? inst.courses : [];
+            return {
+                ...inst,
+                courses: courses.map((course) => {
+                    const courseSlug = (course.slug || '').toLowerCase();
+                    const key = `${instSlug}::${courseSlug}`;
+                    return {
+                        ...course,
+                        sessionsCount: countMap.get(key) || 0
+                    };
+                })
+            };
+        });
+
+        res.json(withCounts);
     } catch (err) {
         console.error('Error fetching institutions:', err);
         res.status(500).json({ error: 'Failed to fetch institutions' });
@@ -163,10 +248,11 @@ const createInstitution = async (req, res) => {
         if (courseCheck.error) {
             return res.status(400).json({ error: courseCheck.error });
         }
+        const coursesWithTokens = await withCourseLaunchTokens(courseCheck.normalized);
         const inst = new Institution({
             slug: slug.trim().toLowerCase(),
             title: title.trim(),
-            courses: courseCheck.normalized
+            courses: coursesWithTokens
         });
         await inst.save();
         res.json(inst);
@@ -181,6 +267,10 @@ const updateInstitution = async (req, res) => {
     try {
         const { id } = req.params;
         const { slug, title, courses } = req.body;
+        const existingInst = await Institution.findById(id).lean();
+        if (!existingInst) {
+            return res.status(404).json({ error: 'Institution not found' });
+        }
         let courseCheck = null;
         if (courses !== undefined) {
             courseCheck = normalizeCourses(courses);
@@ -196,16 +286,19 @@ const updateInstitution = async (req, res) => {
             update.title = title.trim();
         }
         if (courseCheck) {
-            update.courses = courseCheck.normalized;
+            const existingTokenBySlug = new Map(
+                (existingInst.courses || []).map((c) => [
+                    (c.slug || '').toLowerCase(),
+                    (c.launchToken || '').toString().toLowerCase()
+                ])
+            );
+            update.courses = await withCourseLaunchTokens(courseCheck.normalized, existingTokenBySlug);
         }
         const inst = await Institution.findByIdAndUpdate(
             id,
             update,
             { new: true, runValidators: true }
         );
-        if (!inst) {
-            return res.status(404).json({ error: 'Institution not found' });
-        }
         res.json(inst);
     } catch (err) {
         console.error('Error updating institution:', err);

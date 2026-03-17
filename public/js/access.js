@@ -94,6 +94,13 @@ function connectFacilitatorSocket() {
         scheduleRealtimeRefresh();
     });
 
+    facilitatorSocket.on('facilitatorPlayerCount', (payload = {}) => {
+        const countEl = doc('launchPlayerCount');
+        if (!countEl) return;
+        const playerCount = Number.isFinite(payload.playerCount) ? payload.playerCount : 0;
+        countEl.textContent = `Players connected: ${playerCount}`;
+    });
+
     facilitatorSocket.on('authError', (data) => {
         console.warn('Facilitator socket authentication failed:', data && data.message ? data.message : 'unknown reason');
     });
@@ -200,6 +207,18 @@ function handleAccessTypeChange() {
     }
 }
 
+function getSafeRedirectPath() {
+    const params = new URLSearchParams(window.location.search);
+    const redirect = params.get('redirect') || '';
+    if (!redirect.startsWith('/')) {
+        return null;
+    }
+    if (redirect.startsWith('//')) {
+        return null;
+    }
+    return redirect;
+}
+
 async function login(event) {
     if (event) event.preventDefault();
 
@@ -239,6 +258,11 @@ async function login(event) {
         const data = await res.json();
         currentAccess = data.access;
         showSuccess('Logged in');
+        const redirectPath = getSafeRedirectPath();
+        if (redirectPath) {
+            window.location.assign(redirectPath);
+            return;
+        }
         showSessionsSection();
         // Update browser URL to facilitator
         window.history.pushState({ page: 'facilitator' }, 'Facilitator Dashboard', '/facilitator');
@@ -271,6 +295,9 @@ function showSessionsSection() {
     
     // Load game data for quiz display
     loadGameData();
+    
+    // Load launch URL and QR code for course-level access
+    loadLaunchUrl();
     
     // Add radio button listeners for select mode (after sessions section is visible)
     const radioButtons = document.querySelectorAll('input[name="selectMode"]');
@@ -329,6 +356,31 @@ function showSessionsSection() {
                 saveState();
             });
         });
+    }
+}
+
+async function loadLaunchUrl() {
+    const card = doc('launchUrlCard');
+    if (!card) return;
+    if (!currentAccess || currentAccess.type !== 'course') {
+        card.style.display = 'none';
+        return;
+    }
+    const countEl = doc('launchPlayerCount');
+    if (countEl) {
+        countEl.textContent = 'Players connected: 0';
+    }
+    try {
+        const res = await secureApiCall(`${API_BASE}/launch-url`);
+        if (!res || res.expired || !res.ok) return;
+        const data = await res.json();
+        const input = doc('launchUrlInput');
+        const img = doc('launchUrlQr');
+        if (input) input.value = data.launchUrl || '';
+        if (img && data.qrDataUrl) img.src = data.qrDataUrl;
+        card.style.display = 'block';
+    } catch (err) {
+        console.warn('Failed to load launch URL:', err);
     }
 }
 
@@ -1021,6 +1073,25 @@ document.addEventListener('DOMContentLoaded', () => {
     const deleteBtn = doc('deleteSelectedBtn');
     if (deleteBtn) {
         deleteBtn.addEventListener('click', deleteSelectedSessions);
+    }
+
+    // Copy launch URL button
+    const copyLaunchBtn = doc('copyLaunchUrlBtn');
+    if (copyLaunchBtn) {
+        copyLaunchBtn.addEventListener('click', async () => {
+            const input = doc('launchUrlInput');
+            if (!input || !input.value) return;
+            try {
+                await navigator.clipboard.writeText(input.value);
+                const orig = copyLaunchBtn.textContent;
+                copyLaunchBtn.textContent = 'Copied!';
+                setTimeout(() => { copyLaunchBtn.textContent = orig; }, 1500);
+            } catch (err) {
+                // Fallback for browsers without clipboard API
+                input.select();
+                document.execCommand('copy');
+            }
+        });
     }
 
     updateClearDatesButtonState();

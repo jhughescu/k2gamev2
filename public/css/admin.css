@@ -178,6 +178,28 @@ button.disabled:hover {
     margin-top: 10px;
     padding-left: 20px;
 }
+.courses-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    background: #fff;
+}
+.courses-table th,
+.courses-table td {
+    border: 1px solid #d7d7d7;
+    padding: 8px 10px;
+    text-align: left;
+    font-size: 14px;
+}
+.courses-table th {
+    background: #eef3f8;
+    color: #2b2b2b;
+}
+.courses-table td:last-child,
+.courses-table th:last-child {
+    width: 110px;
+    text-align: center;
+}
 .course-item {
     color: #555;
     margin: 5px 0;

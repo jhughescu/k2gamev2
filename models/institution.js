@@ -3,7 +3,8 @@ const Schema = mongoose.Schema;
 
 const courseSchema = new Schema({
     slug: { type: String, required: true }, // short ID used in URLs
-    name: { type: String, required: true }   // display name
+    name: { type: String, required: true },   // display name
+    launchToken: { type: String, unique: true, sparse: true } // opaque course launch token
 }, {_id: false});
 
 const institutionSchema = new Schema({
