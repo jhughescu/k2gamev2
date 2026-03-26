@@ -1,6 +1,7 @@
 const socketIo = require('socket.io');
 const { getEventEmitter } = require('./../controllers/eventController');
 const sessionController = require('./../controllers/sessionController');
+const Session = require('./../models/session');
 //const downloadController = require('./../controllers/downloadController');
 const { saveCSVLocally, convertToCSV } = require('./../controllers/downloadController');
 const logController = require('./../controllers/logController');
@@ -161,6 +162,30 @@ function initSocket(server) {
                 const playerScope = getCourseScopeFromSession(session);
 //                console.log('handshakeCheck', getPlayerHandshake());
 //                console.log(Q);
+                const persistPlayerSessionBinding = (uniqueID, payload = {}) => {
+                    return new Promise((resolve) => {
+                        const requestSession = socket.request && socket.request.session ? socket.request.session : null;
+                        if (!requestSession || !uniqueID) {
+                            return resolve();
+                        }
+
+                        requestSession.playerSession = {
+                            uniqueID,
+                            institutionSlug: normalizeSlug((payload && payload.institution) || (requestSession.access && requestSession.access.institutionSlug)),
+                            courseSlug: normalizeSlug((payload && payload.course) || (requestSession.access && requestSession.access.courseSlug)),
+                            accessKeyId: ((payload && payload.accessKeyId) || (requestSession.access && requestSession.access.accessKeyId) || '').toString().trim(),
+                            updatedAt: Date.now()
+                        };
+
+                        requestSession.save((err) => {
+                            if (err) {
+                                console.warn('Failed to persist player session binding:', err && err.message ? err.message : err);
+                            }
+                            resolve();
+                        });
+                    });
+                };
+
                 socket.join('players');
                 socket.emit('handshakeCheck', getPlayerHandshake());
                 if (playerScope) {
@@ -185,21 +210,86 @@ function initSocket(server) {
                         payload.institution = accessScope.institutionSlug;
                         payload.course = accessScope.courseSlug;
                     }
-                    sessionController.newSession(payload, (createdSession) => {
-                        if (io) {
-                            io.to('facilitators').emit('facilitatorSessionCreated', {
-                                uniqueID: createdSession && createdSession.uniqueID ? createdSession.uniqueID : null,
-                                timestamp: Date.now()
-                            });
+                    (async () => {
+                        const access = session && session.access ? session.access : null;
+                        const sessionLimit = access && Number.isInteger(access.sessionLimit) ? access.sessionLimit : null;
+                        const accessKeyId = access && access.accessKeyId ? String(access.accessKeyId).trim() : '';
+                        if (accessKeyId) {
+                            payload.accessKeyId = accessKeyId;
                         }
+
+                        if (sessionLimit) {
+                            const institutionFilter = normalizeSlug((payload && payload.institution) || (access && access.institutionSlug));
+                            const courseFilter = normalizeSlug((payload && payload.course) || (access && access.courseSlug));
+                            const countFilter = {};
+                            if (accessKeyId) {
+                                countFilter.accessKeyId = accessKeyId;
+                            } else {
+                                if (institutionFilter) {
+                                    countFilter.institution = institutionFilter;
+                                }
+                                if (courseFilter) {
+                                    countFilter.course = courseFilter;
+                                }
+                            }
+
+                            const existingCount = await Session.countDocuments(countFilter);
+                            if (existingCount >= sessionLimit) {
+                                if (cb) {
+                                    cb({
+                                        error: 'session_limit_reached',
+                                        message: `Session limit reached (${sessionLimit})`
+                                    });
+                                }
+                                return;
+                            }
+                        }
+
+                        sessionController.newSession(payload, (createdSession) => {
+                            if (io) {
+                                io.to('facilitators').emit('facilitatorSessionCreated', {
+                                    uniqueID: createdSession && createdSession.uniqueID ? createdSession.uniqueID : null,
+                                    timestamp: Date.now()
+                                });
+                            }
+                            if (createdSession && createdSession.uniqueID) {
+                                persistPlayerSessionBinding(createdSession.uniqueID, payload).finally(() => {
+                                    if (cb) {
+                                        cb(createdSession);
+                                    }
+                                });
+                                return;
+                            }
+                            if (cb) {
+                                cb(createdSession);
+                            }
+                        });
+                    })().catch((err) => {
+                        console.error('Failed to enforce session limit:', err);
                         if (cb) {
-                            cb(createdSession);
+                            cb({ error: 'session_limit_check_failed' });
                         }
                     });
                 });
                 socket.on('restoreSession', (sOb, cb) => {
 //                    console.log('restored session');
-                    sessionController.restoreSession(sOb, cb);
+                    sessionController.restoreSession(sOb, (restoredSession) => {
+                        if (restoredSession && restoredSession.uniqueID) {
+                            const payload = {
+                                institution: restoredSession.institution,
+                                course: restoredSession.course
+                            };
+                            persistPlayerSessionBinding(restoredSession.uniqueID, payload).finally(() => {
+                                if (cb) {
+                                    cb(restoredSession);
+                                }
+                            });
+                            return;
+                        }
+                        if (cb) {
+                            cb(restoredSession);
+                        }
+                    });
                 });
                 socket.on('getSession', (sOb, cb) => {
                     sessionController.getSession(sOb, cb);

@@ -243,11 +243,32 @@ document.addEventListener('DOMContentLoaded', function () {
     const colourBG = document.getElementById('temp');
     //
 
+    const sanitizeStorageScope = (value, fallback = 'na') => {
+        const raw = (value || '').toString().trim().toLowerCase();
+        if (!raw) return fallback;
+        const cleaned = raw.replace(/[^a-z0-9_-]/g, '');
+        return cleaned || fallback;
+    };
+
+    const getAccessKeyScope = () => {
+        return sanitizeStorageScope(getQuery('ak'), 'legacy');
+    };
+
+    const getLaunchTokenScope = () => {
+        const parts = window.location.pathname.split('/').filter(Boolean);
+        if (parts.length >= 2 && parts[0] === 'play') {
+            return sanitizeStorageScope(parts[1], 'notoken');
+        }
+        return 'notoken';
+    };
+
     const getStoreID = () => {
         const fudgeQ = getQuery('fudge');
         const fudgeID = fudgeQ ? `-${fudgeQ}` : '';
-        //console.log(`fudgeID`, fudgeID);
-        return `${handshake}${fudgeID}-id${getIdAdj()}`;
+        const accessKeyScope = getAccessKeyScope();
+        const launchTokenScope = getLaunchTokenScope();
+        // Include access key + launch token scopes so browser state is isolated per access-key-specific launch.
+        return `${handshake}${fudgeID}-ak${accessKeyScope}-tk${launchTokenScope}-id${getIdAdj()}`;
     };
     const gameflow = (msg, ob) => {
         let act = false;
@@ -299,6 +320,52 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         return o;
         */
+    };
+    const updatePlayAgainAvailability = async (btnRestart) => {
+        if (!btnRestart || btnRestart.length === 0) {
+            return;
+        }
+
+        btnRestart.prop('disabled', false);
+        btnRestart.text('Play again');
+        btnRestart.removeAttr('title');
+        btnRestart.css({ opacity: '', cursor: '' });
+
+        try {
+            const accessRes = await fetch('/access/check', {
+                credentials: 'same-origin',
+                headers: { 'Accept': 'application/json' }
+            });
+            if (!accessRes.ok) {
+                return;
+            }
+
+            const accessData = await accessRes.json();
+            const access = accessData && accessData.access ? accessData.access : null;
+            const sessionLimit = access && Number.isInteger(access.sessionLimit) ? access.sessionLimit : null;
+            if (!accessData || !accessData.authenticated || !sessionLimit || sessionLimit < 1) {
+                return;
+            }
+
+            const sessionsRes = await fetch('/access/sessions', {
+                credentials: 'same-origin',
+                headers: { 'Accept': 'application/json' }
+            });
+            if (!sessionsRes.ok) {
+                return;
+            }
+
+            const sessionsData = await sessionsRes.json();
+            const existingSessions = Array.isArray(sessionsData && sessionsData.sessions) ? sessionsData.sessions : [];
+            if (existingSessions.length >= sessionLimit) {
+                btnRestart.prop('disabled', true);
+                btnRestart.text('Session limit reached');
+                btnRestart.attr('title', `Session limit reached (${sessionLimit})`);
+                btnRestart.css({ opacity: '0.5', cursor: 'not-allowed' });
+            }
+        } catch (err) {
+            console.warn('Failed to evaluate Play again availability:', err && err.message ? err.message : err);
+        }
     };
     const summariseSession = () => {
         gameflow(`your country is ${session.team.country}`);
@@ -1361,8 +1428,48 @@ document.addEventListener('DOMContentLoaded', function () {
     };
 //    window.go = goStCheck;
 //    window.stop = stopStCheck;
+    const getCourseScopeFromPath = () => {
+        // Legacy fallback for direct /game/:institution/:course paths.
+        const pathParts = window.location.pathname.split('/').filter(p => p);
+        if (pathParts.length >= 3 && pathParts[0] === 'game') {
+            return {
+                institution: pathParts[1],
+                course: pathParts[2]
+            };
+        }
+        return { institution: '', course: '' };
+    };
+
+    const resolveCourseScopeForNewSession = async () => {
+        const scopeFromPath = getCourseScopeFromPath();
+        if (scopeFromPath.institution && scopeFromPath.course) {
+            return scopeFromPath;
+        }
+
+        try {
+            const res = await fetch('/access/check', {
+                credentials: 'same-origin',
+                headers: { 'Accept': 'application/json' }
+            });
+            if (res.ok) {
+                const data = await res.json();
+                const access = data && data.access ? data.access : null;
+                if (data && data.authenticated && access && access.type === 'course' && access.institutionSlug && access.courseSlug) {
+                    return {
+                        institution: access.institutionSlug,
+                        course: access.courseSlug
+                    };
+                }
+            }
+        } catch (err) {
+            console.warn('Failed to resolve course scope from access session:', err && err.message ? err.message : err);
+        }
+
+        return scopeFromPath;
+    };
+
     // Main init method:
-    const checkSession = () => {
+    const checkSession = async () => {
         //        console.log(`checkSession, newconnect? ${newconnect}`);
 //        showOverlay(`Start new game?`, {
 //            button: 'yes',
@@ -1397,21 +1504,27 @@ document.addEventListener('DOMContentLoaded', function () {
                 uniqueID: lid
             }, (sesh) => {
                 if (typeof (sesh) === 'object') {
+                    const state = String((sesh && sesh.state) || '').toLowerCase();
+                    if (state.startsWith('completed')) {
+                        localStorage.removeItem(gid);
+                        gameflow(`completed session ${lid} found; starting new session`);
+                        checkSession();
+                        return;
+                    }
                     setSession(sesh, 'restored');
                 } else {
-                    gameflow(`no game found with ID ${lid} [confirm2]`);
+                    localStorage.removeItem(gid);
+                    gameflow(`no game found with ID ${lid}; starting new session [confirm2]`);
+                    checkSession();
                 }
             });
         } else {
             gameflow('no game in progress, start new game');
-            // Extract institution and course from URL path (e.g., /game/cu/johnh)
-            const pathParts = window.location.pathname.split('/').filter(p => p);
-            const institution = pathParts.length >= 2 ? pathParts[1] : '';
-            const course = pathParts.length >= 3 ? pathParts[2] : '';
+            const scope = await resolveCourseScopeForNewSession();
             socket.emit('newSession', {
                 forceTeam: window.getQueries().team || false,
-                institution: institution,
-                course: course
+                institution: scope.institution,
+                course: scope.course
             }, sesh => {
                 if (sesh && sesh.error) {
                     gameflow('invalid institution or course link', { style: 'warning' });
@@ -3154,32 +3267,27 @@ document.addEventListener('DOMContentLoaded', function () {
 
     //  # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # climberDepletionEvent
     const climberDepletionEvent = (ob) => {
+        let OK = true;
         if (stormUnderway()) {
 //            console.log('resupply runs not possible in storm conditions');
 //            return;
+            OK = false;
         }
         // Usually called by the Climber class (publically exposed method)
         const rem = Math.ceil(ob[ob.resource]);
-        //        console.log(`depletion of ${ob.resource} for ${ob.name}, remaining: ${rem}`);
-        //        console.log(ob);
-        if (rem === 0) {
-
-        }
-        devShowProfiles();
-        if (rem === 0) {
-            //            console.log(`climberDepletionEvent`, ob);
-            //            showQuickSummary(ob);
-            //            window.listClimberLoads(0);
-            const resOb = buildResourceObject(ob);
-            ob.resourceObject = resOb;
-            gTimer.pauseTimer();
-            const o = Object.assign(ob, {
-                event: 'resource_gone',
-                method: 'resourcesGoneSetup'
-            });
-            //            console.log('climberDep', o);
-            showModalEvent(o);
-            //            debugger;
+        // console.log(`depletion of ${ob.resource} for ${ob.name}, remaining: ${rem}`);
+        if (OK) {
+            devShowProfiles();
+            if (rem === 0) {
+                const resOb = buildResourceObject(ob);
+                ob.resourceObject = resOb;
+                gTimer.pauseTimer();
+                const o = Object.assign(ob, {
+                    event: 'resource_gone',
+                    method: 'resourcesGoneSetup'
+                });
+                showModalEvent(o);
+            }
         }
     };
     const endgame = (good) => {
@@ -3674,11 +3782,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 const btnRestart = $('#playagain');
                 if (btnRestart) {
                     btnRestart.off('click').on('click', startNew);
+                    updatePlayAgainAvailability(btnRestart);
                 }
                 if (cheating) {
                     setTimeout(() => {
-                        console.log('go again');
-                       startNew();
+                        // console.log('go again');
+                    //    startNew();
                     }, 2000);
                 }
             });

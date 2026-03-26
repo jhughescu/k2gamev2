@@ -58,6 +58,8 @@ let dateToFilter = null;
 let pinnedSessionId = null; // Track pinned/toggled session highlight
 let facilitatorSocket = null;
 let refreshTimer = null;
+let loginOptions = null;
+let ttlInfo = null;
 
 function scheduleRealtimeRefresh(delayMs = 300) {
     if (refreshTimer) {
@@ -99,6 +101,11 @@ function connectFacilitatorSocket() {
         if (!countEl) return;
         const playerCount = Number.isFinite(payload.playerCount) ? payload.playerCount : 0;
         countEl.textContent = `Players connected: ${playerCount}`;
+
+        // Keep the session-limit "remaining" summary in sync with realtime activity.
+        if (currentAccess && Number.isInteger(currentAccess.sessionLimit) && currentAccess.sessionLimit > 0) {
+            scheduleRealtimeRefresh();
+        }
     });
 
     facilitatorSocket.on('authError', (data) => {
@@ -196,14 +203,106 @@ function showSuccess(message) {
     setTimeout(() => el.classList.remove('active'), 3000);
 }
 
+function initThemeToggle() {
+    const THEME_KEY = 'dashboard_theme';
+    const themeBtn = doc('themeToggleBtn');
+    
+    if (!themeBtn) return;
+
+    const syncThemeButton = () => {
+        const isDark = document.body.classList.contains('theme-dark');
+        themeBtn.textContent = isDark ? '☀' : '🌙';
+        themeBtn.title = isDark ? 'Disable dark mode' : 'Enable dark mode';
+        themeBtn.setAttribute('aria-label', themeBtn.title);
+    };
+
+    themeBtn.style.display = 'inline-block';
+    
+    // Restore theme preference on load
+    const savedTheme = localStorage.getItem(THEME_KEY);
+    if (savedTheme === 'dark') {
+        document.body.classList.add('theme-dark');
+    }
+    syncThemeButton();
+    
+    // Toggle theme on button click
+    themeBtn.addEventListener('click', () => {
+        document.body.classList.toggle('theme-dark');
+        const isDark = document.body.classList.contains('theme-dark');
+        localStorage.setItem(THEME_KEY, isDark ? 'dark' : 'light');
+        syncThemeButton();
+    });
+}
+
+function setSelectOptions(selectEl, options, placeholderText) {
+    if (!selectEl) return;
+    selectEl.innerHTML = '';
+
+    const placeholderOption = document.createElement('option');
+    placeholderOption.value = '';
+    placeholderOption.textContent = placeholderText;
+    selectEl.appendChild(placeholderOption);
+
+    for (const option of options) {
+        const item = document.createElement('option');
+        item.value = option.slug;
+        item.textContent = option.name;
+        selectEl.appendChild(item);
+    }
+
+    selectEl.value = '';
+}
+
+function populateCourseOptions() {
+    const type = doc('accessType').value;
+    const institutionSlug = doc('institutionSlug').value;
+    const courseSelect = doc('courseSlug');
+    if (!courseSelect) return;
+
+    if (type !== 'course' || !institutionSlug || !loginOptions) {
+        setSelectOptions(courseSelect, [], 'Select course');
+        courseSelect.disabled = true;
+        return;
+    }
+
+    const courseOptionsByInstitution = loginOptions.courseOptionsByInstitution || {};
+    const courseOptions = courseOptionsByInstitution[institutionSlug] || [];
+    setSelectOptions(courseSelect, courseOptions, 'Select course');
+    courseSelect.disabled = courseOptions.length === 0;
+}
+
+function handleInstitutionChange() {
+    populateCourseOptions();
+}
+
 function handleAccessTypeChange() {
     const type = doc('accessType').value;
-    const courseInput = doc('courseSlug');
-    if (type === 'institution') {
-        courseInput.value = '';
-        courseInput.disabled = true;
-    } else {
-        courseInput.disabled = false;
+    const institutionSelect = doc('institutionSlug');
+    if (!institutionSelect) return;
+
+    const institutions = type === 'course'
+        ? (loginOptions && loginOptions.courseTypeInstitutions) || []
+        : (loginOptions && loginOptions.institutionTypeInstitutions) || [];
+
+    setSelectOptions(institutionSelect, institutions, 'Select institution');
+    populateCourseOptions();
+}
+
+async function loadAccessLoginOptions() {
+    try {
+        const res = await secureApiCall(`${API_BASE}/login-options`);
+        if (!res || res.expired || !res.ok) {
+            throw new Error('Failed to load login options');
+        }
+        loginOptions = await res.json();
+    } catch (err) {
+        console.error('Login options load failed:', err);
+        showError('Unable to load login options');
+        loginOptions = {
+            institutionTypeInstitutions: [],
+            courseTypeInstitutions: [],
+            courseOptionsByInstitution: {}
+        };
     }
 }
 
@@ -219,25 +318,54 @@ function getSafeRedirectPath() {
     return redirect;
 }
 
+function updateLaunchLimitsInfo() {
+    const limitsEl = doc('launchLimitsInfo');
+    if (!limitsEl) return;
+
+    const parts = [];
+    if (Number.isInteger(currentAccess && currentAccess.sessionLimit) && currentAccess.sessionLimit > 0) {
+        const remaining = Math.max(0, currentAccess.sessionLimit - sessions.length);
+        parts.push(`Session limit: ${currentAccess.sessionLimit} (${remaining} remaining)`);
+    }
+
+    if (currentAccess && currentAccess.endDate) {
+        const parsed = new Date(currentAccess.endDate);
+        if (!Number.isNaN(parsed.getTime())) {
+            parts.push(`Session end date: ${parsed.toLocaleDateString()}`);
+        }
+    }
+
+    if (parts.length === 0) {
+        limitsEl.textContent = '';
+        limitsEl.style.display = 'none';
+        return;
+    }
+
+    limitsEl.textContent = parts.join(' | ');
+    limitsEl.style.display = 'block';
+}
+
 async function login(event) {
     if (event) event.preventDefault();
 
     const type = doc('accessType').value;
     const institutionSlug = doc('institutionSlug').value.trim().toLowerCase();
     const courseSlug = doc('courseSlug').value.trim().toLowerCase();
+    const firstName = doc('firstName').value.trim();
+    const surname = doc('surname').value.trim();
     const password = doc('password').value;
 
-    if (!institutionSlug || !password) {
-        showError('Institution slug and password are required');
+    if (!institutionSlug || !firstName || !surname || !password) {
+        showError('Institution, first name, surname, and password are required');
         return;
     }
 
     if (type === 'course' && !courseSlug) {
-        showError('Course slug is required for course access');
+        showError('Course is required for course access');
         return;
     }
 
-    const payload = { type, institutionSlug, password };
+    const payload = { type, institutionSlug, firstName, surname, password };
     if (type === 'course') {
         payload.courseSlug = courseSlug;
     }
@@ -281,6 +409,7 @@ function showSessionsSection() {
 
     const accessTitle = doc('accessTitle');
     const accessSubtitle = doc('accessSubtitle');
+    const accessFacilitator = doc('accessFacilitator');
 
     const institutionLabel = currentAccess.institutionName || currentAccess.institutionSlug || 'Institution';
     let courseLabel = 'All courses';
@@ -290,11 +419,28 @@ function showSessionsSection() {
 
     if (accessTitle) accessTitle.textContent = institutionLabel;
     if (accessSubtitle) accessSubtitle.textContent = `Course: ${courseLabel}`;
+    
+    // Display facilitator name if available
+    if (accessFacilitator) {
+        const firstName = currentAccess.firstName || '';
+        const surname = currentAccess.surname || '';
+        const facilitatorName = `${firstName} ${surname}`.trim();
+        accessFacilitator.textContent = facilitatorName ? `Facilitator: ${facilitatorName}` : '';
+    }
 
     connectFacilitatorSocket();
+
+        // Hide delete button if this key has a session limit — deleting sessions would
+        // circumvent the cap, so the option is removed entirely for such keys.
+        const deleteBtn = doc('deleteSelectedBtn');
+        if (deleteBtn) {
+            deleteBtn.style.display = (currentAccess.sessionLimit > 0) ? 'none' : '';
+        }
     
     // Load game data for quiz display
     loadGameData();
+
+    updateLaunchLimitsInfo();
     
     // Load launch URL and QR code for course-level access
     loadLaunchUrl();
@@ -366,6 +512,9 @@ async function loadLaunchUrl() {
         card.style.display = 'none';
         return;
     }
+
+    updateLaunchLimitsInfo();
+
     const countEl = doc('launchPlayerCount');
     if (countEl) {
         countEl.textContent = 'Players connected: 0';
@@ -399,10 +548,81 @@ async function loadSessions() {
         }
         const data = await res.json();
         sessions = data.sessions || [];
+        ttlInfo = data.ttlInfo || null;
+        updateLaunchLimitsInfo();
         renderSessions();
     } catch (err) {
         showError('Failed to load sessions: ' + err.message);
     }
+}
+
+function formatTtlStatus(session) {
+    const ttl = session && session.ttl ? session.ttl : null;
+    if (!ttl || !ttl.expiresAt) {
+        return {
+            label: 'TTL not set',
+            color: '#6b7280',
+            bg: '#f3f4f6'
+        };
+    }
+
+    if (ttl.isOverdueDeletion) {
+        return {
+            label: 'Pending deletion',
+            color: '#7f1d1d',
+            bg: '#fee2e2'
+        };
+    }
+
+    const daysLeft = Number(ttl.daysUntilDeletion);
+    if (!Number.isFinite(daysLeft)) {
+        return {
+            label: 'Deletion date unknown',
+            color: '#6b7280',
+            bg: '#f3f4f6'
+        };
+    }
+
+    if (daysLeft <= 1) {
+        return {
+            label: 'Expires in < 24h',
+            color: '#7f1d1d',
+            bg: '#fee2e2'
+        };
+    }
+
+    if (ttl.isNearDeletion) {
+        return {
+            label: `Expires in ${daysLeft} days`,
+            color: '#7c2d12',
+            bg: '#ffedd5'
+        };
+    }
+
+    return {
+        label: `Expires in ${daysLeft} days`,
+        color: '#14532d',
+        bg: '#dcfce7'
+    };
+}
+
+function updateFacilitatorTtlSummary(totalShown) {
+    const subtitle = doc('accessSubtitle');
+    if (!subtitle) return;
+
+    const warningWindowDays = ttlInfo && Number.isInteger(ttlInfo.warningWindowDays)
+        ? ttlInfo.warningWindowDays
+        : 14;
+    const nearDeletionCount = ttlInfo && Number.isInteger(ttlInfo.nearDeletionCount)
+        ? ttlInfo.nearDeletionCount
+        : 0;
+
+    if (totalShown <= 0) {
+        subtitle.textContent = `No sessions currently visible.`;
+        return;
+    }
+
+    subtitle.textContent = `Sessions close to deletion (next ${warningWindowDays} days): ${nearDeletionCount} of ${totalShown}`;
 }
 
 async function loadGameData() {
@@ -495,9 +715,12 @@ function renderSessions() {
     }
 
     if (filteredSessions.length === 0) {
+        updateFacilitatorTtlSummary(0);
         container.innerHTML = '<p class="muted">No sessions match the filter.</p>';
         return;
     }
+
+    updateFacilitatorTtlSummary(filteredSessions.length);
     
     // Calculate pagination
     const totalPages = Math.ceil(filteredSessions.length / sessionsPerPage);
@@ -523,6 +746,10 @@ function renderSessions() {
         // Team country - enriched from gameData on backend
         const teamStr = s.teamCountry ? `Team: ${s.teamCountry}` : (s.teamRef ? `Team Ref: ${s.teamRef}` : 'Team: N/A');
         const isChecked = s.uniqueID && selectedSessionIds.has(s.uniqueID) ? 'checked' : '';
+        const ttlBadge = formatTtlStatus(s);
+        const expiryDateText = s.ttl && s.ttl.expiresAt
+            ? new Date(s.ttl.expiresAt).toLocaleDateString()
+            : 'unknown';
         
         return `
             <div class="institution-item" data-session-id="${s.uniqueID}">
@@ -536,6 +763,10 @@ function renderSessions() {
                 <div style="color: #666; font-size: 0.9em;">
                     <div>${teamStr}</div>
                     <div>ID: ${s.uniqueID}</div>
+                    <div>
+                        <span style="display: inline-block; margin-top: 6px; padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; color: ${ttlBadge.color}; background: ${ttlBadge.bg};">${ttlBadge.label}</span>
+                        <span style="margin-left: 8px; color: #555; font-size: 12px;">Delete on: ${expiryDateText}</span>
+                    </div>
                 </div>
                 <div style="position: absolute; right: 10px; bottom: 10px;">
                     <input type="checkbox" class="sessionSelect" data-id="${s.uniqueID}" aria-label="Select session ${s.name || s.uniqueID}" ${isChecked}>
@@ -1020,8 +1251,58 @@ async function deleteSelectedSessions() {
     }
 }
 
+function getDownloadFilenameFromDisposition(disposition, fallback = 'k2_sessions_export.json') {
+    if (!disposition) return fallback;
+    const utfMatch = disposition.match(/filename\*=UTF-8''([^;]+)/i);
+    if (utfMatch && utfMatch[1]) {
+        return decodeURIComponent(utfMatch[1]);
+    }
+    const basicMatch = disposition.match(/filename="?([^";]+)"?/i);
+    if (basicMatch && basicMatch[1]) {
+        return basicMatch[1];
+    }
+    return fallback;
+}
+
+async function downloadAccessData() {
+    try {
+        const res = await secureApiCall(`${API_BASE}/export-sessions`, {
+            method: 'GET',
+            headers: { 'Accept': 'application/json' }
+        });
+
+        if (!res || res.expired) {
+            return;
+        }
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            showError(err.error || 'Failed to export data');
+            return;
+        }
+
+        const blob = await res.blob();
+        const disposition = res.headers.get('Content-Disposition') || res.headers.get('content-disposition');
+        const fileName = getDownloadFilenameFromDisposition(disposition);
+
+        const objectUrl = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = objectUrl;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(objectUrl);
+
+        showSuccess('Data export downloaded');
+    } catch (err) {
+        console.error('Download data error:', err);
+        showError('Failed to download data export');
+    }
+}
+
 doc('loginForm').addEventListener('submit', login);
 doc('accessType').addEventListener('change', handleAccessTypeChange);
+doc('institutionSlug').addEventListener('change', handleInstitutionChange);
 doc('logoutBtn').addEventListener('click', logout);
 
 // Add filter checkbox listener
@@ -1075,6 +1356,11 @@ document.addEventListener('DOMContentLoaded', () => {
         deleteBtn.addEventListener('click', deleteSelectedSessions);
     }
 
+    const downloadBtn = doc('downloadDataBtn');
+    if (downloadBtn) {
+        downloadBtn.addEventListener('click', downloadAccessData);
+    }
+
     // Copy launch URL button
     const copyLaunchBtn = doc('copyLaunchUrlBtn');
     if (copyLaunchBtn) {
@@ -1095,6 +1381,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     updateClearDatesButtonState();
+    initThemeToggle();
 });
 
 // Ensure saved selections are available before auth check
@@ -1102,6 +1389,7 @@ loadSavedState();
 
 // Check auth on page load
 (async () => {
-    await checkAuth();
+    await loadAccessLoginOptions();
     handleAccessTypeChange();
+    await checkAuth();
 })();

@@ -1,6 +1,6 @@
 {
     "name": "k2gamev2",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": "K2 game second version",
     "keywords": [],
     "author": "John Hughes",
@@ -38,6 +38,12 @@
         "generate-build-info": "node generate_build_info.js",
         "dev": "nodemon --exec \"npm run generate-build-info && node\" app.js",
         "start": "node app.js",
+        "ttl:backfill:dry": "node scripts/backfill-session-ttl.js",
+        "ttl:backfill:apply": "node scripts/backfill-session-ttl.js --apply",
+        "archive:backfill:dry": "node scripts/backfill-session-archive-expiry.js",
+        "archive:backfill:apply": "node scripts/backfill-session-archive-expiry.js --apply",
+        "retention:dry": "node scripts/run-session-retention.js",
+        "retention:apply": "node scripts/run-session-retention.js --apply",
         "free-port": "kill-port 3030"
     },
     "main": "app.js",

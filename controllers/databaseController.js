@@ -17,6 +17,87 @@ const documentId = new ObjectId('6763417558a5471d1c0f12ea');
 
 let quizMongoose = null;
 
+const parseBool = (value, fallback = true) => {
+    if (typeof value === 'boolean') return value;
+    if (typeof value !== 'string') return fallback;
+    const v = value.trim().toLowerCase();
+    if (['1', 'true', 'yes', 'on'].includes(v)) return true;
+    if (['0', 'false', 'no', 'off'].includes(v)) return false;
+    return fallback;
+};
+
+async function ensureSessionUniqueIndexes() {
+    try {
+        const existingIndexes = await Session.collection.indexes();
+        const hasUniqueIdIndex = existingIndexes.some((idx) =>
+            idx
+            && idx.unique === true
+            && idx.key
+            && idx.key.uniqueID === 1
+            && Object.keys(idx.key).length === 1
+        );
+        const hasNameIndex = existingIndexes.some((idx) =>
+            idx
+            && idx.unique === true
+            && idx.key
+            && idx.key.name === 1
+            && Object.keys(idx.key).length === 1
+        );
+
+        if (!hasUniqueIdIndex) {
+            await Session.collection.createIndex({ uniqueID: 1 }, { unique: true, name: 'uniqueID_1' });
+            console.log('Created missing unique index on Session.uniqueID');
+        }
+
+        if (!hasNameIndex) {
+            await Session.collection.createIndex({ name: 1 }, { unique: true, name: 'name_1' });
+            console.log('Created missing unique index on Session.name');
+        }
+
+        console.log('Session unique index verification completed.');
+    } catch (err) {
+        console.error('Error verifying Session unique indexes:', err);
+        throw err;
+    }
+}
+
+async function ensureSessionTtlIndex() {
+    try {
+        const existingIndexes = await Session.collection.indexes();
+        const ttlEnabled = parseBool(process.env.SESSION_TTL_INDEX_ENABLED, true);
+        const hasExpiresAtTtlIndex = existingIndexes.some((idx) =>
+            idx
+            && idx.key
+            && idx.key.expiresAt === 1
+            && Object.keys(idx.key).length === 1
+            && Number(idx.expireAfterSeconds) === 0
+        );
+
+        if (!ttlEnabled) {
+            if (hasExpiresAtTtlIndex) {
+                await Session.collection.dropIndex('expiresAt_1');
+                console.log('Dropped Session TTL index (expiresAt_1) because SESSION_TTL_INDEX_ENABLED=false.');
+            } else {
+                console.log('Session TTL index disabled and not present (SESSION_TTL_INDEX_ENABLED=false).');
+            }
+            return;
+        }
+
+        if (!hasExpiresAtTtlIndex) {
+            await Session.collection.createIndex(
+                { expiresAt: 1 },
+                { expireAfterSeconds: 0, name: 'expiresAt_1' }
+            );
+            console.log('Created missing TTL index on Session.expiresAt (expireAfterSeconds=0)');
+        } else {
+            console.log('Session TTL index verification completed (expiresAt_1 present).');
+        }
+    } catch (err) {
+        console.error('Error verifying Session TTL index:', err);
+        throw err;
+    }
+}
+
 // Connect to MongoDB and start change stream with resilience
 async function dbConnect() {
     try {
@@ -46,11 +127,13 @@ async function dbConnect() {
         console.log('DB connected');
 
         try {
-    await Session.init();
-    console.log('Session indexes ensured.');
-} catch (err) {
-    console.error('Error initializing Session indexes:', err);
-}
+            await Session.init();
+            console.log('Session schema indexes initialized.');
+            await ensureSessionUniqueIndexes();
+            await ensureSessionTtlIndex();
+        } catch (err) {
+            console.error('Error initializing/verifying Session indexes:', err);
+        }
 
         // Add connection event handlers for better diagnostics
         const db = mongoose.connection;

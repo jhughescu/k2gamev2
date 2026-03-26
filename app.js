@@ -105,6 +105,7 @@ const versionController = require('./controllers/versionController');
 const { initLocalAccess } = require('./controllers/localAccessController');
 const authController = require('./controllers/authController');
 const { initSocket } = require('./controllers/socketController');
+const { startSessionRetentionScheduler } = require('./controllers/sessionRetentionController');
 
 // Apply security middleware early with CSP configuration
 app.use(helmet({
@@ -196,6 +197,7 @@ require('./controllers/routeController');
 
 //initLocalAccess();
 databaseController.dbConnect();
+startSessionRetentionScheduler();
 initSocket(server);
 if (isDevMode) {
     server.listen(PORT, HOST, () => {

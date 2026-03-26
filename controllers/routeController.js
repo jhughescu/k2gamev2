@@ -22,6 +22,8 @@ const authController = require('./authController');
 const Institution = require('../models/institution');
 const adminController = require('./adminController');
 const QRCode = require('qrcode');
+const AccessKey = require('../models/accessKey');
+const Session = require('../models/session');
 
 const hasGamePageAccess = (req, instSlug, courseSlug) => {
     const session = req.session || {};
@@ -93,7 +95,9 @@ app.get('/facilitator', authController.requireSessionAccess, (req, res) => {
 app.post('/access/login', authController.authLimiter, authController.accessLogin);
 app.post('/access/logout', authController.authLimiter, authController.accessLogout);
 app.get('/access/check', authController.authLimiter, authController.checkAccess);
+app.get('/access/login-options', authController.authLimiter, authController.getAccessLoginOptions);
 app.get('/access/sessions', authController.requireSessionAccess, sessionController.listSessionsForAccess);
+app.get('/access/export-sessions', authController.requireSessionAccess, sessionController.exportSessionsForAccess);
 app.get('/access/gamedata', authController.requireSessionAccess, (req, res) => {
     // Return gameData for quiz/team info
     sessionController.getGameData((data) => {
@@ -158,7 +162,8 @@ app.get('/access/launch-url', authController.requireSessionAccess, async (req, r
             return res.status(404).json({ error: 'Launch token not found for this course' });
         }
         const baseUrl = `${req.protocol}://${req.get('host')}`;
-        const launchUrl = `${baseUrl}/play/${course.launchToken}`;
+        const keyParam = access.accessKeyId ? `?ak=${encodeURIComponent(access.accessKeyId)}` : '';
+        const launchUrl = `${baseUrl}/play/${course.launchToken}${keyParam}`;
         const qrDataUrl = await QRCode.toDataURL(launchUrl, { width: 300, margin: 2 });
         res.json({ launchUrl, qrDataUrl });
     } catch (err) {
@@ -193,6 +198,7 @@ app.get('/entry', (req, res) => {
 
 app.get('/play/:token', async (req, res) => {
     const token = (req.params.token || '').toLowerCase().trim();
+    const launchAccessKeyId = (req.query.ak || '').toString().trim();
     if (!token) {
         return res.redirect('/');
     }
@@ -206,13 +212,83 @@ app.get('/play/:token', async (req, res) => {
             return res.redirect('/');
         }
 
+        const instSlug = (inst.slug || '').toLowerCase();
+        const courseSlug = (course.slug || '').toLowerCase();
+        let scopedAccessKey = null;
+        if (launchAccessKeyId) {
+            scopedAccessKey = await AccessKey.findOne({
+                _id: launchAccessKeyId,
+                active: true,
+                institutionSlug: instSlug,
+                type: 'course',
+                courseSlug: courseSlug
+            }).lean();
+            if (!scopedAccessKey) {
+                return res.redirect('/');
+            }
+        }
+
+        // Allow a browser to continue an already-bound in-progress session even
+        // when the course limit has since been exhausted.
+        const boundPlayerSession = req.session && req.session.playerSession ? req.session.playerSession : null;
+        if (boundPlayerSession && boundPlayerSession.uniqueID) {
+            const sameScope =
+                (boundPlayerSession.institutionSlug || '').toLowerCase() === instSlug &&
+                (boundPlayerSession.courseSlug || '').toLowerCase() === courseSlug;
+            if (sameScope) {
+                const boundAccessKeyId = (boundPlayerSession.accessKeyId || '').toString().trim();
+                const requiresKeyMatch = !!(launchAccessKeyId || boundAccessKeyId);
+                const keyMatches = !requiresKeyMatch || boundAccessKeyId === launchAccessKeyId;
+                const existingSession = await Session.findOne({
+                    uniqueID: boundPlayerSession.uniqueID,
+                    institution: instSlug,
+                    course: courseSlug
+                }).lean();
+                if (existingSession && keyMatches) {
+                    const sessionState = String(existingSession.state || '').toLowerCase();
+                    if (!sessionState.startsWith('completed')) {
+                        req.session.access = {
+                            type: 'course',
+                            institutionSlug: instSlug,
+                            institutionName: inst.title || inst.slug,
+                            courseSlug: courseSlug,
+                            courseName: course.name || course.slug,
+                            label: 'launch-link',
+                            accessKeyId: scopedAccessKey ? String(scopedAccessKey._id) : undefined,
+                            sessionLimit: scopedAccessKey && Number.isInteger(scopedAccessKey.sessionLimit) ? scopedAccessKey.sessionLimit : undefined
+                        };
+                        req.session.isAuthenticated = true;
+                        req.session.role = 'access';
+                        return req.session.save((err) => {
+                            if (err) {
+                                console.error('Session save failed on /play/:token (bound session):', err);
+                                return res.redirect('/');
+                            }
+                            return res.sendFile(path.join(basePath, 'game.html'));
+                        });
+                    }
+                }
+            }
+            delete req.session.playerSession;
+        }
+
+        // Enforce session limit if one applies to this institution/course
+        if (scopedAccessKey && Number.isInteger(scopedAccessKey.sessionLimit) && scopedAccessKey.sessionLimit > 0) {
+            const sessionCount = await Session.countDocuments({ accessKeyId: String(scopedAccessKey._id) });
+            if (sessionCount >= scopedAccessKey.sessionLimit) {
+                return res.redirect('/sessions-exhausted');
+            }
+        }
+
         req.session.access = {
             type: 'course',
-            institutionSlug: (inst.slug || '').toLowerCase(),
+            institutionSlug: instSlug,
             institutionName: inst.title || inst.slug,
-            courseSlug: (course.slug || '').toLowerCase(),
+            courseSlug: courseSlug,
             courseName: course.name || course.slug,
-            label: 'launch-link'
+            label: 'launch-link',
+            accessKeyId: scopedAccessKey ? String(scopedAccessKey._id) : undefined,
+            sessionLimit: scopedAccessKey && Number.isInteger(scopedAccessKey.sessionLimit) ? scopedAccessKey.sessionLimit : undefined
         };
         req.session.isAuthenticated = true;
         req.session.role = 'access';
@@ -229,6 +305,44 @@ app.get('/play/:token', async (req, res) => {
     }
 });
 
+app.get('/facilitator/play/:token', async (req, res) => {
+    const token = (req.params.token || '').toLowerCase().trim();
+    if (!token) {
+        return res.redirect('/facilitator/login');
+    }
+    try {
+        const inst = await Institution.findOne({ 'courses.launchToken': token }).lean();
+        if (!inst || !Array.isArray(inst.courses)) {
+            return res.redirect('/facilitator/login');
+        }
+        const course = inst.courses.find((c) => ((c.launchToken || '').toLowerCase() === token));
+        if (!course) {
+            return res.redirect('/facilitator/login');
+        }
+
+        req.session.access = {
+            type: 'course',
+            institutionSlug: (inst.slug || '').toLowerCase(),
+            institutionName: inst.title || inst.slug,
+            courseSlug: (course.slug || '').toLowerCase(),
+            courseName: course.name || course.slug,
+            label: 'facilitator-launch-link'
+        };
+        req.session.isAuthenticated = true;
+        req.session.role = 'access';
+        req.session.save((err) => {
+            if (err) {
+                console.error('Session save failed on /facilitator/play/:token:', err);
+                return res.redirect('/facilitator/login');
+            }
+            return res.redirect('/facilitator');
+        });
+    } catch (err) {
+        console.error('Error in /facilitator/play/:token route:', err && err.message ? err.message : err);
+        return res.redirect('/facilitator/login');
+    }
+});
+
 app.get(`/game/:institution/:course`, (req, res) => {
     res.redirect('/');
 });
@@ -239,6 +353,9 @@ app.get(`/`, (req, res) => {
     setNoStoreHeaders(res);
     res.sendFile(path.join(basePath, 'flat', 'entry.html'));
     //    res.sendFile('../public/flat/index.html');
+});
+app.get('/sessions-exhausted', (req, res) => {
+    res.sendFile(path.join(basePath, 'flat', 'sessions-exhausted.html'));
 });
 app.get('/testuser', (req, res) => {
     const username = req.query.user;
@@ -365,10 +482,24 @@ app.delete('/admin/api/institutions/:id', adminController.adminAuth, adminContro
 app.post('/admin/api/admin-users', authController.requireSuperuser, adminController.createAdminUser);
 app.get('/admin/api/admin-users', authController.requireSuperuser, adminController.listAdminUsers);
 app.post('/admin/api/admin-users/:id/reset-password', authController.requireSuperuser, adminController.resetAdminPassword);
+app.post('/admin/api/admin-users/:id/set-password', authController.requireSuperuser, adminController.setAdminPassword);
+app.get('/admin/api/retention/runs', authController.requireSuperuser, adminController.getRetentionRuns);
+app.get('/admin/api/retention/archives', authController.requireSuperuser, adminController.getRetentionArchives);
+app.get('/admin/api/retention/config', authController.requireAdmin, adminController.getRetentionConfig);
 app.post('/admin/api/access-keys', authController.requireAdmin, adminController.createAccessKey);
 app.get('/admin/api/access-keys', authController.requireAdmin, adminController.listAccessKeys);
+app.get('/admin/api/sessions', authController.requireAdmin, adminController.listAllSessions);
+app.post('/admin/api/sessions/generate', authController.requireAdmin, adminController.createGeneratedSessions);
+app.post('/admin/api/sessions/export-selected', authController.requireAdmin, adminController.exportSelectedSessions);
+app.get('/admin/api/sessions/highest-name-number', authController.requireAdmin, adminController.getHighestSessionNameNumber);
+app.get('/admin/api/sessions/stats/state', authController.requireAdmin, adminController.getSessionStateStats);
+app.delete('/admin/api/sessions', authController.requireAdmin, adminController.deleteSessionsByIds);
+app.post('/admin/api/restore/upload', authController.requireAdmin, adminController.uploadRestorePackage);
+app.get('/admin/api/restore/jobs/:id', authController.requireAdmin, adminController.getRestoreJobStatus);
 app.patch('/admin/api/access-keys/:id/active', authController.requireAdmin, adminController.setAccessKeyActive);
 app.patch('/admin/api/access-keys/:id/password', authController.requireAdmin, adminController.updateAccessKeyPassword);
+app.get('/admin/api/access-keys/:id/export-sessions', authController.requireAdmin, adminController.exportAccessKeySessions);
+app.delete('/admin/api/access-keys/:id', authController.requireAdmin, adminController.deleteAccessKey);
 
 // 404 handler - must be last
 app.use((req, res) => {

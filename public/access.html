@@ -9,9 +9,16 @@
 <body>
     <main id="mainContent">
     <div class="container">
-        <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
-            <h1>Facilitator Dashboard</h1>
-            <button class="logout-btn" id="logoutBtn" style="display: none; padding: 8px 16px; background: #0050a8; color: white; border: 1px solid #003f85; border-radius: 3px; cursor: pointer; font-size: 13px; font-weight: 500;">Logout</button>
+        <header class="facilitator-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+            <div class="facilitator-header-title">
+                <img class="facilitator-header-logo logo-light" src="/assets/cranfield/dwf_cuLogo.svg" alt="Cranfield University logo">
+                <img class="facilitator-header-logo logo-dark" src="/assets/cranfield/logo-white.png" alt="Cranfield University logo">
+                <h1>Facilitator Dashboard</h1>
+            </div>
+            <div class="theme-toggle-section">
+                <button class="theme-toggle-btn" id="themeToggleBtn" title="Enable dark mode" aria-label="Enable dark mode">🌙</button>
+                <button class="logout-btn" id="logoutBtn" style="display: none;">Logout</button>
+            </div>
         </header>
 
         <div id="errorMsg" class="error"></div>
@@ -31,12 +38,24 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="institutionSlug">Institution slug (e.g., cu)</label>
-                    <input type="text" id="institutionSlug" placeholder="cu" autocomplete="off">
+                    <label for="institutionSlug">Institution</label>
+                    <select id="institutionSlug">
+                        <option value="">Select institution</option>
+                    </select>
                 </div>
                 <div class="form-group">
-                    <label for="courseSlug">Course slug (only for COU)</label>
-                    <input type="text" id="courseSlug" placeholder="lead" autocomplete="off" disabled>
+                    <label for="courseSlug">Course</label>
+                    <select id="courseSlug" disabled>
+                        <option value="">Select course</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="firstName">First name</label>
+                    <input type="text" id="firstName" placeholder="First name" autocomplete="given-name">
+                </div>
+                <div class="form-group">
+                    <label for="surname">Surname</label>
+                    <input type="text" id="surname" placeholder="Surname" autocomplete="family-name">
                 </div>
                 <div class="form-group">
                     <label for="password">Password</label>
@@ -51,6 +70,7 @@
             <div class="section-card">
                 <h2 id="accessTitle" style="margin-bottom: 6px;"></h2>
                 <p id="accessSubtitle" style="color: #666; margin-bottom: 16px;"></p>
+                <p id="accessFacilitator" style="color: #666; margin-bottom: 16px;"></p>
 
                 <!-- Game Launch URL (course-level access only) -->
                 <div id="launchUrlCard" style="display: none; margin-bottom: 20px; padding: 14px; background: #eef3f8; border: 1px solid #c5d8ef; border-radius: 4px;">
@@ -70,6 +90,7 @@
                                 style="width: 140px; height: 140px; display: block; border: 1px solid #c5d8ef; border-radius: 4px; background: #fff;">
                         </div>
                     </div>
+                    <div id="launchLimitsInfo" style="display: none; margin-top: 10px; color: #173a5e; font-size: 13px;"></div>
                     <div style="margin-top: 10px; display: flex; justify-content: flex-start; align-items: center; gap: 8px; color: #173a5e; font-size: 13px;">
                         <span style="width: 8px; height: 8px; border-radius: 50%; background: #2e7d32; display: inline-block;"></span>
                         <span id="launchPlayerCount">Players connected: 0</span>
@@ -88,6 +109,7 @@
                                 <input type="date" id="dateTo" style="padding: 6px; border: 1px solid #ccc; border-radius: 3px;">
                             </div>
                             <button id="clearDatesBtn" style="padding: 6px 12px; background: #0050a8; color: white; border: 1px solid #003f85; border-radius: 3px; cursor: pointer; font-size: 13px; font-weight: 500;">Clear</button>
+                            <button id="downloadDataBtn" style="padding: 6px 12px; background: #2e7d32; color: white; border: 1px solid #1b5e20; border-radius: 3px; cursor: pointer; font-size: 13px; font-weight: 500;">Download Data</button>
                             <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
                                 <input type="checkbox" id="showCompletedOnly" style="cursor: pointer;">
                                 <span>Show completed only</span>

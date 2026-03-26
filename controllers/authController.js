@@ -6,6 +6,7 @@ const bcrypt = require('bcryptjs');
 const User = require('../models/user');
 const AccessKey = require('../models/accessKey');
 const Institution = require('../models/institution');
+const Session = require('../models/session');
 const { doubleCsrfProtection } = require('./csrfConfig');
 require('dotenv').config();
 
@@ -294,17 +295,115 @@ const logout = (req, res) => {
     });
 };
 
-const accessLogin = async (req, res) => {
-    const { type, institutionSlug, courseSlug, password, label } = req.body || {};
-    if (!type || !institutionSlug || !password) {
-        return res.status(400).json({ error: 'Bad Request', message: 'type, institutionSlug, and password are required' });
+const normalizeAccessName = (value) => (value || '').toString().trim().toLowerCase();
+
+const getAccessLoginOptions = async (req, res) => {
+    try {
+        const sessionInstitutionValues = await Session.distinct('institution');
+        const institutionSlugsWithSessions = new Set(
+            (sessionInstitutionValues || [])
+                .map((value) => (value || '').toString().trim().toLowerCase())
+                .filter(Boolean)
+        );
+
+        const activeKeys = await AccessKey.find({
+            active: true,
+            firstName: { $exists: true, $ne: '' },
+            surname: { $exists: true, $ne: '' }
+        })
+            .select('type institutionSlug courseSlug')
+            .lean();
+
+        const institutionDocs = await Institution.find()
+            .select('slug title courses.slug courses.name')
+            .lean();
+
+        const institutionNameBySlug = new Map();
+        const courseNameByInstitutionAndSlug = new Map();
+
+        for (const inst of institutionDocs) {
+            const instSlug = (inst.slug || '').toLowerCase();
+            if (!instSlug) continue;
+            institutionNameBySlug.set(instSlug, inst.title || instSlug);
+
+            const courseNameBySlug = new Map();
+            for (const course of (inst.courses || [])) {
+                const courseSlug = (course.slug || '').toLowerCase();
+                if (!courseSlug) continue;
+                courseNameBySlug.set(courseSlug, course.name || courseSlug);
+            }
+            courseNameByInstitutionAndSlug.set(instSlug, courseNameBySlug);
+        }
+
+        const institutionTypeInstitutionSlugs = new Set(institutionSlugsWithSessions);
+        const courseTypeInstitutionSlugs = new Set(institutionSlugsWithSessions);
+        const courseSlugsByInstitution = new Map();
+
+        for (const key of activeKeys) {
+            const type = (key.type || '').toLowerCase();
+            const instSlug = (key.institutionSlug || '').toLowerCase();
+            if (!instSlug) continue;
+
+            if (type === 'course') {
+                const courseSlug = (key.courseSlug || '').toLowerCase();
+                if (!courseSlug) continue;
+                const existing = courseSlugsByInstitution.get(instSlug) || new Set();
+                existing.add(courseSlug);
+                courseSlugsByInstitution.set(instSlug, existing);
+            }
+        }
+
+        const toInstitutionList = (slugSet) => {
+            return Array.from(slugSet)
+                .map((slug) => ({
+                    slug,
+                    name: institutionNameBySlug.get(slug) || slug
+                }))
+                .sort((a, b) => a.name.localeCompare(b.name));
+        };
+
+        const courseOptionsByInstitution = {};
+        for (const [instSlug, courseSlugSet] of courseSlugsByInstitution.entries()) {
+            const namesMap = courseNameByInstitutionAndSlug.get(instSlug) || new Map();
+            const courseOptions = Array.from(courseSlugSet)
+                .map((slug) => ({
+                    slug,
+                    name: namesMap.get(slug) || slug
+                }))
+                .sort((a, b) => a.name.localeCompare(b.name));
+            courseOptionsByInstitution[instSlug] = courseOptions;
+        }
+
+        res.json({
+            institutionTypeInstitutions: toInstitutionList(institutionTypeInstitutionSlugs),
+            courseTypeInstitutions: toInstitutionList(courseTypeInstitutionSlugs),
+            courseOptionsByInstitution
+        });
+    } catch (err) {
+        console.error('Error loading access login options:', err);
+        res.status(500).json({ error: 'Failed to load access login options' });
     }
+};
+
+const accessLogin = async (req, res) => {
+    const { type, institutionSlug, courseSlug, password, firstName, surname } = req.body || {};
+    if (!type || !institutionSlug || !password || !firstName || !surname) {
+        return res.status(400).json({
+            error: 'Bad Request',
+            message: 'type, institutionSlug, firstName, surname, and password are required'
+        });
+    }
+
     const normalizedType = type.toLowerCase();
     if (!['institution', 'course'].includes(normalizedType)) {
         return res.status(400).json({ error: 'Bad Request', message: 'Invalid type' });
     }
+
     const inst = (institutionSlug || '').toLowerCase();
     const course = (courseSlug || '').toLowerCase();
+    const normalizedFirstName = normalizeAccessName(firstName);
+    const normalizedSurname = normalizeAccessName(surname);
+
     const query = { type: normalizedType, institutionSlug: inst, active: true };
     if (normalizedType === 'course') {
         if (!course) {
@@ -312,41 +411,61 @@ const accessLogin = async (req, res) => {
         }
         query.courseSlug = course;
     }
-    const key = await AccessKey.findOne(query);
-    if (!key) {
+
+    const keys = await AccessKey.find(query);
+    if (!keys.length) {
         return res.status(401).json({ error: 'Unauthorized', message: 'Invalid access credentials' });
     }
-    const ok = await verifyPassword(password, key.passwordHash);
-    if (!ok) {
+
+    let matchedKey = null;
+    for (const key of keys) {
+        const keyFirstName = normalizeAccessName(key.firstName);
+        const keySurname = normalizeAccessName(key.surname);
+        if (keyFirstName !== normalizedFirstName || keySurname !== normalizedSurname) {
+            continue;
+        }
+
+        const ok = await verifyPassword(password, key.passwordHash);
+        if (ok) {
+            matchedKey = key;
+            break;
+        }
+    }
+
+    if (!matchedKey) {
         return res.status(401).json({ error: 'Unauthorized', message: 'Invalid access credentials' });
     }
-    key.lastUsedAt = new Date();
-    await key.save();
-    
-    // Fetch institution and course names
+
+    if (matchedKey.endDate && new Date() > new Date(matchedKey.endDate)) {
+        return res.status(403).json({ error: 'Forbidden', message: 'Access key has expired' });
+    }
+
+    matchedKey.lastUsedAt = new Date();
+    await matchedKey.save();
+
     const institution = await Institution.findOne({ slug: inst }).lean();
-    console.log('Institution lookup for slug:', inst, '-> Found:', institution);
     const institutionName = institution ? institution.title : inst;
     let courseName = null;
     if (normalizedType === 'course' && institution) {
         const courseObj = institution.courses.find(c => c.slug === course);
-        console.log('Course lookup for slug:', course, '-> Found:', courseObj);
         courseName = courseObj ? courseObj.name : course;
     }
-    
-    console.log('Setting access with names:', { institutionName, courseName });
-    
+
     req.session.access = {
+        accessKeyId: String(matchedKey._id),
         type: normalizedType,
         institutionSlug: inst,
         institutionName: institutionName,
         courseSlug: normalizedType === 'course' ? course : undefined,
         courseName: normalizedType === 'course' ? courseName : undefined,
-        label: label || key.label || undefined
+        label: matchedKey.label || undefined,
+        firstName: matchedKey.firstName || undefined,
+        surname: matchedKey.surname || undefined,
+        endDate: matchedKey.endDate || undefined,
+        sessionLimit: Number.isInteger(matchedKey.sessionLimit) ? matchedKey.sessionLimit : undefined
     };
-    // Do not elevate to admin; mark authenticated for access-only flows
     req.session.isAuthenticated = true;
-    req.session.role = 'access';  // Force role to 'access', even if previously logged in as admin
+    req.session.role = 'access';
     req.session.save((err) => {
         if (err) {
             console.error('Session save error:', err);
@@ -427,6 +546,7 @@ module.exports = {
     authLimiter,
     getEnvInfo,
     getCsrfToken,
+    getAccessLoginOptions,
     accessLogin,
     accessLogout,
     checkAccess,

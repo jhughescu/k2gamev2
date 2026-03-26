@@ -10,11 +10,18 @@
     <div class="container">
         <main id="mainContent">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
-                <div>
-                    <h1 id="dashboardHeading">Admin Portal</h1>
-                    <div id="buildInfoLine" class="build-info-line" style="display: none;"></div>
+                <div class="admin-header-title">
+                    <img class="admin-header-logo logo-light" src="/assets/cranfield/dwf_cuLogo.svg" alt="Cranfield University logo">
+                    <img class="admin-header-logo logo-dark" src="/assets/cranfield/logo-white.png" alt="Cranfield University logo">
+                    <div class="admin-header-copy">
+                        <h1 id="dashboardHeading">Admin Portal</h1>
+                        <div id="buildInfoLine" class="build-info-line" style="display: none;"></div>
+                    </div>
                 </div>
-                <button class="logout-btn" id="logoutBtn" style="display: none;">Logout</button>
+                <div class="theme-toggle-section">
+                    <button class="theme-toggle-btn" id="themeToggleBtn" title="Enable dark mode" aria-label="Enable dark mode">🌙</button>
+                    <button class="logout-btn" id="logoutBtn" style="display: none;">Logout</button>
+                </div>
             </div>
 
             <div id="errorMsg" class="error"></div>
@@ -38,12 +45,62 @@
 
         <!-- Admin Section -->
         <div id="adminSection" style="display: none;">
-            <!-- Create Institution Form -->
-            <div class="section-card">
-                <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px;">
-                    <h2 id="formTitle">Create Institution</h2>
-                    <button type="button" id="cancelEditBtn" class="secondary" style="display: none;">Cancel Edit</button>
+            <!-- Session Generator Section (Superuser only) -->
+            <div class="section-card" id="sessionGeneratorSection" data-panel-id="sessionGenerator" style="display: none;">
+                <div class="section-card-header">
+                    <h2>Session Generator <span style="color: #e74c3c; font-size: 0.8em;">(Superuser Only)</span></h2>
+                    <div class="section-card-actions">
+                        <button type="button" id="sessionGeneratorToggleBtn" class="secondary section-toggle-btn" aria-expanded="false" aria-controls="sessionGeneratorBody">Expand</button>
+                    </div>
                 </div>
+                <div id="sessionGeneratorBody" style="display: none;">
+                    <p class="muted">Generate test session payloads, save them to the database, and review the created payloads in the browser console.</p>
+                    <form id="sessionGeneratorForm" novalidate>
+                        <div class="form-group">
+                            <label for="sessionGeneratorStartDate">Start Date/Time</label>
+                            <input type="datetime-local" id="sessionGeneratorStartDate" required>
+                            <div id="sessionGeneratorRetentionPreview" class="muted" style="margin-top: 6px; font-size: 12px;">Retention preview unavailable.</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="sessionGeneratorInstitution">Institution</label>
+                            <select id="sessionGeneratorInstitution" required>
+                                <option value="">Select institution...</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="sessionGeneratorCourse">Course</label>
+                            <select id="sessionGeneratorCourse" required disabled>
+                                <option value="">Select course...</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="sessionGeneratorCount">Number of sessions</label>
+                            <input type="number" id="sessionGeneratorCount" min="1" step="1" value="10" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="sessionGeneratorAccessKeyId">Link to existing Access Key (optional)</label>
+                            <select id="sessionGeneratorAccessKeyId" disabled>
+                                <option value="">No Access Key</option>
+                            </select>
+                            <div class="muted" style="margin-top: 6px; font-size: 12px;">
+                                Only active Access Keys matching the selected institution/course are listed.
+                            </div>
+                        </div>
+                        <button type="submit" id="sessionGeneratorRunBtn">Generate Sessions</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Create Institution Form -->
+            <div class="section-card" data-panel-id="createInstitution">
+                <div class="section-card-header">
+                    <h2 id="formTitle">Create Institution</h2>
+                    <div class="section-card-actions">
+                        <button type="button" id="createInstitutionToggleBtn" class="secondary section-toggle-btn" aria-expanded="false" aria-controls="createInstitutionBody">Expand</button>
+                        <button type="button" id="cancelEditBtn" class="secondary" style="display: none;">Cancel Edit</button>
+                    </div>
+                </div>
+                <div id="createInstitutionBody" style="display: none;">
                 <form id="institutionForm" novalidate>
                     <div class="form-group">
                         <label for="instSlug">Slug (e.g., cu):</label>
@@ -72,44 +129,89 @@
                     </div>
                     <button type="submit" id="saveInstitutionBtn">Create Institution</button>
                 </form>
+                </div>
             </div>
 
             <!-- Institutions List -->
-            <div id="institutionList" class="institution-list active">
-                <h2>Institutions</h2>
-                <div id="institutionsContainer"></div>
+            <div class="section-card" data-panel-id="institutions" style="margin-top: 32px;">
+                <div class="section-card-header">
+                    <h2>Institutions</h2>
+                    <div class="section-card-actions">
+                        <button type="button" id="institutionsToggleBtn" class="secondary section-toggle-btn" aria-expanded="false" aria-controls="institutionsBody">Expand</button>
+                    </div>
+                </div>
+                <div id="institutionsBody" style="display: none;">
+                    <div id="institutionList" class="institution-list active">
+                        <div id="institutionsContainer"></div>
+                    </div>
+                </div>
             </div>
 
             <!-- Access Keys Section -->
-            <div class="section-card" style="margin-top: 32px;">
-                <h2>Access Keys (INS/COU)</h2>
+            <div class="section-card" data-panel-id="accessKeys" style="margin-top: 32px;">
+                <div class="section-card-header">
+                    <div class="section-title-with-help">
+                        <h2>Access Keys</h2>
+                        <button type="button" id="accessKeysHelpBtn" class="help-icon-btn" aria-label="What are access keys?" title="What are access keys?">?</button>
+                    </div>
+                    <div class="section-card-actions">
+                        <button type="button" id="accessKeysToggleBtn" class="secondary section-toggle-btn" aria-expanded="false" aria-controls="accessKeysBody">Expand</button>
+                    </div>
+                </div>
+                <div id="accessKeysBody" style="display: none;">
                 <form id="accessKeyForm" novalidate>
-                    <div class="form-group">
-                        <label for="accessType">Type</label>
-                        <select id="accessType">
-                            <option value="institution">Institution (INS)</option>
-                            <option value="course">Course (COU)</option>
-                        </select>
+                    <div class="access-key-top-columns">
+                        <div class="access-key-column access-key-column-left">
+                            <div class="form-group">
+                                <label for="accessType">Type</label>
+                                <select id="accessType">
+                                    <option value="institution">Institution (INS)</option>
+                                    <option value="course">Course (COU)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="accessInstSlug">Institution</label>
+                                <select id="accessInstSlug">
+                                    <option value="">Select institution...</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="accessCourseSlug">Course (only for COU)</label>
+                                <select id="accessCourseSlug">
+                                    <option value="">Select course...</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="access-key-column access-key-column-center">
+                        </div>
+                        <div class="access-key-column access-key-column-right">
+                            <div class="form-group">
+                                <label for="accessFirstName">Facilitator first name</label>
+                                <input type="text" id="accessFirstName" placeholder="First name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="accessSurname">Facilitator surname</label>
+                                <input type="text" id="accessSurname" placeholder="Surname" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="accessPassword">Password</label>
+                                <input type="text" id="accessPassword" placeholder="set a password" autocomplete="new-password">
+                            </div>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label for="accessInstSlug">Institution</label>
-                        <select id="accessInstSlug">
-                            <option value="">Select institution...</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="accessCourseSlug">Course (only for COU)</label>
-                        <select id="accessCourseSlug">
-                            <option value="">Select course...</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="accessPassword">Password</label>
-                        <input type="text" id="accessPassword" placeholder="set a password" autocomplete="new-password">
-                    </div>
-                    <div class="form-group">
-                        <label for="accessLabel">Label (optional)</label>
-                        <input type="text" id="accessLabel" placeholder="For reporting">
+                    <div class="access-key-row access-key-row-options">
+                        <div class="form-group">
+                            <label for="accessSessionLimit">Session limit (optional)</label>
+                            <input type="number" id="accessSessionLimit" min="1" step="1" placeholder="e.g. 20">
+                        </div>
+                        <div class="form-group">
+                            <label for="accessEndDate">Date limit (optional)</label>
+                            <input type="date" id="accessEndDate">
+                        </div>
+                        <div class="form-group access-label-group">
+                            <label for="accessLabel">Label (optional)</label>
+                            <input type="text" id="accessLabel" placeholder="For reporting">
+                        </div>
                     </div>
                     <button type="submit" id="createAccessKeyBtn">Create Access Key</button>
                 </form>
@@ -118,37 +220,184 @@
                     <h3 style="margin-bottom: 8px;">Existing Access Keys</h3>
                     <div id="accessKeysContainer"></div>
                 </div>
+                </div>
+            </div>
+
+            <!-- Restore Section -->
+            <div class="section-card" data-panel-id="restore" style="margin-top: 32px;">
+                <div class="section-card-header">
+                    <h2>Restore</h2>
+                    <div class="section-card-actions">
+                        <button type="button" id="restoreToggleBtn" class="secondary section-toggle-btn" aria-expanded="false" aria-controls="restoreBody">Expand</button>
+                    </div>
+                </div>
+                <div id="restoreBody" style="display: none;">
+                    <div class="restore-panel-copy">
+                        This panel can be used to restore data that may have been deleted in error, including reinstating deleted Access Keys when included in a valid restore package. It cannot be used to overwrite existing data, and upload packages must be correctly formatted.
+                    </div>
+                    <form id="restoreUploadForm" class="restore-upload-form" novalidate>
+                        <div class="restore-upload-box">
+                            <label for="restoreFileInput">Restore package</label>
+                            <input type="file" id="restoreFileInput" accept="application/json,.json">
+                            <div id="restoreFileMeta" class="restore-file-meta">No file selected.</div>
+                        </div>
+                        <div class="button-group" style="margin-top: 12px;">
+                            <button type="submit" id="restoreUploadBtn" disabled>Upload</button>
+                        </div>
+                    </form>
+                    <div id="restorePreviewPanel" class="restore-preview-panel" style="display: none;">
+                        <div class="restore-preview-header">
+                            <h3>Restore Preview</h3>
+                            <button type="button" id="restorePreviewCancelBtn" class="secondary" aria-label="Cancel preview">Cancel</button>
+                        </div>
+                        <div class="restore-preview-details">
+                            <div class="preview-detail-row">
+                                <span class="preview-label">Institution / Course:</span>
+                                <span id="restorePreviewType" class="preview-value">-</span>
+                            </div>
+                            <div class="preview-detail-row">
+                                <span class="preview-label">Sessions to Restore:</span>
+                                <span id="restorePreviewSessionCount" class="preview-value">-</span>
+                            </div>
+                            <div class="preview-detail-row">
+                                <span class="preview-label">Access Key:</span>
+                                <span id="restorePreviewAccessKey" class="preview-value">-</span>
+                            </div>
+                            <div class="preview-detail-row">
+                                <span class="preview-label">Exported At:</span>
+                                <span id="restorePreviewExportedAt" class="preview-value">-</span>
+                            </div>
+                            <div class="preview-detail-row">
+                                <span class="preview-label">Scope:</span>
+                                <span id="restorePreviewScope" class="preview-value">-</span>
+                            </div>
+                        </div>
+                        <div class="button-group" style="margin-top: 14px;">
+                            <button type="button" id="restoreCompleteBtn" class="primary">Complete Restore</button>
+                            <button type="button" id="restorePreviewCancelBtn2" class="secondary">Cancel</button>
+                        </div>
+                    </div>
+                    <div id="restoreStatusPanel" class="restore-status-panel" aria-live="polite" style="display: none;">
+                        <div id="restoreStatusSummary" class="restore-status-summary">No restore job running.</div>
+                        <div id="restoreStatusLog" class="restore-status-log">
+                            <div class="restore-status-line muted">Progress updates will appear here during restore.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Retention Review Section (Superuser only) -->
+            <div class="section-card" id="retentionReviewSection" data-panel-id="retentionReview" style="margin-top: 32px; display: none;">
+                <div class="section-card-header">
+                    <h2>Retention Runs <span style="color: #e74c3c; font-size: 0.8em;">(Superuser Only)</span></h2>
+                    <div class="section-card-actions">
+                        <button type="button" id="retentionToggleBtn" class="secondary section-toggle-btn" aria-expanded="false" aria-controls="retentionBody">Expand</button>
+                    </div>
+                </div>
+                <div id="retentionBody" style="display: none;">
+                    <div class="button-group" style="margin-top: 8px;">
+                        <button type="button" id="retentionRefreshBtn" class="secondary">Refresh</button>
+                    </div>
+                    <div id="retentionSummary" class="muted" style="margin-top: 8px;">No retention data loaded yet.</div>
+                    <div id="retentionRunsList" style="margin-top: 12px;"></div>
+                    <div id="retentionArchiveSummary" class="muted" style="margin-top: 14px;">No archive retention data loaded yet.</div>
+                    <label for="retentionArchivePendingOnly" style="display: inline-flex; align-items: center; gap: 8px; margin-top: 8px; cursor: pointer;">
+                        <input type="checkbox" id="retentionArchivePendingOnly" style="cursor: pointer;">
+                        <span>Show pending deletion only</span>
+                    </label>
+                    <div id="retentionArchiveList" style="margin-top: 12px;"></div>
+                </div>
+            </div>
+
+            <!-- Sessions Section -->
+            <div class="section-card" data-panel-id="sessions" style="margin-top: 32px;">
+                <div class="section-card-header">
+                    <h2>Sessions</h2>
+                    <div class="section-card-actions">
+                        <button type="button" id="sessionsToggleBtn" class="secondary section-toggle-btn" aria-expanded="false" aria-controls="sessionsBody">Expand</button>
+                    </div>
+                </div>
+                <div id="sessionsBody" style="display: none;">
+                    <div style="margin-top: 8px; color: #666; font-size: 13px;">All sessions currently stored in the database.</div>
+                    <div style="margin-top: 12px; display: flex; align-items: center; gap: 12px;">
+                        <button type="button" id="selectAllDbSessionsBtn" class="secondary small">Select all (0 total)</button>
+                        <button type="button" id="deleteSelectedSessionsBtn" class="danger small">Delete selected</button>
+                        <button type="button" id="downloadSelectedSessionsBtn" class="secondary small">Download selected</button>
+                        <span id="selectedSessionsCount" class="institution-slug">0 selected</span>
+                    </div>
+                    <div style="margin-top: 12px;" id="sessionsContainer"></div>
+                </div>
             </div>
 
             <!-- Admin Users Section (Superuser only) -->
-            <div class="section-card" id="adminUsersSection" style="margin-top: 32px; display: none;">
-                <h2>Admin Users <span style="color: #e74c3c; font-size: 0.8em;">(Superuser Only)</span></h2>
-                <form id="adminUserForm" novalidate>
-                    <div class="form-group">
-                        <label for="adminUsername">Username</label>
-                        <input type="text" id="adminUsername" placeholder="admin_username" autocomplete="off" required>
+            <div class="section-card" id="adminUsersSection" data-panel-id="adminUsers" style="margin-top: 32px; display: none;">
+                <div class="section-card-header">
+                    <h2>Admin Users <span style="color: #e74c3c; font-size: 0.8em;">(Superuser Only)</span></h2>
+                    <div class="section-card-actions">
+                        <button type="button" id="adminUsersToggleBtn" class="secondary section-toggle-btn" aria-expanded="false" aria-controls="adminUsersBody">Expand</button>
                     </div>
-                    <div class="form-group">
-                        <label for="adminPassword">Password</label>
-                        <input type="password" id="adminPassword" placeholder="set a secure password" autocomplete="new-password" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="adminRole">Role</label>
-                        <select id="adminRole">
-                            <option value="admin">Admin</option>
-                            <option value="superuser">Superuser</option>
-                        </select>
-                    </div>
-                    <button type="submit" id="createAdminUserBtn">Create Admin User</button>
-                </form>
+                </div>
+                <div id="adminUsersBody" style="display: none;">
+                    <form id="adminUserForm" novalidate>
+                        <div class="form-group">
+                            <label for="adminUsername">Username</label>
+                            <input type="text" id="adminUsername" placeholder="admin_username" autocomplete="off" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="adminPassword">Password</label>
+                            <input type="password" id="adminPassword" placeholder="set a password" autocomplete="new-password" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="adminRole">Role</label>
+                            <select id="adminRole">
+                                <option value="admin">Admin</option>
+                                <option value="superuser">Superuser</option>
+                            </select>
+                        </div>
+                        <button type="submit" id="createAdminUserBtn">Create Admin User</button>
+                    </form>
 
-                <div style="margin-top: 16px;">
-                    <h3 style="margin-bottom: 8px;">Existing Admin Users</h3>
-                    <div id="adminUsersContainer"></div>
+                    <div style="margin-top: 16px;">
+                        <h3 style="margin-bottom: 8px;">Existing Admin Users</h3>
+                        <div id="adminUsersContainer"></div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        </main>
+    </div>
+
+    <div id="accessKeysHelpModal" class="modal-overlay" aria-hidden="true">
+        <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="accessKeysHelpTitle">
+            <div class="modal-header">
+                <h3 id="accessKeysHelpTitle">About Access Keys</h3>
+                <button type="button" id="accessKeysHelpCloseBtn" class="modal-close-btn" aria-label="Close help dialog">Close</button>
+            </div>
+            <div class="modal-content">
+                <p>Access keys (AK) grant password-protected access to the Facilitator Dashboard, where facilitators can access the entry point for their instance of the K2 game and view/download the data produced.</p>
+                <p><strong>Institution keys</strong> grant access across all courses in the selected institution.</p>
+                <p><strong>Course keys</strong> limit access to one specific course.</p>
+                <p><strong>End date</strong> is optional and limits the time period during which the game can be played for that AK.</p>
+                <p><strong>Session limit</strong> is optional and caps how many sessions can be created for that AK.</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="generatedAccessKeyModal" class="modal-overlay" aria-hidden="true">
+        <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="generatedAccessKeyTitle">
+            <div class="modal-header">
+                <h3 id="generatedAccessKeyTitle">Generated Access Key Credentials</h3>
+                <button type="button" id="generatedAccessKeyCloseBtn" class="modal-close-btn" aria-label="Close credentials dialog">Close</button>
+            </div>
+            <div class="modal-content">
+                <p>This password is shown once for testing. Save it now.</p>
+                <pre id="generatedAccessKeyDetails" style="white-space: pre-wrap; word-break: break-word; margin: 0 0 12px 0;"></pre>
+                <div class="button-group">
+                    <button type="button" id="generatedAccessKeyCopyBtn">Copy Credentials</button>
                 </div>
             </div>
         </div>
-        </main>
     </div>
 
     <script src="/js/admin.js"></script>

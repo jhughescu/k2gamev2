@@ -6,6 +6,20 @@ const { getEventEmitter } = require('./../controllers/eventController');
 //const gameController = require('./controllers/gameController');
 //const dateController = require('./controllers/dateController');
 const eventEmitter = getEventEmitter();
+const DEFAULT_SESSION_RETENTION_DAYS = 90;
+
+const getSessionRetentionDays = () => {
+    const raw = Number(process.env.SESSION_RETENTION_DAYS);
+    if (Number.isInteger(raw) && raw > 0) {
+        return raw;
+    }
+    return DEFAULT_SESSION_RETENTION_DAYS;
+};
+
+const buildSessionExpiryDate = (baseDate = new Date()) => {
+    const retentionDays = getSessionRetentionDays();
+    return new Date(baseDate.getTime() + retentionDays * 24 * 60 * 60 * 1000);
+};
 
 let persistentData = null;
 const developData = (d) => {
@@ -73,6 +87,29 @@ const processData = async () => {
     }
 };
 
+const getHighestSessionNumber = async () => {
+    // Query database to find the session with the highest numeric name value
+    // SessionNames follow pattern "k2session_N" where N is a number
+    try {
+        const sessions = await Session.find({}, { name: 1 }).lean();
+        let highestNumber = 0;
+        
+        sessions.forEach(s => {
+            if (s.name && s.name.includes('_')) {
+                const num = parseInt(s.name.split('_')[1]);
+                if (!isNaN(num) && num > highestNumber) {
+                    highestNumber = num;
+                }
+            }
+        });
+        
+        return highestNumber;
+    } catch (err) {
+        console.error('Error finding highest session number:', err);
+        return 0;
+    }
+};
+
 const newSession = async (ob, cb) => {
 //    console.log(`newSession; let's call getSessions to see how many sessions there are`);
 //    console.log(ob);
@@ -102,6 +139,7 @@ const newSession = async (ob, cb) => {
         } while (st === cc);
         const institutionSlug = (ob.institution || '').toLowerCase();
         const courseSlug = (ob.course || '').toLowerCase();
+        const accessKeyId = (ob.accessKeyId || '').toString().trim();
         const validation = await validateInstitutionCourse(institutionSlug, courseSlug);
         if (validation === null) {
             console.warn(`Invalid institution/course combination`, { institutionSlug, courseSlug });
@@ -112,11 +150,14 @@ const newSession = async (ob, cb) => {
         }
         try {
 //            const fakeDate = 20250707112532;
+            const now = new Date();
             const s = await Session.create({
                 uniqueID: sN,
                 name: sID,
                 dateID: tools.getTimeNumber(),
                 dateAccessed: tools.getTimeNumber(),
+                lastAccessedAt: now,
+                expiresAt: buildSessionExpiryDate(now),
 //                dateID: fakeDate,
 //                dateAccessed: fakeDate,
                 type: 1,
@@ -128,7 +169,8 @@ const newSession = async (ob, cb) => {
                 profile1: {blank: true},
                 profile2: {blank: true},
                 institution: institutionSlug,
-                course: courseSlug
+                course: courseSlug,
+                accessKeyId: accessKeyId || undefined
             });
             console.log(s)
             cb(developSession(s));
@@ -156,10 +198,14 @@ const newSessionV1 = async (cb) => {
     do {
         st = Math.floor(at.length * Math.random());
     } while (st === cc);
+    const now = new Date();
     const s = new Session({
         uniqueID: `1${tools.padNum(sN, 100000)}${1000 + Math.round(Math.random() * 1000)}`,
         name: sID,
         dateID: tools.getTimeNumber(),
+        dateAccessed: tools.getTimeNumber(),
+        lastAccessedAt: now,
+        expiresAt: buildSessionExpiryDate(now),
         type: 1,
         teamRef: cc,
         supportTeamRef: st,
@@ -202,6 +248,15 @@ const ALLOWED_SET_FIELDS = new Set([
 ]);
 
 const ALLOWED_PUSH_FIELDS = new Set(['quiz']);
+const DEFAULT_FACILITATOR_TTL_WARNING_DAYS = 14;
+
+const getFacilitatorTtlWarningDays = () => {
+    const raw = Number(process.env.FACILITATOR_TTL_WARNING_DAYS);
+    if (Number.isInteger(raw) && raw > 0) {
+        return raw;
+    }
+    return DEFAULT_FACILITATOR_TTL_WARNING_DAYS;
+};
 
 const updateSession = async (sOb, cb) => {
 //    console.log(`updateSession called for uniqueID: ${sOb.uniqueID} (${typeof(sOb.uniqueID)})`);
@@ -231,6 +286,10 @@ const updateSession = async (sOb, cb) => {
 
             skippedFields.push(key);
         }
+
+        const now = new Date();
+        update.$set.lastAccessedAt = now;
+        update.$set.expiresAt = buildSessionExpiryDate(now);
 
         // Clean up empty operators if not used
         if (Object.keys(update.$push).length === 0) delete update.$push;
@@ -509,25 +568,204 @@ const deleteSessionsV1 = async (sOb = {}, cb) => {
 // REST handler for access-filtered session listing
 const listSessionsForAccess = async (req, res) => {
     try {
-        const filter = req.accessFilter || {};
-        console.log('listSessionsForAccess filter:', JSON.stringify(filter));
-        console.log('req.session.access:', req.session.access);
+        const filter = { ...(req.accessFilter || {}) };
+        const accessContext = req.accessContext || {};
+        const accessKeyId = (accessContext.accessKeyId || '').toString().trim();
+        const hasSessionLimit = Number.isInteger(accessContext.sessionLimit) && accessContext.sessionLimit > 0;
+        const ttlWarningDays = getFacilitatorTtlWarningDays();
+        const ttlWarningMs = ttlWarningDays * 24 * 60 * 60 * 1000;
+        const nowMs = Date.now();
+
+        // For limited keys, scope sessions to the specific access key so
+        // "remaining" reflects this key's own allocation only.
+        if (hasSessionLimit && accessKeyId) {
+            filter.accessKeyId = accessKeyId;
+        }
+
         const sessions = await Session.find(filter).lean();
-        console.log(`Found ${sessions.length} sessions matching filter`);
         
         // Enrich sessions with team country data
         getGameData((gameData) => {
+            let nearDeletionCount = 0;
             const enrichedSessions = sessions.map(s => {
                 if (s.teamRef !== undefined && gameData.teams && gameData.teams[s.teamRef]) {
                     s.teamCountry = gameData.teams[s.teamRef].country;
                 }
+
+                let expiresAtIso = null;
+                let msUntilDeletion = null;
+                let daysUntilDeletion = null;
+                let isNearDeletion = false;
+                let isOverdueDeletion = false;
+
+                if (s.expiresAt) {
+                    const expiresAtDate = new Date(s.expiresAt);
+                    const expiresAtMs = expiresAtDate.getTime();
+                    if (Number.isFinite(expiresAtMs)) {
+                        expiresAtIso = expiresAtDate.toISOString();
+                        msUntilDeletion = expiresAtMs - nowMs;
+                        daysUntilDeletion = Math.ceil(msUntilDeletion / (24 * 60 * 60 * 1000));
+                        isOverdueDeletion = msUntilDeletion <= 0;
+                        isNearDeletion = !isOverdueDeletion && msUntilDeletion <= ttlWarningMs;
+                    }
+                }
+
+                if (isNearDeletion || isOverdueDeletion) {
+                    nearDeletionCount += 1;
+                }
+
+                s.ttl = {
+                    expiresAt: expiresAtIso,
+                    msUntilDeletion,
+                    daysUntilDeletion,
+                    isNearDeletion,
+                    isOverdueDeletion
+                };
                 return s;
             });
-            res.json({ sessions: enrichedSessions });
+
+            res.json({
+                sessions: enrichedSessions,
+                ttlInfo: {
+                    warningWindowDays: ttlWarningDays,
+                    nearDeletionCount,
+                    totalSessions: enrichedSessions.length
+                }
+            });
         });
     } catch (err) {
         console.error('Error listing sessions for access:', err);
         res.status(500).json({ error: 'Failed to fetch sessions' });
+    }
+};
+
+const exportSessionsForAccess = async (req, res) => {
+    try {
+        const accessContext = req.accessContext || {};
+        const accessKeyId = (accessContext.accessKeyId || '').toString().trim();
+        const baseFilter = req.accessFilter || {};
+        const filter = accessKeyId ? { accessKeyId } : { ...baseFilter };
+
+        const sessions = await Session.find(filter).lean();
+        const exportedSessions = sessions.map((s) => {
+            const clone = { ...s };
+            const sourceMongoId = clone._id ? String(clone._id) : undefined;
+            delete clone._id;
+            delete clone.__v;
+            return {
+                ...clone,
+                sourceMongoId
+            };
+        });
+
+        const payload = {
+            exportType: 'k2-session-export',
+            version: 1,
+            exportedAt: new Date().toISOString(),
+            scope: {
+                accessKeyId: accessKeyId || null,
+                type: accessContext.type || null,
+                institutionSlug: accessContext.institutionSlug || null,
+                courseSlug: accessContext.courseSlug || null,
+                facilitator: {
+                    firstName: accessContext.firstName || null,
+                    surname: accessContext.surname || null,
+                    label: accessContext.label || null
+                }
+            },
+            sessions: exportedSessions
+        };
+
+        const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+        const inst = (accessContext.institutionSlug || 'inst').toLowerCase();
+        const course = (accessContext.courseSlug || 'all').toLowerCase();
+        const fileName = `k2_sessions_${inst}_${course}_${stamp}.json`;
+
+        res.setHeader('Content-Type', 'application/json; charset=utf-8');
+        res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+        return res.status(200).send(JSON.stringify(payload, null, 2));
+    } catch (err) {
+        console.error('Error exporting sessions for access:', err);
+        res.status(500).json({ error: 'Failed to export sessions' });
+    }
+};
+
+const getSessionStateStats = async () => {
+    // Query all sessions and analyze state values
+    try {
+        const sessions = await Session.find(
+            {},
+            {
+                state: 1,
+                name: 1,
+                playTime: 1,
+                events: 1,
+                profile0: 1,
+                profile1: 1,
+                profile2: 1,
+                quiz: 1
+            }
+        ).lean();
+        const stateValues = new Set();
+        const stateCountMap = {};
+        let minPlayTime = Number.POSITIVE_INFINITY;
+        let maxPlayTime = Number.NEGATIVE_INFINITY;
+        let hasPlayTimeValues = false;
+        const randomPools = {
+            events: [],
+            profile0: [],
+            profile1: [],
+            profile2: [],
+            quiz: []
+        };
+
+        const hasObjectKeys = (value) => {
+            if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+            return Object.keys(value).length > 0;
+        };
+        
+        sessions.forEach(s => {
+            const state = String(s.state || '').toLowerCase().trim();
+            stateValues.add(state);
+            stateCountMap[state] = (stateCountMap[state] || 0) + 1;
+
+            const playTime = Number(s.playTime);
+            if (Number.isFinite(playTime)) {
+                hasPlayTimeValues = true;
+                if (playTime < minPlayTime) minPlayTime = playTime;
+                if (playTime > maxPlayTime) maxPlayTime = playTime;
+            }
+
+            if (Array.isArray(s.events) && s.events.length > 0) {
+                randomPools.events.push(s.events);
+            }
+            if (Array.isArray(s.quiz) && s.quiz.length > 0) {
+                randomPools.quiz.push(s.quiz);
+            }
+            if (hasObjectKeys(s.profile0)) {
+                randomPools.profile0.push(s.profile0);
+            }
+            if (hasObjectKeys(s.profile1)) {
+                randomPools.profile1.push(s.profile1);
+            }
+            if (hasObjectKeys(s.profile2)) {
+                randomPools.profile2.push(s.profile2);
+            }
+        });
+        
+        return {
+            totalSessions: sessions.length,
+            uniqueStates: Array.from(stateValues).sort(),
+            stateDistribution: stateCountMap,
+            playTimeRange: {
+                min: hasPlayTimeValues ? minPlayTime : 0,
+                max: hasPlayTimeValues ? maxPlayTime : 0
+            },
+            randomPools
+        };
+    } catch (err) {
+        console.error('Error analyzing session states:', err);
+        throw err;
     }
 };
 
@@ -541,5 +779,8 @@ module.exports = {
     getSessions,
     getGameData,
     changeSupportTeam,
-    listSessionsForAccess
+    listSessionsForAccess,
+    exportSessionsForAccess,
+    getHighestSessionNumber,
+    getSessionStateStats
 };
