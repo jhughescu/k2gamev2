@@ -88,6 +88,11 @@ document.addEventListener('DOMContentLoaded', function () {
     socket.on('resetTime', () => {
         resetSession();
     });
+    socket.on('interruptGame', (data) => {
+        // Handle the interruptGame event
+        interruptGame(data);
+    });
+
     socket.on('startStorm', () => {
         startStorm();
     });
@@ -1013,20 +1018,23 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     };
     const showModalSelfie = (ev) => {
-        //        console.log('render it', ev);
         const C = Climber.getClimbers();
         const c = C[Math.floor(C.length * Math.random())];
         const m = $('#overlay_modal');
+        const o = Object.assign({}, c);
+        if (ev.hasOwnProperty('message')) {
+            o.message = ev.message;
+            o.hasMessage = true;
+        }
         m.show();
         m.addClass('clickable');
         renderTemplate('overlay_modal', `modal`, {
             type: 'selfie'
         }, () => {
-            //            console.log('base rendered');
-            renderTemplate('modal_content', `modal/event/selfie`, c, () => {
-                //                console.log('content rendered');
+            
+            console.log('render modal', ev, c, o);
+            renderTemplate('modal_content', `modal/event/selfie`, o, () => {
                 setupModalClose($('#overlay_modal'), true);
-                //                enableButton($($('.k2-modal-btn')[0]), true);
             });
         });
     };
@@ -1671,7 +1679,7 @@ document.addEventListener('DOMContentLoaded', function () {
     };
     const playPauseSession = () => {
 //        return;
-//        console.log('playPauseSession');
+       console.log('playPauseSession', eventStack);
         if (!checkCompletion().allFinished) {
             toggleTimer();
         }
@@ -1923,7 +1931,7 @@ document.addEventListener('DOMContentLoaded', function () {
         devShowProfiles();
     };
     const updateClimbers = (cs) => {
-        Climber.updateViews(cs);
+        Climber.updateViews(cs|| getCurrentState());
     };
     const clearTeamMember = (p, cb) => {
         const id = `profile${p}`;
@@ -2165,28 +2173,47 @@ document.addEventListener('DOMContentLoaded', function () {
     //let tAdj = gameMinutes / sessionMax; /* factor by which time is speeded up */
     let tAdj = null; /* factor by which time is speeded up */
     //    console.log(`tAdj = ${tAdj}`);
+    
+    const get_tAdj = () => {
+        return tAdj;
+    };
+    const getTimeFromDisplay = (timeDisp) => {
+        const timeReversed = window.unformatTime(timeDisp);
+        const timeReversedMinusStart = timeReversed - startTime;
+        const timeReversedMinusStartDivTAdj = timeReversedMinusStart / tAdj;
+        // console.log(`getTimeFromDisplay, timeDisp: ${timeDisp}, timeReversed: ${timeReversed}, timeReversedMinusStart: ${timeReversedMinusStart}, timeReversedMinusStartDivTAdj: ${timeReversedMinusStartDivTAdj}`);
+        return timeReversedMinusStartDivTAdj;
 
+    }
     const showtime = () => {
-//        console.log('showtime');
         const gtime = gTimer.elapsedTime;
         const adj = gtime * tAdj;
-        if ((adj + startTime) >= endTime) {
+        const ended = (adj + startTime) >= endTime;
+        const timeVal = adj + startTime;
+        const timeDisp = window.formatTime(timeVal);
+        const timeReversed = window.unformatTime(timeDisp);
+        // console.log(`showtime gtime: ${gtime}, tAdj: ${tAdj}, adj: ${adj}, display time: ${timeDisp}`);
+        // console.log(timeDisp);
+        // console.log(`timeReversed: ${timeReversed}`);
+        const timeReversedMinusStart = timeReversed - startTime;
+        // console.log(`timeReversedMinusStart: ${timeReversedMinusStart}`);
+        const timeReversedMinusStartDivTAdj = timeReversedMinusStart / tAdj;
+        // console.log(`timeReversedMinusStartDivTAdj: ${timeReversedMinusStartDivTAdj}`);
+        // console.log(`timeReversedMinusStartDivTAdj: ${getTimeFromDisplay(timeDisp)}`);
+        if (ended) {
             timeDisplay.html(window.formatTime(endTime));
             gTimer.pauseTimer();
             gameflow(`time's up`);
-            //            console.log(`time's up`);
             theState.storeTime(endTime);
-            const cs = checkCompletion();
-            if (!cs.allFinished) {
+                const cs = checkCompletion();
+                if (!cs.allFinished) {
                 const dead = cs.notFinished.map(c => c.name);
                 console.log(`dead climbers: ${dead}`);
                 Climber.onTimeout();
             }
         } else {
-            //            storeLocal('time', gTimer.elapsedTime);
-            //            console.log('poo');
-            timeDisplay.html(window.formatTime(adj + startTime));
-            sessionStorage.setItem('displayTime', window.formatTime(adj + startTime));
+            timeDisplay.html(timeDisp);
+            sessionStorage.setItem('displayTime', timeDisp);
             if (colourBG) {
                 colourBG.style.background = updateGradient((adj / runTime) * 100);
             }
@@ -3152,9 +3179,37 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         return ev;
     };
+    const interruptGame = (data) => {
+        console.log('Received interruptGame event with data:', data, data.hours, data.minutes, window.unformatTime(`${data.hours}:${data.minutes}`));
+        // gTimer.forceTimer(window.unformatTime(`${data.hours - 5}:${data.minutes}`));
+        const T = gTimer.forceTimer(data.hours, data.minutes);
+        scrubEvents(T.minutes);
+        updateClimbers();
+        console.log(T, eventStack, eventStack.getEvents(), session.events);
+        const evs = eventStack.getEvents();
+        const currentEv = eventStack.getCurrentEvent();
+        const isCurr = evs.find(e => e.current);
+        console.log('Current event after interrupt:', isCurr, currentEv);
+    }
+    const scrubEvents = (minutes) => {
+        // for use on interrupt game; set all events prior to the time passed as incomplete
+        const evs = eventStack.getEvents();
+        const preEvs = evs.filter(e => e.time <= minutes);
+        const evArray = session.events.slice(0);
+        for (let i = preEvs.length; i < evArray.length; i++) {
+            evArray[i] = 0;
+        }
+        updateSession('events', evArray);
+        // eventStack.clearCurrent();
+        eventStack.onGameInterrupt(evArray);
+        // console.log(evs);
+        // console.log(preEvs);
+        console.log(session);
+        // console.log(evArray);
+    }
     //  # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # eventTrigger
     const eventTrigger = (ev) => {
-//        console.log(`eventTrigger`, ev.time, ev.event);
+       console.log(`eventTrigger`, ev.time, ev.event);
 //        console.log(session.events);
 //        console.log(`should trigger: ${session.events[window.clone(ev).n] === 0}`);
         // EventStack calls this method when a new event is to be triggered
@@ -3222,12 +3277,12 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     };
     const updateEventStack = (cs) => {
-        //        console.log(`updateEventStack`);
+            //    console.log(`updateEventStack`);
         const ev = eventStack.updateTime(cs, eventTrigger);
         if (ev) {
             const evSumm = eventStack.updateSummary(ev, 1);
             updateSession('events', evSumm);
-//            console.log(`event summary updated (${ev.n} to 1) ${evSumm}`);
+           console.log(`event summary updated (${ev.n} to 1) ${evSumm}`);
             //            console.log(ev);
         }
     };
@@ -4229,6 +4284,10 @@ document.addEventListener('DOMContentLoaded', function () {
     //    test();
     // hook into timer methods
     gTimer.updateDisplay = updateDisplay;
+    gTimer.showtime = showtime;
+    gTimer.get_tAdj = get_tAdj;
+    gTimer.getTimeFromDisplay = getTimeFromDisplay;
+    console.log('showtime established');
     gTimer.storageUpdater = storageUpdater;
     const toggleTimer = () => {
         Climber.storeSummaries();

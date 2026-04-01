@@ -346,6 +346,14 @@
     "activeEventRangeNO": [10, 56],
     "activeEventRangeNO": [3, 3],
     "activeEventRange": [0, 560],
+    "eventsMin": [
+        {
+            "time": 500,
+            "event": "start",
+            "active": true,
+            "video": "5dd21441-4bd0-4350-a77c-b2020099dd78"
+        }
+    ],
     "events": [
         {
             "time": 0.5,
@@ -469,8 +477,8 @@
             "time": 20,
             "event": "photo",
             "type": "selfie",
-            "penalties": {"oxygen": 1, "sustenance": 1}
-
+            "penalties": {"oxygen": 1, "sustenance": 1},
+            "message": "I am enjoying the climb so far although I’m feeling far more tired than I thought I would at this altitude…"
         },
         {
             "time": 25,

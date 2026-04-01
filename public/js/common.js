@@ -170,21 +170,90 @@ document.addEventListener('DOMContentLoaded', function () {
         const ts = `${d.getFullYear()}${padNum(d.getMonth() + 1)}${padNum(d.getDate())} ${padNum(d.getHours())}:${padNum(d.getMinutes())}:${padNum(d.getSeconds())}`;
         return ts;
     };
-    const formatTime = (ms, level = 'hour') => {
+    const formatTime = (ms, level = 'hour', includeMilliseconds = false) => {
         // Calculate hours, minutes, and seconds
         //        console.log(ms);
         const hours = Math.floor(ms / 3600000); // 1 hour = 3600000 ms
         const minutes = Math.floor((ms % 3600000) / 60000); // 1 minute = 60000 ms
         const seconds = Math.floor((ms % 60000) / 1000); // 1 second = 1000 ms
+        const milli = Math.floor(ms % 1000);
 
         // Format each as a 2-digit string
         const hoursStr = String(hours).padStart(1, '0');
         const minutesStr = String(minutes).padStart(hours > 0 ? 2 : 1, '0');
         const secondsStr = String(seconds).padStart(2, '0');
+        const milliStr = String(milli).padStart(3, '0');
 
-        const str = `${level === 'hour' && hours > 0 ? hoursStr + ':' : ''}${minutesStr}:${secondsStr}`;
+        const str = `${level === 'hour' && hours > 0 ? hoursStr + ':' : ''}${minutesStr}:${secondsStr}${includeMilliseconds ? '.' + milliStr : ''}`;
         return str;
-    }
+    };
+    const unformatTime = (timeString) => {
+        // Supports "h:mm:ss", "m:ss", and optional millisecond suffix ".mmm".
+        if (typeof(timeString) !== 'string') {
+            return NaN;
+        }
+
+        const trimmed = timeString.trim();
+        if (!trimmed) {
+            return NaN;
+        }
+
+        const parts = trimmed.split(':').map((part) => part.trim());
+        if (parts.length !== 2 && parts.length !== 3) {
+            return NaN;
+        }
+
+        // Validate numeric-only components before parsing.
+        const hasInvalidPart = parts.some((part) => !/^\d+$/.test(part));
+        if (hasInvalidPart) {
+            return NaN;
+        }
+
+        let hours = 0;
+        let minutes = 0;
+        let seconds = 0;
+        let milliseconds = 0;
+
+        const parseSecondsPart = (raw) => {
+            // Accept "ss" or "ss.mmm" where mmm is 1-3 digits.
+            if (/^\d+$/.test(raw)) {
+                return { seconds: parseInt(raw, 10), milliseconds: 0 };
+            }
+            const match = raw.match(/^(\d+)\.(\d{1,3})$/);
+            if (!match) {
+                return null;
+            }
+            const sec = parseInt(match[1], 10);
+            const frac = match[2].padEnd(3, '0');
+            return { seconds: sec, milliseconds: parseInt(frac, 10) };
+        };
+
+        if (parts.length === 3) {
+            hours = parseInt(parts[0], 10);
+            minutes = parseInt(parts[1], 10);
+            const parsed = parseSecondsPart(parts[2]);
+            if (!parsed) {
+                return NaN;
+            }
+            seconds = parsed.seconds;
+            milliseconds = parsed.milliseconds;
+        } else {
+            minutes = parseInt(parts[0], 10);
+            const parsed = parseSecondsPart(parts[1]);
+            if (!parsed) {
+                return NaN;
+            }
+            seconds = parsed.seconds;
+            milliseconds = parsed.milliseconds;
+        }
+
+        // Keep minute/second semantics aligned with formatted clock output.
+        if (minutes > 59 || seconds > 59 || milliseconds > 999) {
+            return NaN;
+        }
+
+        return (((hours * 3600) + (minutes * 60) + seconds) * 1000) + milliseconds;
+    };
     const createSplitTime = (t) => {
 //        console.log(`createSplitTime`, t);
         if (typeof(t) !== 'string') {
@@ -1269,6 +1338,7 @@ document.addEventListener('DOMContentLoaded', function () {
     window.getNumberText = getNumberText;
     window.getTimestamp = getTimestamp;
     window.formatTime = formatTime;
+    window.unformatTime = unformatTime;
     window.createSplitTime = createSplitTime;
     window.formatSplitTime = formatSplitTime;
     window.roundAll = roundAll;
@@ -1281,6 +1351,7 @@ document.addEventListener('DOMContentLoaded', function () {
     window.clone = clone;
     window.toCamelCase = toCamelCase;
     window.stringToCamelCase = stringToCamelCase;
+    window.padNum = padNum;
     window.logBoolean = logBoolean;
     window.removeTemplate = removeTemplate;
     window.renderTemplate = renderTemplate;

@@ -591,6 +591,12 @@ function initSocket(server) {
 //                    console.log(`resetTime to ${r} which has ${showRoomSize(r)} room`);
                     io.to(r).emit('resetTime');
                 });
+                socket.on('interruptGame', (data) => {
+                    const r = `s-${data.gameID}`;
+//                    console.log(`interruptGame to ${r} which has ${showRoomSize(r)} room`);
+                    io.to(r).emit('interruptGame', { hours: data.hours, minutes: data.minutes });
+                });
+
                 socket.on('startStorm', (data) => {
                     const r = `s-${data.gameID}`;
 //                    console.log(`startStorm to ${r} which has ${showRoomSize(r)} room`);

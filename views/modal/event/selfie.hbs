@@ -11,5 +11,8 @@
         </div>
     </div>
     <p>{{name}} has sent you a selfie on their climb!</p>
+    {{#if hasMessage}}
+        <br><p>"{{message}}"</p>
+    {{/if}}
 
 </div>

@@ -126,23 +126,24 @@ class EventStack {
         return this.eventSummary;
     }
     updateTime(o, cb) {
-        // receives a time object
+        // receives a time object AND a callback (eventTrigger) from main game code, checks if an event is triggered at that time, and if so sends it to the callback
 //        console.log(`updateTime: OK to run? ${Boolean(this.events.length)}`);
         if (this.events.length) {
             const m = o.gametime.m;
             let e = false;
             e = this.triggers[`t${roundNumber(m, 1)}`];
             if (e) {
+                console.log(`eventSummary: ${this.eventSummary}`);
                 if (this.eventSummary[e.n] < 2) {
                     this.currentEvent = e;
                     if (cb) {
                         cb(e);
                     }
-//                    console.log(`event ${e.event} CAN be called`);
-//                    console.log(e);
+                   console.log(`event ${e.event} CAN be called`);
+                   console.log(e);
                     return e;
                 } else {
-//                    console.warn(`event ${e.event} has been called previously, cannot call again`);
+                   console.warn(`event ${e.event} has been called previously, cannot call again`);
                 }
             }
             this.cMin = Math.floor(m);
@@ -152,6 +153,13 @@ class EventStack {
         this.eventSummary = new Array(this.events.length).fill(0);
 //        console.log(this.eventSummary);
         return this.eventSummary;
+    }
+    onGameInterrupt(evArr) {
+        this.clearCurrent();
+        this.eventSummary = evArr;
+    }
+    clearCurrent() {
+        this.currentEvent = null;
     }
     getEvents() {
         return this.events;

@@ -1,7 +1,7 @@
 {
-  "timestamp": "2026-03-26T11:49:00Z",
-  "commitHash": "856384441c13b3d827acc989652d1c8967bfe2e0",
-  "commitMessage": "fix rate limiter ipv6 key generator",
+  "timestamp": "2026-04-01T16:54:14+01:00",
+  "commitHash": "321aa1b59696bcdd4c320af669c81f7908056052",
+  "commitMessage": "release: v1.0.1 nonbreaking admin/facilitator updates",
   "branch": "master",
   "githubReleaseTag": null,
   "githubRunNumber": null,

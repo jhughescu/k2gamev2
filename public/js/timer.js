@@ -1,3 +1,5 @@
+
+
 class GameTimer {
     constructor() {
         this.startTime = null;
@@ -12,6 +14,7 @@ class GameTimer {
         this.assessor = {funk: null, int: 1000};
         this.assessReport = {};
         this.rate = {min: 50, max: 500, step: 5, int: 80, test: 80, zero: 0, now: 0, diff: 0, diffMin: 99999999, diffMax: 0};
+        console.log(`GameTimer initialized with int ${this.rate.int}`);
     }
 
     getHourInMilli(n) {
@@ -81,12 +84,15 @@ class GameTimer {
     intervalMethod() {
         const currentTime = Date.now();
         this.elapsedTime = currentTime - this.startTime;
+        // console.log(`interval tick, startTime: ${this.startTime}, elapsed time: ${this.elapsedTime} ms displaytime: ${window.formatTime(this.elapsedTime)}`);
         this.updateDisplay(this.elapsedTime);
         //
         this.assessInterval();
     }
+    // console.log('chips');
+    
     startIntervals() {
-//        console.warn(`startIntervals`);
+    //    console.warn(`startIntervals`);
         this.rate.test = this.rate.int;
         clearInterval(this.interval);
         this.interval = setInterval(() => {
@@ -153,12 +159,75 @@ class GameTimer {
         this.hasStarted = false;
         this.updateDisplay(this.elapsedTime); // Reset display to 0
     }
+    showtime() {
+        // blank function to be hooked by scriptgame.js to show the time when forceTimer is called
+        console.log('showtime called - wrong');
+    }
+    get_tAdj() {
+        // blank function to be hooked by scriptgame.js to get the time adjustment factor when forceTimer is called
+        return null;
+    }
+    getTimeFromDisplay() {
+        // blank function to be hooked by scriptgame.js to get the time from the display when forceTimer is called
+        return null;
+    }
+
+    forceTimer(h, m) {
+        // console.log(h, m);
+        // this.stopIntervals();
+        const hours = parseInt(h) - 0;
+        const minutes = parseInt(m);
+        const hMs = hours * this.hour;
+        const mMs = minutes * this.minute;
+        const totalMs = (hours * this.hour) + (minutes * this.minute);
+        const adjMs = mMs * this.get_tAdj();
+        const elapsedSeconds = Math.floor(this.elapsedTime / 1000);
+        // console.log(`elapsedTime is ${this.elapsedTime} ms (${elapsedSeconds}s) which is ${window.formatTime(this.elapsedTime)}, reversed: ${window.unformatTime(window.formatTime(this.elapsedTime))}`);
+        const timeFromDisplay = this.getTimeFromDisplay(`${window.padNum(h)}:${window.padNum(m)}:00`);
+        this.elapsedTime = timeFromDisplay;
+    
+        this.showtime();
+        // NOTE: the 5 below is a magic number representing the 5 hour offset in the game time, which is currently fixed but could be made dynamic in future
+        return {elapsedTime: this.elapsedTime, hours: hours, minutes: minutes, elapsedMinutes: this.getMinutesFromMilli(totalMs) - (5 * 60)};
+    }
+    forceTimerV1(ts) {
+        this.stopIntervals();
+        this.elapsedTime = ts;
+        this.startTime = Date.now() - this.elapsedTime;
+        this.isRunning = false;
+        this.hasStarted = true;
+        const H = Math.round(this.startTime/360000000000);
+        // console.log(`forceTimer to ${ts} ${window.formatTime(ts)} typeof ${typeof ts}`);
+        // console.log(`forceTimer to ${ts} ${window.formatTime(ts + (Date.now() / 100000))} typeof ${typeof ts}`);
+        // console.log(`hour ${H}`);
+
+        // console.log(`startTime to ${this.startTime}`);
+        // console.log(`elapsedTime is ${this.elapsedTime} ${window.formatTime(this.elapsedTime)}`);
+        // this.updateDisplay(this.elapsedTime);
+        for (let i = 0; i < 10; i++) {
+            const adj = ts + (i * 1000);
+            const T = (adj * 60) + (5 * 1000 * 60 * 60);
+            const T2 = (ts * 60) + (this.startTime/360000000000);
+            // const T3 = Math.round(Date.now()/360000000000);
+            const T3 = Math.round(Date.now()/100000);
+            console.log(`${T3}, ${5 * 1000 * 60 * 60}`);
+            console.log(`forceTimer to ${ts} ${adj} ${T3} ${window.formatTime(T)} ${window.formatTime(T2)} typeof ${typeof adj}`);
+        }
+    }
     setTimer(n) {
         this.elapsedTime = n;
     }
     updateDisplay(time) {
+
+
+        // NOTE: rewired to scriptgame.js
+        
+        
+        
+        
+        
         // Implement this to update your timer display in the UI
-//        console.log(`Elapsed Time: ${time} ms`);
+    //    console.log(`Elapsed Time: ${time} ms`);
     }
     getSummary() {
         return {

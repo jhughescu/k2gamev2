@@ -36,6 +36,17 @@
         <button id='refreshGame'>Refresh game win</button>
         <button id='testClimbers'>test climbers</button>
     </div>
+    <div class='button-grid' style="margin-top: 12px; align-items: center;">
+        <label for='setTimeHours' style="display: inline-flex; align-items: center; gap: 6px; margin: 0;">
+            Hour
+            <input id='setTimeHours' type='number' min='5' max='6' value='5' style="width: 70px;">
+        </label>
+        <label for='setTimeMinutes' style="display: inline-flex; align-items: center; gap: 6px; margin: 0;">
+            Minute
+            <input id='setTimeMinutes' type='number' min='0' max='59' value='0' style="width: 80px;">
+        </label>
+        <button id='interruptGame'>Interrupt Game</button>
+    </div>
     <div id='insertion'></div>
 </body>
 

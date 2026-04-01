@@ -17,6 +17,11 @@ document.addEventListener('DOMContentLoaded', function () {
     const bRefreshGame = $('#refreshGame');
     const bTestClimbers = $('#testClimbers');
     const bToggleLocal = $('#toggleLocal');
+    const setTimeHoursInput = $('#setTimeHours');
+    const setTimeMinutesInput = $('#setTimeMinutes');
+    const bInterruptGame = $('#interruptGame');
+    const TOOLKIT_STORAGE_KEY = 'k2.dev.toolkit.formState';
+    console.log('toolkit loaded', bInterruptGame);
     //
     const setupSocket = () => {
         socket.on('gameFound', (g) => {
@@ -37,6 +42,74 @@ document.addEventListener('DOMContentLoaded', function () {
         bRefreshGame.off('click').on('click', refreshGameWin);
         bTestClimbers.off('click').on('click', testClimbers);
         bToggleLocal.off('click').on('click', toggleLocal);
+        bInterruptGame.off('click').on('click', interruptGame);
+        setupSetTimeInputs();
+    };
+    const clampToRange = (value, min, max, fallback) => {
+        const parsed = Number.parseInt(value, 10);
+        if (!Number.isFinite(parsed)) return fallback;
+        return Math.min(max, Math.max(min, parsed));
+    };
+    const loadToolkitFormState = () => {
+        try {
+            const raw = sessionStorage.getItem(TOOLKIT_STORAGE_KEY);
+            if (!raw) return {};
+            const parsed = JSON.parse(raw);
+            return parsed && typeof parsed === 'object' ? parsed : {};
+        } catch (err) {
+            console.warn('Unable to read toolkit form state from sessionStorage', err);
+            return {};
+        }
+    };
+    const saveToolkitFormState = (nextState) => {
+        try {
+            sessionStorage.setItem(TOOLKIT_STORAGE_KEY, JSON.stringify(nextState));
+        } catch (err) {
+            console.warn('Unable to save toolkit form state to sessionStorage', err);
+        }
+    };
+    const bindPersistedInput = (input, fieldName) => {
+        if (input.length === 0) return;
+        const state = loadToolkitFormState();
+        if (Object.prototype.hasOwnProperty.call(state, fieldName)) {
+            input.val(state[fieldName]);
+        }
+        const persist = () => {
+            const latest = loadToolkitFormState();
+            latest[fieldName] = String(input.val());
+            saveToolkitFormState(latest);
+        };
+        input.off('change.persist').on('change.persist', persist);
+        input.off('input.persist').on('input.persist', persist);
+    };
+    const setupSetTimeInputs = () => {
+        if (setTimeHoursInput.length > 0) {
+            bindPersistedInput(setTimeHoursInput, 'setTimeHours');
+            const enforceHours = () => {
+                const next = clampToRange(setTimeHoursInput.val(), 5, 6, 5);
+                setTimeHoursInput.val(next);
+                const latest = loadToolkitFormState();
+                latest.setTimeHours = String(next);
+                saveToolkitFormState(latest);
+            };
+            setTimeHoursInput.off('input').on('input', enforceHours);
+            setTimeHoursInput.off('blur').on('blur', enforceHours);
+            enforceHours();
+        }
+
+        if (setTimeMinutesInput.length > 0) {
+            bindPersistedInput(setTimeMinutesInput, 'setTimeMinutes');
+            const enforceMinutes = () => {
+                const next = clampToRange(setTimeMinutesInput.val(), 0, 59, 0);
+                setTimeMinutesInput.val(next);
+                const latest = loadToolkitFormState();
+                latest.setTimeMinutes = String(next);
+                saveToolkitFormState(latest);
+            };
+            setTimeMinutesInput.off('input').on('input', enforceMinutes);
+            setTimeMinutesInput.off('blur').on('blur', enforceMinutes);
+            enforceMinutes();
+        }
     };
     const closedown = () => {
 //        socket.emit('toolkitClosed', { gameID: initObj.uniqueID });
@@ -159,6 +232,13 @@ document.addEventListener('DOMContentLoaded', function () {
     const resetTime = () => {
         socket.emit('resetTime', { gameID: initObj.uniqueID });
     };
+    const interruptGame = () => {
+        const hours = parseInt($('#setTimeHours').val());
+        const minutes = parseInt($('#setTimeMinutes').val());
+        // alert('IG');
+        socket.emit('interruptGame', { gameID: initObj.uniqueID, hours, minutes });
+    };
+
     const startStorm = () => {
         socket.emit('startStorm', { gameID: initObj.uniqueID });
     };
