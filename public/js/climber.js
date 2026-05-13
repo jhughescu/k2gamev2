@@ -87,6 +87,7 @@ class Climber {
         // delay in minutes
         this.delayExpiry = stored.delayExpiry > 0 ? stored.delayExpiry : 0;
         this.delayCurrentTotal = stored.delayCurrentTotal > 0 ? stored.delayCurrentTotal : 0;
+        this.speedBoostExpiry = 0;
         this.delayRemaining = null;
         this.eventTime = stored.eventTime > 0 ? stored.eventTime : 0;
         this.currentStage = init.currentStage || 0;
@@ -190,6 +191,12 @@ class Climber {
         const C = this.getClimbers().filter(c => !c.finished);
         C.forEach(c => {
             c.showDead();
+        });
+    }
+    static boostAll(boo) {
+        const C = this.getClimbers().filter(c => !c.finished);
+        C.forEach(c => {
+            c.boostSpeed(boo);
         });
     }
     static async getRouteMap(cb) {
@@ -512,6 +519,30 @@ class Climber {
     setCurrentSpeed(n) {
         this.setProperty('currentSpeed', n);
     }
+    boostSpeed(boo = true) {
+        if (!this.currentTimeObject || !this.currentTimeObject.gametime) {
+            console.warn('boostSpeed: gametime not yet available');
+            return;
+        }
+        if (this.speedBoostExpiry > 0) {
+            // boost already active; extend by another minute
+            this.speedBoostExpiry += 1;
+            this.log('speed boost extended', true);
+            return;
+        }
+        const gt = this.currentTimeObject.gametime;
+        const change = boo ? 2 : 0.2;
+        this.speedBoostExpiry = gt.m + 1;
+        this.setCurrentSpeed(this.currentSpeed * change);
+        this.log(`speed boost applied at ${$('.game-time')[0].innerHTML}`, true);
+        // console.log(`boost at ${$('.game-time')[0].innerHTML}`);
+    }
+    onSpeedBoostExpiry() {
+        this.speedBoostExpiry = 0;
+        this.calculateClimbRate();
+        // this.log('speed boost expired', true);
+        this.log(`boost ENDS at ${$('.game-time')[0].innerHTML}`);
+    }
     setDelay(n) {
 //        console.log(`setDelay ${n}`);
         // a game event has sent a delay to this climber. Prevent updates until the delay (in minutes) has expired
@@ -799,6 +830,9 @@ class Climber {
         const gt = this.currentTimeObject.gametime;
         if (!this.finished) {
             const d = o.sec - this.currentTime;
+            if (this.speedBoostExpiry > 0 && gt.m >= this.speedBoostExpiry) {
+                this.onSpeedBoostExpiry();
+            }
             const step = d * this.currentSpeed;
 //            this.log(`step: ${step}, currentSpeed: ${this.currentSpeed}`);
             this.currentTime = o.sec;

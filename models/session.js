@@ -115,6 +115,10 @@ const sessionSchema = new Schema({
         type: [Schema.Types.Mixed],
         default: []
     },
+    eventsRandom: {
+        type: [Schema.Types.Mixed],
+        default: []
+    },
     profile0: {
         type: Schema.Types.Mixed,
         default: () => ({})

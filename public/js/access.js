@@ -191,9 +191,11 @@ function updateClearDatesButtonState() {
 
 function showError(message) {
     const el = doc('errorMsg');
-    el.textContent = message;
-    el.classList.add('active');
-    setTimeout(() => el.classList.remove('active'), 5000);
+    if (el) {
+        el.textContent = message;
+        el.classList.add('active');
+        setTimeout(() => el.classList.remove('active'), 5000);
+    }
 }
 
 function showSuccess(message) {
@@ -276,16 +278,18 @@ function handleInstitutionChange() {
 }
 
 function handleAccessTypeChange() {
-    const type = doc('accessType').value;
-    const institutionSelect = doc('institutionSlug');
-    if (!institutionSelect) return;
+    if (doc('accessType')) {
+        const type = doc('accessType').value;    
+        const institutionSelect = doc('institutionSlug');
+        if (!institutionSelect) return;
 
-    const institutions = type === 'course'
-        ? (loginOptions && loginOptions.courseTypeInstitutions) || []
-        : (loginOptions && loginOptions.institutionTypeInstitutions) || [];
+        const institutions = type === 'course'
+            ? (loginOptions && loginOptions.courseTypeInstitutions) || []
+            : (loginOptions && loginOptions.institutionTypeInstitutions) || [];
 
-    setSelectOptions(institutionSelect, institutions, 'Select institution');
-    populateCourseOptions();
+        setSelectOptions(institutionSelect, institutions, 'Select institution');
+        populateCourseOptions();
+    }
 }
 
 async function loadAccessLoginOptions() {
@@ -401,9 +405,11 @@ async function login(event) {
 }
 
 function showSessionsSection() {
-    doc('loginSection').style.display = 'none';
-    doc('sessionsSection').style.display = 'block';
-    doc('logoutBtn').style.display = 'block';
+    if (doc('loginSection')) {
+        doc('loginSection').style.display = 'none';
+        doc('sessionsSection').style.display = 'block';
+        doc('logoutBtn').style.display = 'block';
+    }
 
     console.log('showSessionsSection - currentAccess:', currentAccess);
 
@@ -652,6 +658,7 @@ async function loadGameData() {
             console.log('Quiz response status:', quizRes.status);
             
             if (quizRes.ok) {
+                
                 questions = await quizRes.json();
                 console.log('Quiz questions loaded, count:', questions.length);
                 console.log('First question:', questions[0]);
@@ -732,8 +739,8 @@ function renderSessions() {
     // Render paginated sessions
     let html = pageSessionions.map((s, index) => {
         // Log each session's full data
-        console.log(`\nSession ${startIdx + index + 1}:`, s);
-        console.log('  Fields:', Object.keys(s));
+        // console.log(`\nSession ${startIdx + index + 1}:`, s);
+        // console.log('  Fields:', Object.keys(s));
         
         // Format date - dateAccessed is a number like dateID (YYYYMMDDHHMM format)
         let dateStr = 'N/A';
@@ -1299,11 +1306,18 @@ async function downloadAccessData() {
         showError('Failed to download data export');
     }
 }
-
-doc('loginForm').addEventListener('submit', login);
-doc('accessType').addEventListener('change', handleAccessTypeChange);
-doc('institutionSlug').addEventListener('change', handleInstitutionChange);
-doc('logoutBtn').addEventListener('click', logout);
+if (doc('loginForm')) {
+    doc('loginForm').addEventListener('submit', login);
+}
+if (doc('accessType')) {
+    doc('accessType').addEventListener('change', handleAccessTypeChange);
+}
+if (doc('institutionSlug')) {
+    doc('institutionSlug').addEventListener('change', handleInstitutionChange);
+}
+if (doc('logoutBtn')) {
+    doc('logoutBtn').addEventListener('click', logout);
+}
 
 // Add filter checkbox listener
 document.addEventListener('DOMContentLoaded', () => {

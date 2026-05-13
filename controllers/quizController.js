@@ -1,6 +1,8 @@
 const { getQuizDbConnection } = require('../controllers/databaseController');
 const mongoose = require('mongoose');
 
+const QUESTION_SORT = { $natural: 1 };
+
 function getQuestionModelName(bank) {
     return `Question_${String(bank).replace(/[^a-zA-Z0-9_]/g, '_')}`;
 }
@@ -20,7 +22,7 @@ async function getQuestionModel(bank) {
 async function getQuestionRefs(bank) {
     const Question = await getQuestionModel(bank);
 
-    const refs = await Question.find({}, { _id: 1 });
+    const refs = await Question.find({}, { _id: 1 }).sort(QUESTION_SORT);
     const list = refs.map(doc => doc._id.toString());
 //    console.log(list);
     return list;
@@ -28,12 +30,12 @@ async function getQuestionRefs(bank) {
 
 async function getAllQuestions(bank) {
     const Question = await getQuestionModel(bank);
-    return Question.find({}, { correctAnswerIndexes: 0 }).sort({ _id: 1 }).lean();
+    return Question.find({}, { correctAnswerIndexes: 0 }).sort(QUESTION_SORT).lean();
 }
 
 async function getQuestion(bank, qId = false, excludeIds = [], includeAnswer = false) {
     const Question = await getQuestionModel(bank);
-//    console.log(`getQuestion`, bank, qId);
+    console.log(`getQuestion`, bank, qId);
 
     const objectIds = excludeIds
         .filter(id => mongoose.Types.ObjectId.isValid(id))
@@ -46,12 +48,13 @@ async function getQuestion(bank, qId = false, excludeIds = [], includeAnswer = f
         // Deterministic fetch by index
         const query = { _id: { $nin: objectIds } };
         const projection = includeAnswer ? {} : { correctAnswerIndex: 0 };
-
+        console.log(query);
+        console.log(projection);
         question = await Question.find(query, projection)
-            .sort({ _id: 1 }) // or any other consistent order
+            .sort(QUESTION_SORT)
             .skip(qId)
             .limit(1);
-        // console.log(question);
+        console.log(question);
     } else {
 
 //        console.log('random question return');

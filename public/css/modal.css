@@ -314,7 +314,7 @@
 .modal #radio {
     margin: 0px 30px;
 }
-.modal #radio img {
+.modal #radio img, .modal #boost img {
     width: 250px;
     margin: 40px auto;
 }

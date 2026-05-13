@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', function () {
     let initObj;
     let socket;
     let info;
+    let checkInt;
     const ins = $('#insertion');
     //
     const bToggleAutoRes = $('#toggleAutoResource');
@@ -20,7 +21,16 @@ document.addEventListener('DOMContentLoaded', function () {
     const setTimeHoursInput = $('#setTimeHours');
     const setTimeMinutesInput = $('#setTimeMinutes');
     const bInterruptGame = $('#interruptGame');
+    const bShowEvents = $('#showEvents');
     const TOOLKIT_STORAGE_KEY = 'k2.dev.toolkit.formState';
+    const EVENT_REPORT_REQUEST = 'k2:event-report:request';
+    const EVENT_REPORT_RESPONSE = 'k2:event-report:response';
+    const TOOLKIT_EVENTS_UPDATED = 'k2:toolkit:events-updated';
+    const EVENT_REPORT_PATH = '/flat/event-report.html';
+    const EVENT_REPORT_WINDOW_NAME = 'k2-event-report-window';
+    const EVENT_REPORT_WINDOW_FEATURES = 'width=960,height=720';
+    let eventReportWindowRef = null;
+    let eventReportRefreshTimer = null;
     console.log('toolkit loaded', bInterruptGame);
     //
     const setupSocket = () => {
@@ -43,6 +53,8 @@ document.addEventListener('DOMContentLoaded', function () {
         bTestClimbers.off('click').on('click', testClimbers);
         bToggleLocal.off('click').on('click', toggleLocal);
         bInterruptGame.off('click').on('click', interruptGame);
+        bShowEvents.off('click').on('click', showEvents);
+
         setupSetTimeInputs();
     };
     const clampToRange = (value, min, max, fallback) => {
@@ -126,21 +138,21 @@ document.addEventListener('DOMContentLoaded', function () {
         });
         initControls();
         window.addEventListener('beforeunload', closedown);
-        window.addEventListener('message', (ev) => {
-//            console.log(`i heard ${ev.data.type}`);
-            console.log(ev.data);
-            console.log(ev);
-        });
+        window.addEventListener('message', onMessageFromReportWindow);
         window.addEventListener('load', () => {
-            info = window.opener.requestToolkitInfo(window.getQueries().uniqueID);
-            console.log('loaded', info);
-            if (info.hasOwnProperty('autoResource')) {
-                renderArButton(info.autoResource);
+            if (window.opener) {
+                info = window.opener.requestToolkitInfo(window.getQueries().uniqueID);
+                console.log('loaded', info);
+                if (info.hasOwnProperty('autoResource')) {
+                    renderArButton(info.autoResource);
+                }
+                if (info.hasOwnProperty('cheating')) {
+                    renderCheatButton(info.cheating);
+                }
             }
-            if (info.hasOwnProperty('cheating')) {
-                renderCheatButton(info.cheating);
-            }
-        })
+        });
+        clearInterval(checkInt);
+        checkInt = setInterval(openerChecker, 2000);
     };
     const testClimbers = () => {
         // create climbers for testing (do not store, i.e. set type to -9999)
@@ -238,6 +250,264 @@ document.addEventListener('DOMContentLoaded', function () {
         // alert('IG');
         socket.emit('interruptGame', { gameID: initObj.uniqueID, hours, minutes });
     };
+    const registerPartialsForReport = async () => {
+        const response = await fetch('/partials');
+        if (!response.ok) {
+            throw new Error(`Unable to fetch partials (${response.status})`);
+        }
+        const data = await response.json();
+        const partials = data && data.partials ? data.partials : {};
+        Object.keys(partials).forEach((name) => {
+            Handlebars.registerPartial(name, partials[name]);
+        });
+        // Allow either partial name to be used while templates are evolving.
+        if (partials.event_report && !Handlebars.partials.event_summary) {
+            Handlebars.registerPartial('event_summary', partials.event_report);
+        }
+        if (partials.event_summary && !Handlebars.partials.event_report) {
+            Handlebars.registerPartial('event_report', partials.event_summary);
+        }
+    };
+    const fetchTemplateSource = async (templateName) => {
+        const response = await fetch(`/getTemplate?template=${encodeURIComponent(templateName)}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({})
+        });
+        if (!response.ok) {
+            throw new Error(`Unable to fetch template ${templateName} (${response.status})`);
+        }
+        return response.text();
+    };
+    const ensureRequiredPartials = async (templateSource) => {
+        const matches = Array.from(templateSource.matchAll(/{{>\s*([a-zA-Z0-9_-]+)\s*}}/g));
+        const required = [...new Set(matches.map((m) => m[1]).filter(Boolean))];
+        for (const partialName of required) {
+            if (Handlebars.partials && Handlebars.partials[partialName]) {
+                continue;
+            }
+            try {
+                const partialSource = await fetchTemplateSource(`partials/${partialName}`);
+                Handlebars.registerPartial(partialName, partialSource);
+            } catch (err) {
+                throw new Error(`Missing required partial: ${partialName}`);
+            }
+        }
+    };
+    const writeEventReportWindow = (reportWindow, renderedBodyHtml, statusText = '') => {
+        const applyContent = () => {
+            if (reportWindow.closed) {
+                return;
+            }
+            const doc = reportWindow.document;
+            const content = doc.getElementById('eventReportContent');
+            const status = doc.getElementById('eventReportStatus');
+            if (content) {
+                content.innerHTML = renderedBodyHtml;
+            }
+            if (status) {
+                status.textContent = statusText;
+            }
+        };
+
+        try {
+            const ready = reportWindow.document.readyState;
+            if (ready === 'complete' || ready === 'interactive') {
+                applyContent();
+            } else {
+                reportWindow.addEventListener('load', applyContent, { once: true });
+            }
+        } catch (err) {
+            console.warn('Failed to update report window content', err);
+        }
+    };
+    const buildEventReportPayload = async (questions = []) => {
+        // console.log(getInfo());
+        if (!getInfo() || !getInfo().gameData) {
+            throw new Error('Game data not available, cannot request event report');
+        }
+        const session = await new Promise((resolve) => {
+            socket.emit('getSession', { uniqueID: initObj.uniqueID }, (s) => resolve(s));
+        });
+        if (!session || typeof session !== 'object') {
+            throw new Error('No session data returned for event report');
+        }
+        // console.log(getInfo());
+        // console.log(session);
+        const evs = JSON.parse(JSON.stringify(getInfo().gameData.allEvents || []));
+        console.log(`toolkit receives ${evs.length} events for report generation`);
+        const quizAnswers = Array.isArray(session.quiz) ? session.quiz : [];
+        const completionSummary = Array.isArray(session.events) ? session.events : [];
+        const randomSummary = Array.isArray(session.eventsRandom) ? session.eventsRandom : [];
+        const getQuestionEntry = (eventObj) => {
+            if (!eventObj || !Number.isInteger(eventObj.question) || !Array.isArray(questions) || questions.length === 0) {
+                return null;
+            }
+
+            const direct = questions[eventObj.question];
+            return (direct && typeof direct === 'object') ? direct : null;
+        };
+        const getMappedQuestionText = (eventObj) => {
+            const questionEntry = getQuestionEntry(eventObj);
+            return questionEntry && typeof questionEntry.question === 'string' ? questionEntry.question : null;
+        };
+        const getMappedQuestionRef = (eventObj) => {
+            const questionEntry = getQuestionEntry(eventObj);
+            if (!questionEntry || !questionEntry.hasOwnProperty('ref')) {
+                return null;
+            }
+            const refValue = questionEntry.ref;
+            return (typeof refValue === 'string' || typeof refValue === 'number') ? String(refValue) : null;
+        };
+        const getAnswerOptionsForDisplay = (eventObj, isComplete) => {
+            if (!eventObj || !Number.isInteger(eventObj.question)) {
+                return [];
+            }
+
+            const questionEntry = getQuestionEntry(eventObj);
+            const options = questionEntry && Array.isArray(questionEntry.options) ? questionEntry.options : [];
+            if (options.length === 0) {
+                return [];
+            }
+
+            const selectedAnswers = isComplete && Array.isArray(quizAnswers[eventObj.question])
+                ? quizAnswers[eventObj.question]
+                : [];
+            const selectedSet = new Set(selectedAnswers.filter((answerIndex) => Number.isInteger(answerIndex)));
+
+            return options.map((optionText, optionIndex) => {
+                return {
+                    text: String(optionText),
+                    selected: selectedSet.has(optionIndex)
+                };
+            });
+        };
+        console.log('building event report with', { evs, completionSummary, randomSummary, session });
+
+        evs.forEach((e, i) => {
+            e.n = typeof e.n === 'number' ? e.n : i;
+            e.complete = Number(completionSummary[i]) > 1;
+            e.current = Number(completionSummary[i]) === 1;
+            e.isRandom = e.hasOwnProperty('probability');
+            e.randomState = randomSummary[i] === undefined ? null : randomSummary[i];
+            e.questionText = getMappedQuestionText(e);
+            e.questionRef = getMappedQuestionRef(e);
+            e.answerOptions = getAnswerOptionsForDisplay(e, e.complete);
+        });
+        console.log('events for render', evs.sort((a, b) => a.time - b.time));
+        const source = await fetchTemplateSource('dev.events.summary');
+        await registerPartialsForReport();
+        await ensureRequiredPartials(source);
+        const reportData = {
+            events: evs,
+            session,
+            questions,
+            generatedAt: new Date().toISOString()
+        };
+        console.log('report data', reportData);
+        const template = Handlebars.compile(source);
+        const rendered = template(reportData);
+        return {
+            data: reportData,
+            html: rendered,
+            status: `Generated ${new Date().toLocaleString()}`
+        };
+    };
+    const logEventReportRawData = (rawData) => {
+        console.log('Event report raw data:', rawData);
+    };
+    const respondWithEventReport = async (targetWindow, requestedQuestions = []) => {
+        if (!targetWindow || targetWindow.closed) {
+            return;
+        }
+        try {
+            const questions = Array.isArray(requestedQuestions)
+                ? requestedQuestions
+                : ((targetWindow && !targetWindow.closed && Array.isArray(targetWindow.questions)) ? targetWindow.questions : []);
+            const payload = await buildEventReportPayload(questions);
+            const messagePayload = {
+                type: EVENT_REPORT_RESPONSE,
+                html: payload.html,
+                status: payload.status
+            };
+            logEventReportRawData(payload.data);
+            targetWindow.postMessage(messagePayload, window.location.origin);
+            writeEventReportWindow(targetWindow, payload.html, payload.status);
+        } catch (err) {
+            const msg = err && err.message ? err.message : 'Unknown error';
+            console.error('Failed to render event report:', msg);
+            const fallbackHtml = '<p>Could not render event report. See console for details.</p>';
+            const messagePayload = {
+                type: EVENT_REPORT_RESPONSE,
+                html: fallbackHtml,
+                status: `Report failed: ${msg}`
+            };
+            targetWindow.postMessage(messagePayload, window.location.origin);
+            writeEventReportWindow(targetWindow, fallbackHtml, 'Report failed');
+        }
+    };
+    const onMessageFromReportWindow = (ev) => {
+        if (!ev || ev.origin !== window.location.origin) {
+            return;
+        }
+        if (!ev.data || !ev.data.type) {
+            return;
+        }
+        if (ev.data.type === TOOLKIT_EVENTS_UPDATED) {
+            if (!eventReportWindowRef || eventReportWindowRef.closed) {
+                return;
+            }
+            clearTimeout(eventReportRefreshTimer);
+            eventReportRefreshTimer = setTimeout(() => {
+                if (eventReportWindowRef && !eventReportWindowRef.closed) {
+                    respondWithEventReport(eventReportWindowRef);
+                }
+            }, 120);
+            return;
+        }
+        if (ev.data.type !== EVENT_REPORT_REQUEST) {
+            return;
+        }
+        const requestedQuestions = Array.isArray(ev.data.questions) ? ev.data.questions : [];
+        eventReportWindowRef = ev.source;
+        respondWithEventReport(ev.source, requestedQuestions);
+    };
+    const showEvents = async () => {
+        // Always target a named popup so only one event report window can exist,
+        // even if this toolkit window has been reloaded and local refs were lost.
+        const reportWindow = window.open('', EVENT_REPORT_WINDOW_NAME, EVENT_REPORT_WINDOW_FEATURES);
+        if (!reportWindow) {
+            console.error('Failed to render event report: Popup blocked');
+            alert('Popup blocked. Please allow popups for this site and try again.');
+            return;
+        }
+
+        try {
+            const onReportPage = reportWindow.location.pathname === EVENT_REPORT_PATH;
+            if (!onReportPage) {
+                reportWindow.location.href = EVENT_REPORT_PATH;
+            }
+        } catch (err) {
+            console.warn('Unable to check event report window URL, forcing navigation', err);
+            try {
+                reportWindow.location.href = EVENT_REPORT_PATH;
+            } catch (navErr) {
+                console.warn('Unable to navigate event report window', navErr);
+            }
+        }
+
+        try {
+            reportWindow.focus();
+        } catch (err) {
+            console.warn('Unable to focus event report window', err);
+        }
+
+        eventReportWindowRef = reportWindow;
+        writeEventReportWindow(reportWindow, '', 'Building event report...');
+        await respondWithEventReport(reportWindow);
+    };
 
     const startStorm = () => {
         socket.emit('startStorm', { gameID: initObj.uniqueID });
@@ -253,6 +523,19 @@ document.addEventListener('DOMContentLoaded', function () {
     };
     const refreshGameWin = () => {
         socket.emit('refreshWin', { gameID: initObj.uniqueID });
+    };
+    const getInfo = () => {
+        if (window.opener) {
+            return window.opener.requestToolkitInfo(window.getQueries().uniqueID);
+        } else {
+            return null;
+        }
+    }
+    const openerChecker = () => {
+        if (!window.opener) {
+            console.warn('No window.opener found - toolkit may not function correctly');
+            alert('opener lost, try reloading');
+        }
     };
     window.showInfo = () => {
         console.log(info);

@@ -4,6 +4,8 @@ document.addEventListener('DOMContentLoaded', function () {
     let devtoolsWin;
     let devtoolsCheck;
     let toolkitOpen = false;
+    let lastEventStateDigest = null;
+    const TOOLKIT_EVENTS_UPDATED = 'k2:toolkit:events-updated';
     const launchToolkit = () => {
         devtoolsWin = window.open(
             `devtools?uniqueID=${session.uniqueID}&name=${session.name}`,
@@ -55,6 +57,28 @@ document.addEventListener('DOMContentLoaded', function () {
             pressedKeys.delete(e.key.toLowerCase());
         });
         devtoolsOnInit();
+    };
+    const update = (sesh, gData ) => {
+        session = sesh;
+        gameData = gData;
+        try {
+            const nextDigest = JSON.stringify({
+                events: Array.isArray(session && session.events) ? session.events : [],
+                eventsRandom: Array.isArray(session && session.eventsRandom) ? session.eventsRandom : []
+            });
+            if (nextDigest !== lastEventStateDigest) {
+                lastEventStateDigest = nextDigest;
+                if (devtoolsWin && !devtoolsWin.closed) {
+                    devtoolsWin.postMessage({
+                        type: TOOLKIT_EVENTS_UPDATED,
+                        updatedAt: Date.now()
+                    }, window.location.origin);
+                }
+            }
+        } catch (err) {
+            console.warn('Unable to notify toolkit of event updates', err);
+        }
+        // console.log('dev tools updated', { session, gameData });
     };
     const checkForToolkit = () => {
 //        console.log(devtoolsWin);
@@ -157,6 +181,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const init = () => {
         window.tools = {
             setup: setup,
+            update: update,
             toolkitClosed: toolkitClosed,
             toolkitOpen: toolkitOpen,
             showSessionID: showSessionID,

@@ -173,51 +173,12 @@ const newSession = async (ob, cb) => {
                 accessKeyId: accessKeyId || undefined
             });
             console.log(s)
+            console.log(`up there, that's the session`);
             cb(developSession(s));
         } catch (err) {
             console.error(`error creating session`, err);
         }
     });
-};
-const newSessionV1 = async (cb) => {
-    const sessions = await Session.find();
-    const data = await processData();
-    const list = [];
-    sessions.forEach(s => {
-        list.push(parseInt(s.name.split('_')[1]));
-    });
-    list.sort((a, b) => a - b);
-//    const sN = sessions.length + 1;
-//    const sN = tools.findSmallestMissingNumber(list) || tools.roundNumber(Math.random(), 3) * 1000;
-    const sN = tools.roundNumber(Math.random(), 3) * 1000;
-    const sID = `k2session_${sN}`;
-    const at = persistentData.activeTeams;
-    const cc = Math.floor(at.length * Math.random());
-    console.log(`OK, let's create a session. There are ${sessions.length} sessions already in the system, the next unused value is ${sN}, the new ID will be ${sID}`);
-    let st;
-    do {
-        st = Math.floor(at.length * Math.random());
-    } while (st === cc);
-    const now = new Date();
-    const s = new Session({
-        uniqueID: `1${tools.padNum(sN, 100000)}${1000 + Math.round(Math.random() * 1000)}`,
-        name: sID,
-        dateID: tools.getTimeNumber(),
-        dateAccessed: tools.getTimeNumber(),
-        lastAccessedAt: now,
-        expiresAt: buildSessionExpiryDate(now),
-        type: 1,
-        teamRef: cc,
-        supportTeamRef: st,
-        state: 'new',
-        time: 0,
-        profile0: {blank: true},
-        profile1: {blank: true},
-        profile2: {blank: true}
-    });
-    await s.save();
-//    console.log('NEW SESSION', s._id, s.uniqueID);
-    cb(developSession(s));
 };
 const restoreSession = async (sOb, cb) => {
     console.log(`restoreSession:`);
@@ -242,6 +203,7 @@ const ALLOWED_SET_FIELDS = new Set([
     'time',
     'supportTeamRef',
     'events',
+    'eventsRandom',
     'profile0',
     'profile1',
     'profile2'
@@ -320,115 +282,6 @@ const updateSession = async (sOb, cb) => {
     }
 };
 
-const updateSessionV4 = async (sOb, cb) => {
-    try {
-        const filter = { uniqueID: sOb.uniqueID };
-        const update = {};
-
-        for (const [key, value] of Object.entries(sOb)) {
-            update[key] = value;
-        }
-
-        const result = await Session.updateOne(filter, { $set: update });
-
-        if (result.matchedCount === 0) {
-            throw new Error(`No document found for uniqueID ${sOb.uniqueID}`);
-        }
-
-        // Log or comment if nothing changed, but don't throw
-        if (result.modifiedCount === 0) {
-//            console.log(`No update needed for uniqueID ${sOb.uniqueID} (data was identical).`);
-        }
-
-        if (cb) {
-            const updatedSession = await Session.findOne(filter);
-            cb(updatedSession);
-        }
-    } catch (err) {
-        console.error(`Error in updateSession: ${err.message}`);
-        console.log(sOb);
-        if (cb) cb(null, err);
-    }
-};
-
-const updateSessionv1 = async (sOb, cb) => {
-    console.log(`updateSession:`);
-    console.log(sOb);
-    const s = await Session.findOne({uniqueID: sOb.uniqueID});
-    if (s) {
-        Object.entries(sOb).forEach((p, v) => {
-            s[p[0]] = p[1];
-        })
-        s.save();
-        if (cb) {
-            cb(s);
-        } else {
-    //        console.log('no no no');
-        }
-    }
-};
-const updateSessionV2 = async (sOb, cb) => {
-    try {
-        console.log(`updateSession:`);
-        console.log(sOb);
-        // Fetch the session by uniqueID
-        const s = await Session.findOne({ uniqueID: sOb.uniqueID });
-        if (!s) {
-            throw new Error(`Session with uniqueID ${sOb.uniqueID} not found.`);
-        }
-        // Update fields dynamically
-        for (const [key, value] of Object.entries(sOb)) {
-            // Handle arrays like `events` carefully
-            if (key === 'events' && Array.isArray(value)) {
-                s[key] = value; // Replace the array completely
-            } else {
-                s[key] = value; // Standard assignment for other fields
-            }
-        }
-        // Save the session and handle errors
-        await s.save();
-        // Callback if provided
-        if (cb) {
-            cb(s);
-        }
-    } catch (err) {
-        console.error(`Error in updateSession: ${err.message}`);
-        if (cb) cb(null, err);
-    }
-};
-const updateSessionV3 = async (sOb, cb) => {
-    try {
-        /*console.log(`updateSession:`);
-        console.log(sOb);*/
-        const filter = { uniqueID: sOb.uniqueID };
-        const update = {};
-        for (const [key, value] of Object.entries(sOb)) {
-            if (key === 'events' && Array.isArray(value)) {
-                // Replace the array completely
-                update[key] = value;
-            } else {
-                // Standard assignment for other fields
-                update[key] = value;
-            }
-        }
-        // Use direct MongoDB update to avoid triggering __v increment
-        const result = await Session.updateOne(filter, { $set: update });
-        if (result.modifiedCount === 0) {
-            throw new Error(`No document was updated for uniqueID ${sOb.uniqueID}`);
-        }
-//        console.log(`Document with uniqueID ${sOb.uniqueID} successfully updated.`);
-        if (cb) {
-            // Fetch the updated document and pass it to the callback
-            const updatedSession = await Session.findOne(filter);
-            cb(updatedSession);
-        }
-    } catch (err) {
-        console.error(`Error in updateSession: ${err.message}`);
-        console.log(sOb);
-        if (cb) cb(null, err);
-    }
-};
-
 const getTeamNotMe = (id) => {
 
     const T = persistentData.activeTeams.filter(t => t.id !== id);
@@ -455,29 +308,12 @@ const changeSupportTeam = async (id, cb) => {
         }
     }
 };
-const changeSupportTeamV1 = async (id, cb) => {
-//    console.log('change support team', id);
-    const s = await Session.findOne({uniqueID: id});
-    if (s) {
-//        console.log(s);
-        const newT = getTeamNotMe(s.teamRef);
-        const ob = {uniqueID: id, supportTeamRef: newT};
-        updateSession(ob, (rs) => {
-            console.log(rs === null)
-            if (cb && rs !== null) {
-                cb(developSession(rs));
-            }
-        });
-    } else {
-        console.log(`no session found with ID ${id}`);
-    }
-
-};
 
 
 const getSession = async (sOb, cb) => {
-    const s = await Session.findOne({uniqueID: String(sOb.uniqueID)});
-//    console.log(`getSession`);
+    const sID = String(sOb.uniqueID);
+    const s = await Session.findOne({uniqueID: sID});
+//    console.log(`getSession`, sID);
 //    console.log(sOb);
 //    console.log(s);
     if (s) {
@@ -485,7 +321,7 @@ const getSession = async (sOb, cb) => {
         if (cb) {
             cb(s);
         } else {
-    //        console.log('no no no');
+        //    console.log('no no no');
         }
     }
 };
@@ -527,13 +363,6 @@ const getSessions = async (sOb = {}, cb) => {
     }
 };
 
-const getSessionsV1 = async (sOb, cb) => {
-    console.log('mmm, get sessions');
-    const s = await Session.find();
-    if (cb) {
-        cb(s);
-    }
-};
 const deleteSessions = async (dArr, cb) => {
     if (!dArr || (typeof dArr === 'object' && Object.keys(dArr).length === 0)) {
         console.warn('deleteSessions: No filter provided. Refusing to delete all sessions by default.');
@@ -551,19 +380,7 @@ const deleteSessions = async (dArr, cb) => {
     if (cb) cb();
 };
 
-const deleteSessionsV1 = async (sOb = {}, cb) => {
-//    console.log('deleting');
-    Session.deleteMany(sOb)
-    .then(result => {
-        console.log(`Deleted ${result.deletedCount} sessions.`);
-    })
-    .catch(error => {
-        console.error("Error deleting sessions:", error);
-    });
-    if (cb) {
-        cb();
-    }
-};
+
 
 // REST handler for access-filtered session listing
 const listSessionsForAccess = async (req, res) => {

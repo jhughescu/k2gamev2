@@ -1,0 +1,64 @@
+<section class="event-item{{#if complete}} complete{{/if}}{{#unless active}} inactive{{/unless}}">
+    <div class="event-header-row">
+        <div class="event-title-wrap">
+            {{#if current}}
+                <span class="event-arrow" aria-hidden="true">▶</span>
+            {{/if}}
+            <h3 class="event-title">{{event}}</h3>
+            {{#if eventTitle}}
+                <h4 class="event-subtitle">{{eventTitle}}</h4>
+            {{/if}}
+            {{#if complete}}
+                <span class="event-check" aria-label="Complete">✓</span>
+            {{/if}}
+        </div>
+        {{#if isRandom}}
+            <span class="event-random-badge">random event</span>
+        {{/if}}
+    </div>
+
+    <p class="event-time-line">
+        {{time}} minutes{{#if range.[0]}} (range {{range.[0]}} - {{range.[1]}}){{/if}}
+    </p>
+
+    <table class="event-prop-table">
+        <tbody>
+            {{#if questionText}}
+                <tr>
+                    <th class="event-prop-key">question:</th>
+                    <td class="event-prop-value">"{{questionText}}"</td>
+                </tr>
+            {{/if}}
+            {{#if ref}}
+                <tr>
+                    <th class="event-prop-key">ref:</th>
+                    <td class="event-prop-value">{{ref}}</td>
+                </tr>
+            {{/if}}
+            {{#if answerOptions.length}}
+                <tr>
+                    <th class="event-prop-key">answers:</th>
+                    <td class="event-prop-value">
+                        <div class="event-answer-list">
+                            {{#each answerOptions}}
+                                <span{{#if selected}} class="event-answer-option selected"{{else}} class="event-answer-option"{{/if}}>{{text}}</span>
+                            {{/each}}
+                        </div>
+                    </td>
+                </tr>
+            {{/if}}
+            {{#if method}}
+                <tr>
+                    <th class="event-prop-key">method:</th>
+                    <td class="event-prop-value">"{{method}}"</td>
+                </tr>
+            {{/if}}
+            {{#if template}}
+                <tr>
+                    <th class="event-prop-key">template:</th>
+                    <td class="event-prop-value">"{{template}}"</td>
+                </tr>
+            {{/if}}
+        </tbody>
+    </table>
+</section>

@@ -1,9 +1,12 @@
 class Quiz {
-    constructor(socket, { session, setupModalClose, completeEvent, getCheatState }) {
+    constructor(socket, { session, setupModalClose, completeEvent, getCheatState, gameData }) {
         this.init(socket);
-        this.setupGameAPI({ session, setupModalClose, completeEvent, getCheatState });
+        this.setupGameAPI({ session, setupModalClose, completeEvent, getCheatState, gameData });
+        // console.log('Quiz initialized with session:', session, gameData);
     }
     questionBank = 'k2questionbank2';
+    // console.log('define the question bank here', questionBank);
+    // console.log(socket);
     gameAPI;
     socket = null;
     ASKEDID = 'askedQ';
@@ -129,7 +132,7 @@ class Quiz {
     }
     getQuestionRefs(cb) {
         this.socket.emit('getQuestionRefs', {
-            bank: this.questionBank
+            bank: this.getQuestionBank
         }, (r) => {
             if (r) {
                 this.questionRef = r;
@@ -142,9 +145,9 @@ class Quiz {
         });
     }
     getQuestion(qId = 0, cb) {
-//        console.log(this.questionBank);
+//        console.log(this.getQuestionBank);
         this.socket.emit('getQuizQuestion', {
-            bank: this.questionBank,
+            bank: this.getQuestionBank(),
             qId: qId,
 //            excludeIds: this.asked
         }, (r) => {
@@ -168,20 +171,30 @@ class Quiz {
     submitAnswer(questionId, selectedIndexes, cb) {
         const o = {
             sessionID: this.gameAPI.session.uniqueID,
-            bank: this.questionBank,
+            bank: this.getQuestionBank(),
             questionId,
             selectedIndexes
         }
-       console.log('Submitting answer:', o);
+    //    console.log('Submitting answer:', o);
         // console.log(o);
         this.socket.emit('submitAnswer', o, (response) => {
             if (cb) cb(response);
         });
     }
-    setupGameAPI({ session, setupModalClose, completeEvent, getCheatState }) {
-        this.gameAPI = { session, setupModalClose, completeEvent, getCheatState };
-        this.gameAPI = { session, setupModalClose, completeEvent, getCheatState };
+    setupGameAPI({ session, setupModalClose, completeEvent, getCheatState, gameData }) {
+        this.gameAPI = { session, setupModalClose, completeEvent, getCheatState, gameData };
 //        console.log(this.gameAPI);
+    }
+    getGameAPI() {
+        return this.gameAPI;
+    }
+    getQuestionBank() {
+        let bank = this.questionBank;
+        if (this.gameAPI && this.gameAPI.gameData && this.gameAPI.gameData.questionBank) {
+            bank = this.gameAPI.gameData.questionBank;
+        } 
+        // console.log('returning question bank:', bank);
+        return bank;
     }
     init(socket) {
         this.socket = socket;

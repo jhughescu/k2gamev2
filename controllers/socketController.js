@@ -203,7 +203,7 @@ function initSocket(server) {
 //                    console.log('gone');
                 });
                 socket.on('newSession', (ob = {}, cb) => {
-//                    console.log('new session');
+                    console.log('new session');
                     const payload = { ...(ob || {}) };
                     const accessScope = getCourseScopeFromSession(session);
                     if (accessScope) {
@@ -292,6 +292,8 @@ function initSocket(server) {
                     });
                 });
                 socket.on('getSession', (sOb, cb) => {
+                    console.log('getSession requested');
+                    console.log(sOb);
                     sessionController.getSession(sOb, cb);
                 });
                 socket.on('updateSession', (sOb, cb) => {
@@ -621,6 +623,9 @@ function initSocket(server) {
                     const r = `s-${data.gameID}`;
 //                    console.log(`clearConsole to ${r} which has ${showRoomSize(r)} room`);
                     io.to(r).emit('refreshWin');
+                });
+                socket.on('getSession', (sOb, cb) => {
+                    sessionController.getSession(sOb, cb);
                 });
             }
             // end toolkit client

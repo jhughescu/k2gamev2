@@ -1,3 +1,5 @@
+
+
 document.addEventListener('DOMContentLoaded', function () {
     //    return;
 
@@ -1072,6 +1074,28 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         });
     };
+    const showModalBoost = (ev) => {
+        const m = $('#overlay_modal');
+        m.show();
+        m.addClass('clickable');
+        pauseSession();
+        completeEvent({auto: true});
+        renderTemplate('overlay_modal', `modal`, {
+            type: 'boost'
+        }, () => {
+            renderTemplate('modal_content', `modal/event/boost`, ev, () => {
+                setupModalClose($('#overlay_modal'), true, {
+                    display: 'Close',
+                    ev: ev,
+                    methodPost: function () {
+                        Climber.boostAll(ev.resultString === 'good');
+                        console.log('do whatever', ev);
+                        unpauseSession();
+                    }
+                });
+            });
+        });
+    };
     const removeFullscreenModalClick = () => {
         document.querySelector('#overlay_modal').removeEventListener('click', closeModal);
     }
@@ -1270,7 +1294,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 session = sesh;
                 if (window.getQueries().hasOwnProperty('team')) {
                     const ft = parseInt(window.getQueries().team);
-                    console.log(`force team to ${ft} (if available)`);
+                    // console.log(`force team to ${ft} (if available)`);
                     if (gameData.teams[ft]) {
                         session.team = gameData.teams[ft];
                     }
@@ -1281,7 +1305,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 expandSession();
                 const initO = Object.assign({}, gameData);
                 initO.session = session;
+                // console.log('create eventStack with initO', initO);
+                // console.log('create eventStack with initO', JSON.parse(JSON.stringify(initO)));
                 eventStack = new EventStack(initO);
+                // console.log('session set, init render');
+                // console.log(eventStack);
                 summariseSession();
                 if (!versionControl.isCurrentVersion(session.uniqueID)) {
                     if (window.location.host.includes('localhost')) {
@@ -1300,7 +1328,16 @@ document.addEventListener('DOMContentLoaded', function () {
                 goQuiz();
                 updateView();
                 if (session.state === 'new') {
+                    const rEvs = eventStack.allEvents.filter(e => e.probability);
+                    // console.log('new session, set to incomplete - process the random events?', eventStack, rEvs);
+                    const rEvents = eventStack.processRandomEvents();
+                    // const evs = eventStack.processAllEvents(true);
+                    // console.log('* * * * * * processed random events', rEvents);
+                    
+                    updateSession('eventsRandom', rEvents.map(({ n, time, active, resultString }) => ({ n, time, active, resultString })));
                     updateSession('state', 'incomplete');
+                } else {
+                    // console.log(`THIS IS NOT NEW`, gameData, session);
                 }
                 clearInterval(i);
 
@@ -1387,13 +1424,9 @@ document.addEventListener('DOMContentLoaded', function () {
             console.log('session not ready');
         }
     };
-//    console.log($.isEmptyObject(window.clone(session)));
-//    console.log(window.clone(session));
     window.changeSupportTeam = changeSupportTeam;
     window.changeSupportTeamV1 = changeSupportTeamV1;
     let supportTeamList = [];
-
-
     const buildSupportTeamV1 = () => {
         // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! NOTE works only with changeSupportTeamV1 !!!!!!!!!!!!!!!!!!!!!!!!!!!
         // sets up a support team for interations
@@ -1447,7 +1480,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         return { institution: '', course: '' };
     };
-
     const resolveCourseScopeForNewSession = async () => {
         const scopeFromPath = getCourseScopeFromPath();
         if (scopeFromPath.institution && scopeFromPath.course) {
@@ -1478,16 +1510,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Main init method:
     const checkSession = async () => {
-        //        console.log(`checkSession, newconnect? ${newconnect}`);
-//        showOverlay(`Start new game?`, {
-//            button: 'yes',
-//            action: startNew
-//        });
         const gid = getStoreID();
         const lid = localStorage.getItem(gid);
         logUpdate(`${lid ? 'restore' : 'new'}`, `session`);
-        //        console.log(gid);
-        //        console.log(lid);
         if (Boolean(lid)) {
             gameflow(`continuing game ${lid}`, {
                 style: 'ok'
@@ -1495,10 +1520,6 @@ document.addEventListener('DOMContentLoaded', function () {
             gameflow(`newconnect? ${newconnect}`)
             if (newconnect) {
                 gameflow(`You can choose to start a new game [confirm1]`);
-//                showOverlay(`Start new game?`, {
-//                    button: 'yes',
-//                    action: startNew
-//                });
                 let reset = false;
                 if (reset) {
                     clearSession();
@@ -1506,7 +1527,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
                 newconnect = false;
             }
-            //            console.log(`joinRoom 1`);
             socket.emit('joinRoom', lid);
             socket.emit('restoreSession', {
                 uniqueID: lid
@@ -1519,6 +1539,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         checkSession();
                         return;
                     }
+                    // console.log(`call setSession with`, sesh);
                     setSession(sesh, 'restored');
                 } else {
                     localStorage.removeItem(gid);
@@ -1538,20 +1559,18 @@ document.addEventListener('DOMContentLoaded', function () {
                     gameflow('invalid institution or course link', { style: 'warning' });
                     return;
                 }
+                // console.log(`scriptgame calls setSession with`, JSON.parse(JSON.stringify(sesh)), sesh);
+                // debugger;
                 setSession(sesh, 'new');
                 const i = setInterval(() => {
                     if (gameData !== null) {
                         clearInterval(i);
-                        //                        console.log('creating three blank team members');
-                        //                        debugger;
                         setTeamMember(0, -1);
                         setTeamMember(1, -1);
                         setTeamMember(2, -1);
                         setNewEventArray();
                         localStorage.setItem(gid, session.uniqueID);
-                        //                        console.log(`joinRoom 2`);
                         socket.emit('joinRoom', session.uniqueID);
-                        //                        enableButton('btn-resources', true);
                     }
                 }, 2000);
 
@@ -1672,6 +1691,18 @@ document.addEventListener('DOMContentLoaded', function () {
         const p = Object.entries(session).filter(s => s[0].includes('profile')).map(([_, value]) => value);
         return p;
     };
+    const exposeClimberConsoleHelpers = () => {
+        if (!window.isLocal || !window.isLocal()) {
+            return;
+        }
+
+        window.Climber = Climber;
+        window.getClimbers = () => Climber.getClimbers();
+        window.getClimberByIndex = (index = 0) => Climber.getClimbers()[index] || null;
+        window.getClimberByProfile = (profile = 0) => {
+            return Climber.getClimbers().find((climber) => Number(climber.profile) === Number(profile)) || null;
+        };
+    };
     const showProfiles = () => {
         const p = getProfiles();
         //        console.log(p);
@@ -1755,7 +1786,10 @@ document.addEventListener('DOMContentLoaded', function () {
     };
 
     const updateSession = (p, v, cb) => {
-//        console.log(`updateSession`, p, v);
+        // console.log(`%cupdateSession called with`, 'background-color: black; color: yellow;', p, v);
+        if (p === 'eventsRandom') {
+            // console.log(` * * * updateSession`, p, v);
+        }
         session[p] = v;
         expandSession();
         const hup = {
@@ -1766,8 +1800,10 @@ document.addEventListener('DOMContentLoaded', function () {
             gameflow(`update complete: (${p} set to ${JSON.stringify(v)})`);
             if (cb) {
                 cb(str);
+                // console.log('%cupdateSession callback', 'background-color: black; color: green;', str);
             }
         });
+        window.tools.update(session, Object.assign({allEvents: eventStack.getEvents()}, gameData));
     };
 
     const getCurrentState = () => {
@@ -1843,12 +1879,17 @@ document.addEventListener('DOMContentLoaded', function () {
             //            console.log(d.route.stages);
             //            console.log(d);
             d.teams.forEach(t => t.adjectiveLower = t.adjective.toLowerCase());
+            if (eventStack) { 
+                d.allEvents = eventStack.getEvents();
+            }
+            // console.log('it has been got');
             return d;
         }
     };
     const getData = () => {
+        // console.log('getData called');
         socket.emit('getGameData', (d) => {
-            //            console.log(`game data ready`);
+            // console.log(`gameData returned`, JSON.parse(JSON.stringify(d)));
 
             gameData = processData(d);
             //            console.log(d)
@@ -2646,10 +2687,10 @@ document.addEventListener('DOMContentLoaded', function () {
     };
     const setupResourcesMobile = () => {
 //        return;
-        console.log(`setupResourcesMobile`, $('.mini').length);
+        // console.log(`setupResourcesMobile`, $('.mini').length);
 //        console.log();
         if (window.innerWidth <= 800 && $('.mini').length === 0) {
-            console.log('do it');
+            // console.log('do it');
             const $scroller = $('#theatre');
 //            const $header = $('.nav-header-container');
 //            const $content = $('.resources-grid');
@@ -3133,12 +3174,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Events
     const setNewEventArray = () => {
-        //        console.log(`setNewEventArray called`);
+        // console.log(`setNewEventArray called`);
         if (session && gameData) {
             session.events = new Array(gameData.events.length).fill(0);
-            //            console.log('SUCCESS');
-            //            console.log('new event array:');
-            //            console.log(session.events);
+            console.log('setNewEventArray method called', session, gameData);
+            getData();
             updateSession('events', session.events);
             eventStack.setEventSummary(session.events);
         } else {
@@ -3210,8 +3250,7 @@ document.addEventListener('DOMContentLoaded', function () {
     //  # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # eventTrigger
     const eventTrigger = (ev) => {
        console.log(`eventTrigger`, ev.time, ev.event);
-//        console.log(session.events);
-//        console.log(`should trigger: ${session.events[window.clone(ev).n] === 0}`);
+       console.log(ev);
         // EventStack calls this method when a new event is to be triggered
         /*
         if (stormUnderway()) {
@@ -3238,6 +3277,17 @@ document.addEventListener('DOMContentLoaded', function () {
                     completeEvent({auto: true});
                     return;
                 }
+            }
+        }
+        
+        if (ev.probability) {
+            if (ev.result.hasOwnProperty('good')) {
+                ev.result = ev.result[ev.resultString];
+            }
+            ev.message = ev.result.message;
+            if (ev.template.includes('boost')) {
+                showModalBoost(ev);
+                return;
             }
         }
         ev = prepEvent(ev);
@@ -3268,7 +3318,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (methodFunc && typeof methodFunc === 'function') {
                     methodFunc({}, ev);
                     // force autocomplete if the ev.method does this
-//                console.log(`non-modal event (autocomplete)`);
                     completeEvent({auto: true});
                 } else {
                     console.error(`Unknown event method: ${ev.method}`);
@@ -3282,7 +3331,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (ev) {
             const evSumm = eventStack.updateSummary(ev, 1);
             updateSession('events', evSumm);
-           console.log(`event summary updated (${ev.n} to 1) ${evSumm}`);
+        //    console.log(`event summary updated (${ev.n} to 1) ${evSumm}`);
             //            console.log(ev);
         }
     };
@@ -3852,6 +3901,7 @@ document.addEventListener('DOMContentLoaded', function () {
         console.log(Climber.getClimbers());
         console.log(Climber.getClimbers().map(c => c = getClimberObject(c, ['filename', 'allDelays', 'allLandmarks'])));
     };
+    exposeClimberConsoleHelpers();
     window.renderClimberProfiles = renderClimberProfiles;
     window.renderLeaderboardClimber = renderLeaderboardClimber;
     const renderGateway = () => {
@@ -3876,7 +3926,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // quiz
     const goQuiz = () => {
         if (quiz === null) {
-            quiz = new Quiz(socket, { session, setupModalClose, completeEvent, getCheatState });
+            quiz = new Quiz(socket, { session, setupModalClose, completeEvent, getCheatState, gameData  });
         }
     };
     const getQuestionAndRender = () => {
@@ -4287,7 +4337,7 @@ document.addEventListener('DOMContentLoaded', function () {
     gTimer.showtime = showtime;
     gTimer.get_tAdj = get_tAdj;
     gTimer.getTimeFromDisplay = getTimeFromDisplay;
-    console.log('showtime established');
+    // console.log('showtime established');
     gTimer.storageUpdater = storageUpdater;
     const toggleTimer = () => {
         Climber.storeSummaries();

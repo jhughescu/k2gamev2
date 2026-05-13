@@ -1,7 +1,7 @@
 {
-  "timestamp": "2026-04-01T16:54:14+01:00",
-  "commitHash": "321aa1b59696bcdd4c320af669c81f7908056052",
-  "commitMessage": "release: v1.0.1 nonbreaking admin/facilitator updates",
+  "timestamp": "2026-05-12T13:08:02+01:00",
+  "commitHash": "e6d21418f97650ddb9d69c3695e0d11866ab99cf",
+  "commitMessage": "Interrupt Game feature added to toolkit - only for dev testing, as Climber vectors don't seem to work very well...",
   "branch": "master",
   "githubReleaseTag": null,
   "githubRunNumber": null,
