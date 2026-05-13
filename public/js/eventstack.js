@@ -143,7 +143,7 @@ class EventStack {
         return re.map((e, i) => {
         //     console.log(i, JSON.parse(JSON.stringify(e)));
             let n = e.probability > Math.random();
-            n = 1;
+            // n = 1;
             const o = {
                 active: n,
                 // time: 3 + (i * 5),
