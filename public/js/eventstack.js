@@ -138,7 +138,7 @@ class EventStack {
         return ae;
     };
     processRandomEvents() {
-        // console.log(`%cprocessRandomEvents: processing random events`, 'background-color: black; color: orange;');
+        console.log(`%cprocessRandomEvents: processing random events`, 'background-color: black; color: orange;');
         const re = this.allEvents.filter(e => e.probability);
         return re.map((e, i) => {
         //     console.log(i, JSON.parse(JSON.stringify(e)));
@@ -155,7 +155,7 @@ class EventStack {
                 o.resultString = 'good';
             }
             e = Object.assign(e, o);
-            // console.log(JSON.parse(JSON.stringify(e)));
+            console.log(JSON.parse(JSON.stringify(e)));
             return e;
         });
     };
@@ -198,7 +198,7 @@ class EventStack {
         // return a set of the random events which includes the timings set in the processRandomEvents method, which should be called at session init and stored in the session data
         const re = this.gameData.randomEvents || [];
         const ret = this.gameData.session.eventsRandom || [];
-        // console.log(`random events in game data`, re, JSON.parse(JSON.stringify(ret)));
+        console.log(`random events in game data`, re, JSON.parse(JSON.stringify(ret)));
         let out = [];
         if (ret.length) {
             for (let i = 0; i < ret.length; i++) {
@@ -216,6 +216,7 @@ class EventStack {
             }
             
         }
+        console.log(`random events returned:`, re, JSON.parse(JSON.stringify(out)));
         return out;
     }
     getRandomEventsV1() {
