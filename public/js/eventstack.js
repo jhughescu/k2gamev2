@@ -130,7 +130,7 @@ class EventStack {
         } else {
             console.warn(`cannot process events; data model incomplete`);
         }
-        // console.log('\n\n * * events processed', this.allEvents);
+        console.log('\n\n * * events processed', this.allEvents);
     }
     processAllEvents() {
         const re = this.processRandomEvents();
