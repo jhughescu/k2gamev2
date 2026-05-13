@@ -146,8 +146,8 @@ class EventStack {
             n = 1;
             const o = {
                 active: n,
-                time: 3 + (i * 5),
-                // time: n ? Math.round(e.range[0] + Math.random() * (e.range[1] - e.range[0])) : -1
+                // time: 3 + (i * 5),
+                time: n ? Math.round(e.range[0] + Math.random() * (e.range[1] - e.range[0])) : -1
             };
             if (e.result.hasOwnProperty('good') && e.result.hasOwnProperty('bad')) {
                 o.resultString = Math.random() > 0.5 ? `good` : `bad`;
