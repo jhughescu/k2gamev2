@@ -578,6 +578,7 @@ const createGeneratedSessions = async (req, res) => {
                 teamRef: Number(session && session.teamRef),
                 state: String(session && session.state || '').trim(),
                 time: Number(session && session.time || 0),
+                completionTime: Number(session && session.completionTime || 0),
                 supportTeamRef: Number(session && session.supportTeamRef),
                 events: Array.isArray(session && session.events) ? session.events : [],
                 profile0: isPlainObject(session && session.profile0) ? session.profile0 : { blank: true },

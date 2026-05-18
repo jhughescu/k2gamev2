@@ -89,7 +89,10 @@ class Quiz {
     clearSubmit() {
         window.removeTemplate('modal_footer');
     };
-    setupSubmit(q) {
+    setupSubmit(q = {}) {
+        if (this.currentQuestion) {
+            q = this.currentQuestion;
+        }
         const self = this;
         window.removeTemplate('modal_footer');
         window.renderTemplate('modal_footer', 'modal.footer.button', {display: 'Submit'}, () => {
@@ -102,7 +105,8 @@ class Quiz {
                     self.getAllInputs().prop('disabled', true);
                     if (res.correctAnswerIndexes.length === 0) {
                         // no correct answer condition
-                        self.appendFeedback('Thank you for your response, you can now close this panel.')
+                        const fb = q.hasOwnProperty('feedback') ? q.feedback : 'Thank you for your response, you can now close this panel.';
+                        self.appendFeedback(fb)
                     } else {
                         // correct/incorrect condition
                         self.appendFeedback(res.correct ? '✅ Correct!' : '❌ Incorrect!');

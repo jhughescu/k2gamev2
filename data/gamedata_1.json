@@ -508,7 +508,19 @@
             }
         },
         {
-            "time": 30,
+            "range": [26, 29],
+            "probability": 0.1,
+            "eventTitle": "random1",
+            "event": "random1",
+            "result": {
+                "rate": 1,
+                "duration": 1,
+                "message": "You’ve discovered a sherpa guide and temporarily boosted how fast your team can climb for the next minute."
+            },
+            "template": "boost"
+        },
+        {
+            "time": 31,
             "ref": "A3PP",
             "event": "slip",
             "video": "61e9f9e9-7138-40ab-80d4-b2020098be16",
@@ -541,7 +553,7 @@
             "event": "photo",
             "active": true,
             "asset": "photoimages_photo-view.png",
-            "msg": "A climber has sent you a photo of their view"
+            "msg": "I can’t believe there are still teams who are only just starting their climb, it’s getting late!"
         },
         {
             "time": 37,
@@ -556,7 +568,7 @@
             "type": "photo",
             "asset": "photoimages_photo-stormy.png",
             "msgOLD": "Camp IV has received reports of an incoming storm. They will monitor the situation closely and provide further reports once its impact is confirmed.",
-            "msg": "Camp IV has received reports of an incoming storm. All climbers MUST reach the summit before descending. You have 30 minutes for all of your climbers to complete their climb."
+            "msg": "You have received reports of an incoming storm. You must get ALL your climbers down, but those who haven’t reached the summit yet are refusing to turn around. You only have 30 minutes before the storm hits."
         },
         {
             "time": 41,
@@ -565,6 +577,24 @@
             "method": "startStorm",
             "noModal": true,
             "noPause": true
+        },
+        {
+            "range": [41.5, 44],
+            "probability": 0.3,
+            "event": "random2",
+            "result": {
+                "good": {
+                    "rate": 1,
+                    "duration": 1,
+                    "message": "You’ve discovered a sherpa guide and temporarily boosted how fast your team can climb for the next minute."
+                },
+                "bad": {
+                    "rate": -1,
+                    "duration": 1,
+                    "message": "Your climbers are temporarily slowed down for the next minute while they battle fatigue."
+                }
+            },
+            "template": "boost"
         },
         {
             "time": 45,
@@ -597,6 +627,24 @@
             }
         },
         {
+            "range": [46, 49],
+            "probability": 0.7,
+            "event": "random3",
+            "result": {
+                "good": {
+                    "rate": 1,
+                    "duration": 1,
+                    "message": "You’ve discovered a sherpa guide and temporarily boosted how fast your team can climb for the next minute."
+                },
+                "bad": {
+                    "rate": -1,
+                    "duration": 1,
+                    "message": "Your climbers are temporarily slowed down for the next minute while they battle fatigue."
+                }
+            },
+            "template": "boost"
+        },
+        {
             "time": 50,
             "event": "foundoxygen",
             "active": false
@@ -607,6 +655,24 @@
             "event": "question",
             "question": 3,
             "method": "getQuestionAndRender"
+        },
+        {
+            "range": [51.5, 53],
+            "probability": 0.9,
+            "event": "random4",
+            "result": {
+                "good": {
+                    "rate": 1,
+                    "duration": 1,
+                    "message": "You’ve discovered a sherpa guide and temporarily boosted how fast your team can climb for the next minute."
+                },
+                "bad": {
+                    "rate": -1,
+                    "duration": 1,
+                    "message": "Your climbers are temporarily slowed down for the next minute while they battle fatigue."
+                }
+            },
+            "template": "boost"
         },
         {
             "time": 55,
@@ -637,6 +703,24 @@
                     }
                 ]
             }
+        },
+        {
+            "range": [56, 61],
+            "probability": 1,
+            "event": "random5",
+            "result": {
+                "good": {
+                    "rate": 1,
+                    "duration": 1,
+                    "message": "You’ve discovered a sherpa guide and temporarily boosted how fast your team can climb for the next minute."
+                },
+                "bad": {
+                    "rate": -1,
+                    "duration": 1,
+                    "message": "Your climbers are temporarily slowed down for the next minute while they battle fatigue."
+                }
+            },
+            "template": "boost"
         },
         {
             "time": 60,
@@ -687,90 +771,6 @@
             "time": 70,
             "active": false,
             "event": "killerstorm"
-        },
-        {
-            "range": [26, 29],
-            "probability": 0.1,
-            "eventTitle": "random1",
-            "event": "random1",
-            "result": {
-                "rate": 1,
-                "duration": 1,
-                "message": "You’ve discovered a sherpa guide and temporarily boosted how fast your team can climb for the next minute."
-            },
-            "template": "boost"
-        },
-        {
-            "range": [41, 44],
-            "probability": 0.3,
-            "event": "random2",
-            "result": {
-                "good": {
-                    "rate": 1,
-                    "duration": 1,
-                    "message": "You’ve discovered a sherpa guide and temporarily boosted how fast your team can climb for the next minute."
-                },
-                "bad": {
-                    "rate": -1,
-                    "duration": 1,
-                    "message": "Your climbers are temporarily slowed down for the next minute while they battle fatigue."
-                }
-            },
-            "template": "boost"
-        },
-        {
-            "range": [46, 49],
-            "probability": 0.7,
-            "event": "random3",
-            "result": {
-                "good": {
-                    "rate": 1,
-                    "duration": 1,
-                    "message": "You’ve discovered a sherpa guide and temporarily boosted how fast your team can climb for the next minute."
-                },
-                "bad": {
-                    "rate": -1,
-                    "duration": 1,
-                    "message": "Your climbers are temporarily slowed down for the next minute while they battle fatigue."
-                }
-            },
-            "template": "boost"
-        },
-        {
-            "range": [51.5, 53],
-            "probability": 0.9,
-            "event": "random4",
-            "result": {
-                "good": {
-                    "rate": 1,
-                    "duration": 1,
-                    "message": "You’ve discovered a sherpa guide and temporarily boosted how fast your team can climb for the next minute."
-                },
-                "bad": {
-                    "rate": -1,
-                    "duration": 1,
-                    "message": "Your climbers are temporarily slowed down for the next minute while they battle fatigue."
-                }
-            },
-            "template": "boost"
-        },
-        {
-            "range": [53, 54.5],
-            "probability": 1,
-            "event": "random5",
-            "result": {
-                "good": {
-                    "rate": 1,
-                    "duration": 1,
-                    "message": "You’ve discovered a sherpa guide and temporarily boosted how fast your team can climb for the next minute."
-                },
-                "bad": {
-                    "rate": -1,
-                    "duration": 1,
-                    "message": "Your climbers are temporarily slowed down for the next minute while they battle fatigue."
-                }
-            },
-            "template": "boost"
         }
     ],
     "eventsNO": [

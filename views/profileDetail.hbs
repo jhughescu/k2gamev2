@@ -1,6 +1,6 @@
 {{#if isGoal}}
     <div class="modal-body">
-        <img src="assets/icons/Icons_GoalIcon.png" alt="Goal icon" style="display: block; width: 100px; margin: 0 auto;" />
+        <img src="assets/icons/Icons_GoalIcon.svg" alt="Goal icon" style="display: block; width: 100px; margin: 0 auto;" />
         <h3>Goal</h3>
         <p>Everyone in your team must summit, take a photo, and return to camp IV. The best accumulated team time wins.</p>
 
@@ -25,17 +25,16 @@
 {{#if isWaitTime}}
     <div class="modal-body">
         <img src="assets/icons/Icons_WaitTimesIcon.png" alt="Wait time icon" style="display: block; width: 100px; margin: 0 auto;" />
-        <h3>Wait time</h3>
-        <p>You must stay the minimum waiting time within each section before you can proceed to the next. You can decrease your wait time by 7 minutes at the expense of 1
-unit of oxygen. This can only be done once in the Traverse and once in the Bottleneck.</p>
+        <h3>Delay</h3>
+        <p>Certain actions will result in a time penalty for that climber. Until the countdown has ended, that climber will be stuck in their current position.</p>
 
     </div>
 {{/if}}
 {{#if isResources}}
     <div class="modal-body">
         <img src="assets/icons/Icons_ResourceSharingIcon.png" alt="Resource Sharing icon" style="display: block; width: 100px; margin: 0 auto;" />
-        <h3>Resource sharing</h3>
-        <p>You can share emergency rope between teams in the same section with NO PENALTY. You CANNOT share resources outside of your current section. You CAN share resources in the same section with a penalty. 1 oxygen or sustenance unit shared will incur a penalty of 1 extra unit. Costing you 2 in total.</p>
+        <h3>Resource monitoring</h3>
+        <p>Keep a close eye on your climber’s resources throughout their expedition by tapping or clicking on their icons once they have started their climb. You can hide this information by tapping or clicking on them again if you need to.</p>
 
     </div>
 {{/if}}
@@ -47,19 +46,11 @@ unit of oxygen. This can only be done once in the Traverse and once in the Bottl
 
     </div>
 {{/if}}
-{{#if isSectionProblem}}
+{{#if isProblems}}
     <div class="modal-body">
-        <img src="assets/icons/Icons_SectionProblemIcon.png" alt="Section problem icon" style="display: block; width: 100px; margin: 0 auto;" />
-        <h3>Section problems</h3>
-        <p>Must be resolved by everyone in the same section, regardless of team, before anyone can proceed.</p>
-
-    </div>
-{{/if}}
-{{#if isProfileProblem}}
-    <div class="modal-body">
-        <img src="assets/icons/Icons_ProfileProblemIcon.png" alt="Profile problem icon" style="display: block; width: 100px; margin: 0 auto;" />
-        <h3>Profile problems</h3>
-        <p>If your profile is called out, you must return immediately to Camp IV to solve the problem with your Special Advisor. You will communicate with climbers in different sections over the radio but they might be reluctant to assist you due to the penalty they would incur. If nobody helps you, you receive a larger penalty. You CANNOT ask for help from climbers who have summited and returned to Camp IV.</p>
+        <img src="assets/icons/Icons_ProblemsIcon.png" alt="Section problem icon" style="display: block; width: 100px; margin: 0 auto;" />
+        <h3>Problems</h3>
+        <p>During the expedition, your climbers will face various problems that will require your assistance. As with most real-world problems, there is an element of chance involved (represented by a die roll) and you will just have to manage the outcome as best you can. Each problem needs to be resolved before you can move on.</p>
 
     </div>
 {{/if}}

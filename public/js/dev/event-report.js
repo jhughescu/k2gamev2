@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', async () => {
     const EVENT_REPORT_REQUEST = 'k2:event-report:request';
     const EVENT_REPORT_RESPONSE = 'k2:event-report:response';
-    const QUIZ_API_URL = '/access/quiz/k2questionbank2';
+    const DEFAULT_QUIZ_BANK = 'k2questionbank2';
 
     const statusEl = document.getElementById('eventReportStatus');
     const contentEl = document.getElementById('eventReportContent');
@@ -19,8 +19,28 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     const loadQuizQuestions = async () => {
+        const resolveQuestionBank = async () => {
+            try {
+                const response = await fetch('/access/gamedata', {
+                    headers: {
+                        Accept: 'application/json'
+                    }
+                });
+                if (!response.ok) {
+                    return DEFAULT_QUIZ_BANK;
+                }
+                const gameData = await response.json();
+                return (gameData && typeof gameData.questionBank === 'string' && gameData.questionBank.trim())
+                    ? gameData.questionBank.trim()
+                    : DEFAULT_QUIZ_BANK;
+            } catch (err) {
+                return DEFAULT_QUIZ_BANK;
+            }
+        };
+
+        const questionBank = await resolveQuestionBank();
         try {
-            const res = await fetch(QUIZ_API_URL, {
+            const res = await fetch(`/access/quiz/${encodeURIComponent(questionBank)}`, {
                 headers: {
                     Accept: 'application/json'
                 }

@@ -1,7 +1,7 @@
 {
-  "timestamp": "2026-05-12T13:08:02+01:00",
-  "commitHash": "e6d21418f97650ddb9d69c3695e0d11866ab99cf",
-  "commitMessage": "Interrupt Game feature added to toolkit - only for dev testing, as Climber vectors don't seem to work very well...",
+  "timestamp": "2026-05-18T12:43:54+01:00",
+  "commitHash": "3fe533592a696c46fb51c9c5930de81e23948f6c",
+  "commitMessage": "fix: re-enable random probability check",
   "branch": "master",
   "githubReleaseTag": null,
   "githubRunNumber": null,

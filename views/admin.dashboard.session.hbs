@@ -10,13 +10,21 @@
 climbers:
 <table>
 
-<th>name</th><th>time</th><th>status</th><th>delays</th><th>total delay</th>
+<th>name</th><th>status</th><th>delays</th><th>total delay</th>
 {{#each climbers}}
 <tr>
-    <td>{{name}}</td><td>{{totalTimeFormat}}</td><td>{{status}}{{#if finished}} ({{finishTimeDisplay}}){{/if}}</td><td>{{allDelaysDisplay}}</td><td>{{totalDelays}}</td>
+    <td>{{name}}</td><td>{{status}}{{#if finished}} ({{finishTimeDisplay}}){{/if}}</td><td>{{allDelaysDisplay}}</td><td>{{totalDelays}}</td>
 </tr>
 {{/each}}
 </table>
+{{#if session.completionTime}}
+<div class="completionTimePanel" style="margin: 20px 0; padding: 10px; border: 1px solid #ccc; background: #f8f8f8;">
+    <h3>Completion Time</h3>
+    <div style="font-size: 1.5em; font-weight: bold;">
+        {{session.completionTimeDisplay}}
+    </div>
+</div>
+{{/if}}
 <table>
 {{#each answers}}
 <tr><td>{{@key}}) {{this}}</td></tr>

@@ -17,34 +17,30 @@
         {{/if}}
     </div>
 
+    {{#if questionText}}
+        <div class="event-question-panel">
+            <p class="event-question-label">Question</p>
+            <p class="event-question-text">{{questionText}}</p>
+            {{#if answerOptions.length}}
+                <div class="event-answer-list">
+                    {{#each answerOptions}}
+                        <span{{#if selected}} class="event-answer-option selected"{{else}} class="event-answer-option"{{/if}}>{{text}}</span>
+                    {{/each}}
+                </div>
+            {{/if}}
+        </div>
+    {{/if}}
+
     <p class="event-time-line">
         {{time}} minutes{{#if range.[0]}} (range {{range.[0]}} - {{range.[1]}}){{/if}}
     </p>
 
     <table class="event-prop-table">
         <tbody>
-            {{#if questionText}}
-                <tr>
-                    <th class="event-prop-key">question:</th>
-                    <td class="event-prop-value">"{{questionText}}"</td>
-                </tr>
-            {{/if}}
             {{#if ref}}
                 <tr>
                     <th class="event-prop-key">ref:</th>
                     <td class="event-prop-value">{{ref}}</td>
-                </tr>
-            {{/if}}
-            {{#if answerOptions.length}}
-                <tr>
-                    <th class="event-prop-key">answers:</th>
-                    <td class="event-prop-value">
-                        <div class="event-answer-list">
-                            {{#each answerOptions}}
-                                <span{{#if selected}} class="event-answer-option selected"{{else}} class="event-answer-option"{{/if}}>{{text}}</span>
-                            {{/each}}
-                        </div>
-                    </td>
                 </tr>
             {{/if}}
             {{#if method}}

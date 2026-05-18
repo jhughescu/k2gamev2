@@ -264,7 +264,8 @@ app.get('/play/:token', async (req, res) => {
                                 console.error('Session save failed on /play/:token (bound session):', err);
                                 return res.redirect('/');
                             }
-                            return res.sendFile(path.join(basePath, 'game.html'));
+                            setNoStoreHeaders(res);
+                            return res.sendFile(path.join(basePath, 'flat', 'entry-player.html'));
                         });
                     }
                 }
@@ -297,12 +298,47 @@ app.get('/play/:token', async (req, res) => {
                 console.error('Session save failed on /play/:token:', err);
                 return res.redirect('/');
             }
-            return res.sendFile(path.join(basePath, 'game.html'));
+            setNoStoreHeaders(res);
+            return res.sendFile(path.join(basePath, 'flat', 'entry-player.html'));
         });
     } catch (err) {
         console.error('Error in /play/:token route:', err && err.message ? err.message : err);
         return res.redirect('/');
     }
+});
+
+app.get('/entry-player', (req, res) => {
+    setNoStoreHeaders(res);
+    res.sendFile(path.join(basePath, 'flat', 'entry-player.html'));
+});
+
+app.get('/setup', (req, res) => {
+    setNoStoreHeaders(res);
+    res.sendFile(path.join(basePath, 'game.html'));
+});
+
+app.get('/play/:token/setup', async (req, res) => {
+    const token = (req.params.token || '').toLowerCase().trim();
+    if (!token) {
+        return res.redirect('/');
+    }
+
+    try {
+        const inst = await Institution.findOne({ 'courses.launchToken': token }).lean();
+        if (!inst || !Array.isArray(inst.courses)) {
+            return res.redirect('/');
+        }
+        const course = inst.courses.find((c) => ((c.launchToken || '').toLowerCase() === token));
+        if (!course) {
+            return res.redirect('/');
+        }
+    } catch (err) {
+        console.error('Error in /play/:token/setup route:', err && err.message ? err.message : err);
+        return res.redirect('/');
+    }
+
+    setNoStoreHeaders(res);
+    return res.sendFile(path.join(basePath, 'game.html'));
 });
 
 app.get('/facilitator/play/:token', async (req, res) => {

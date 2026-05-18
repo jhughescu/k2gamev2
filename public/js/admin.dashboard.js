@@ -216,6 +216,11 @@ document.addEventListener('DOMContentLoaded', function () {
             o.session.playTimeNum = s.playTime;
             o.session.playTime = window.formatSplitTime(window.createSplitTime(window.formatTime(s.playTime)));
         }
+        // Add completionTime and formatted display
+        if (typeof s.completionTime === 'number' && s.completionTime > 0) {
+            o.session.completionTime = s.completionTime;
+            o.session.completionTimeDisplay = window.formatTime(s.completionTime * 1000);
+        }
         s.quiz.forEach((q, i) => {
             let a = `${questions[i].question.substr(0, 30)}...`;
             let ans = [];
@@ -234,17 +239,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
         // everything else
-        const excludes = ['profile', '_id', 'type', 'supportTeamRef', '__v', 'quiz', 'complete', 'playTime', 'playTimeNum', 'events']
+        const excludes = ['profile', '_id', 'type', 'supportTeamRef', '__v', 'quiz', 'complete', 'playTime', 'playTimeNum', 'events', 'time']
         Object.entries(s).forEach(([k, v]) => {
             if (!excludes.includes(k) && !/^profile\d+$/.test(k)) {
                 o.session[k] = prepValueForDisplay(k, v);
-                o.session.timeDisplay = window.formatTime(o.session.time * 1000);
-
-//                console.log(`include ${k}`);
-            } else {
-//                console.log(` * * exclude ${k}`);
             }
-
         });
 
 //        console.log(o);
@@ -327,7 +326,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const checkedSessions = getCheckedSessions();
         // arr includes only checked sessions so no need to use the checkedSessions array here (although it IS used later)
         let S = arr.map(i => sessions[i]).map(i => prepSessionForDisplay(i));
-        S = makeComparitives(S, ['session.playTimeNum', 'session.totalTimeNum']);
+        S = makeComparitives(S, ['session.playTimeNum', 'session.totalTimeNum', 'session.completionTime']);
         zone.show();
         display.show();
         S.map(s => delete s.climbers);
@@ -372,25 +371,17 @@ document.addEventListener('DOMContentLoaded', function () {
 //            console.log(s[1]);
         });
         rOb.sessions = S;
-        const totalTimeMax = Math.max(...S.map(s => s.session).map(s => s.totalTimeNum || 0));
-        rOb.barChartTotalTime = {
-            maxVal: totalTimeMax,
-            range: [1, 0.75, 0.5, 0.25].map(e => window.formatTime(e * totalTimeMax)),
+        // Completion Time bar chart
+        const completionTimeMax = Math.max(...S.map(s => s.session.completionTime || 0));
+        rOb.barChartCompletionTime = {
+            maxVal: completionTimeMax,
+            range: [1, 0.75, 0.5, 0.25].map(e => window.formatTime(e * completionTimeMax)),
             sessions: rOb.sessions.map(s => {
+                const val = s.session.completionTime || 0;
                 return {
                     name: s.session.name,
-                    metric: s.session.totalTimeNumPerc
-                }
-            })
-        };
-        const playTimeMax = Math.max(...S.map(s => s.session).map(s => s.playTimeNum || 0));
-        rOb.barChartPlayTime = {
-            maxVal: playTimeMax,
-            range: [1, 0.75, 0.5, 0.25].map(e => window.formatTime(e * playTimeMax )),
-            sessions: rOb.sessions.map(s => {
-                return {
-                    name: s.session.name,
-                    metric: s.session.playTimeNumPerc || 0
+                    metric: completionTimeMax > 0 ? (val / completionTimeMax) * 100 : 0,
+                    display: s.session.completionTimeDisplay || ''
                 }
             })
         };

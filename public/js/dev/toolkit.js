@@ -418,12 +418,12 @@ document.addEventListener('DOMContentLoaded', function () {
     const logEventReportRawData = (rawData) => {
         console.log('Event report raw data:', rawData);
     };
-    const respondWithEventReport = async (targetWindow, requestedQuestions = []) => {
+    const respondWithEventReport = async (targetWindow, requestedQuestions = null) => {
         if (!targetWindow || targetWindow.closed) {
             return;
         }
         try {
-            const questions = Array.isArray(requestedQuestions)
+            const questions = (Array.isArray(requestedQuestions) && requestedQuestions.length > 0)
                 ? requestedQuestions
                 : ((targetWindow && !targetWindow.closed && Array.isArray(targetWindow.questions)) ? targetWindow.questions : []);
             const payload = await buildEventReportPayload(questions);

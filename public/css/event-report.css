@@ -111,6 +111,33 @@ body {
     color: #222;
 }
 
+.event-question-panel {
+    margin-top: 10px;
+    margin-bottom: 12px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: #fff7e3;
+    border: 1px solid #efcb73;
+}
+
+.event-question-label {
+    margin: 0 0 4px;
+    font-size: 11px;
+    line-height: 1;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #8f5a00;
+    font-weight: 700;
+}
+
+.event-question-text {
+    margin: 0 0 8px;
+    font-size: 14px;
+    line-height: 1.35;
+    font-weight: 700;
+    color: #1f1f1f;
+}
+
 .event-meta {
     margin: 0;
     font-size: 11px;

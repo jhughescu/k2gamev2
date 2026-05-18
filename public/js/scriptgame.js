@@ -1532,13 +1532,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 uniqueID: lid
             }, (sesh) => {
                 if (typeof (sesh) === 'object') {
-                    const state = String((sesh && sesh.state) || '').toLowerCase();
-                    if (state.startsWith('completed')) {
-                        localStorage.removeItem(gid);
-                        gameflow(`completed session ${lid} found; starting new session`);
-                        checkSession();
-                        return;
-                    }
                     // console.log(`call setSession with`, sesh);
                     setSession(sesh, 'restored');
                 } else {
@@ -3396,6 +3389,17 @@ document.addEventListener('DOMContentLoaded', function () {
     };
     const endgame = (good) => {
         updateSession('state', `completed:${good ? 'good' : 'bad'}`);
+        // work out total finish time & write to Session (completionTime)
+        const C = Climber.getClimbers();
+        let tt = 0;
+        C.forEach((co, i) => {
+            // work on a duplicate of the Climber
+            const c = co.clone();
+            const et = c.calculateEndTime();
+            tt += et;
+        });
+        console.log(`%ctotal time: ${tt}`, 'background: black; color: lightgreen; font-size: 16px; font-weight: bold;');
+        updateSession('completionTime', tt);
         storePlayTimeOnExit();
         renderLeaderboardClimber();
     };
@@ -3891,7 +3895,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (cheating) {
                     setTimeout(() => {
                         // console.log('go again');
-                    //    startNew();
+                       startNew();
                     }, 2000);
                 }
             });

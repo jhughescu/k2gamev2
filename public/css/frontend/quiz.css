@@ -13,6 +13,7 @@ label {
 }
 label input[type="radio"], label input[type="checkbox"] {
     margin-top: 2px;
+    cursor: pointer;
 }
 .quizQuestion .bQuiz {
     margin: 10px auto;

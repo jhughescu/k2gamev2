@@ -935,15 +935,24 @@ function updateSelectedSessionsPanel() {
         return;
     }
     
-    // Get selected sessions with time values
+    // Get selected sessions with completionTime values
     const selectedSessions = sessions.filter(s => s.uniqueID && selectedSessionIds.has(s.uniqueID));
     
-    // Build time bar chart
+    // Build completionTime bar chart
     let timeChartHTML = '';
     if (selectedSessions.length > 0) {
-        const maxTime = Math.max(...selectedSessions.map(s => s.time || 0));
+        const formatSecondsToHHMM = (value) => {
+            const secs = Number(value);
+            if (!Number.isFinite(secs) || secs < 0) return 'N/A';
+            const totalMinutes = Math.floor(secs / 60);
+            const hours = Math.floor(totalMinutes / 60);
+            const minutes = totalMinutes % 60;
+            return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+        };
+
+        const maxTime = Math.max(...selectedSessions.map(s => Number(s.completionTime) || 0));
         const bars = selectedSessions.map(s => {
-            const time = s.time || 0;
+            const time = Number(s.completionTime) || 0;
             const percentage = maxTime > 0 ? (time / maxTime) * 100 : 0;
             return `
                 <div class="time-bar-row" data-session-id="${s.uniqueID}" style="display: flex; align-items: center; margin-bottom: 8px; gap: 8px; cursor: pointer; padding: 4px; border-radius: 3px; transition: background-color 0.2s ease;">
@@ -951,14 +960,14 @@ function updateSelectedSessionsPanel() {
                     <div style="flex: 1; background: #e0e0e0; height: 24px; border-radius: 3px; position: relative; overflow: hidden;">
                         <div class="time-bar-fill" style="background: linear-gradient(90deg, #0050a8, #003f85); height: 100%; width: ${percentage}%; border-radius: 3px; transition: all 0.3s ease;"></div>
                     </div>
-                    <div style="width: 60px; text-align: right; font-size: 12px; font-weight: 600; color: #333;">${time} min</div>
+                    <div style="width: 60px; text-align: right; font-size: 12px; font-weight: 600; color: #333;">${formatSecondsToHHMM(time)}</div>
                 </div>
             `;
         }).join('');
         
         timeChartHTML = `
             <div style="border: 1px solid #e0e0e0; border-radius: 4px; padding: 12px; background: #fafafa; margin-bottom: 15px;">
-                <h4 style="margin: 0 0 12px 0; font-size: 13px; font-weight: 600; color: #333;">Session Times</h4>
+                <h4 style="margin: 0 0 12px 0; font-size: 13px; font-weight: 600; color: #333;">Session Completion Times</h4>
                 <div style="max-height: 320px; overflow-y: auto; padding-right: 4px;">
                     ${bars}
                 </div>

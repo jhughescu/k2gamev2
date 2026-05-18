@@ -12,9 +12,11 @@
             <div class="y-label y-label-0"></div> <!-- keep this line! -->
         </div>
         <div class="chart">
-            {{#each sessions}}
-                <div class="bar chartbar_{{name}} ind ind_{{name}}" id='' style="height: {{metric}}%;"></div>
-            {{/each}}
+                        {{#each sessions}}
+                                <div class="bar chartbar_{{name}} ind ind_{{name}}" id='' style="height: {{metric}}%; position: relative;">
+                                    <span style="position: absolute; left: 8px; bottom: 4px; color: #222; font-size: 0.9em; font-weight: bold;">{{display}}</span>
+                                </div>
+                        {{/each}}
         </div>
     </div>
 </div>

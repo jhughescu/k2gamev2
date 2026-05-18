@@ -165,6 +165,7 @@ const newSession = async (ob, cb) => {
                 supportTeamRef: st,
                 state: 'new',
                 time: 0,
+                completionTime: 0,
                 profile0: {blank: true},
                 profile1: {blank: true},
                 profile2: {blank: true},
@@ -201,6 +202,7 @@ const ALLOWED_SET_FIELDS = new Set([
     'teamRef',
     'state',
     'time',
+    'completionTime',
     'supportTeamRef',
     'events',
     'eventsRandom',
@@ -221,8 +223,8 @@ const getFacilitatorTtlWarningDays = () => {
 };
 
 const updateSession = async (sOb, cb) => {
-//    console.log(`updateSession called for uniqueID: ${sOb.uniqueID} (${typeof(sOb.uniqueID)})`);
-//    console.log(sOb);
+   console.log(`updateSession called for uniqueID: ${sOb.uniqueID} (${typeof(sOb.uniqueID)})`);
+   console.log(sOb);
     try {
         const filter = { uniqueID: String(sOb.uniqueID) };
 

@@ -150,6 +150,14 @@ const sessionSchema = new Schema({
     accessKeyId: {
         type: String,
         trim: true
+    },
+    completionTime: {
+        type: Number,
+        min: 0,
+        validate: {
+            validator: isFiniteNumber,
+            message: 'completionTime must be a valid number'
+        }
     }
 }, {
     strict: true

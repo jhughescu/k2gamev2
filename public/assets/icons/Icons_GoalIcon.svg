@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Scene" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 551.99 555.06">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #d1356f;
+      }
+
+      .cls-2 {
+        fill: none;
+        stroke: #d1356f;
+        stroke-miterlimit: 10;
+        stroke-width: 17.85px;
+      }
+    </style>
+  </defs>
+  <line class="cls-2" x1="149.23" y1="481.77" x2="146.35" y2="97.38"/>
+  <path class="cls-1" d="M145.77,96.38l2.05,142.76s55.3-60.6,114.06-18.5c58.77,42.1,144.34-4.51,144.34-4.51l-2-139.12s-85.63,50.75-129.11,17.51c-63.88-48.84-129.34,1.85-129.34,1.85Z"/>
+</svg>
