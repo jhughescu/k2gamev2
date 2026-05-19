@@ -159,6 +159,10 @@ function loadSavedState() {
             const input = doc('dateTo');
             if (input) input.value = dateToFilter;
         }
+        if (state && typeof state.courseFilter === 'string') {
+            const select = doc('courseFilter');
+            if (select) select.value = state.courseFilter;
+        }
         updateClearDatesButtonState();
     } catch (err) {
         console.warn('Failed to load saved state:', err);
@@ -170,8 +174,10 @@ function saveState() {
         const select = doc('completionFilter');
         const dateFromInput = doc('dateFrom');
         const dateToInput = doc('dateTo');
+        const courseSelect = doc('courseFilter');
         const state = {
             completionFilter: select ? select.value : 'all',
+            courseFilter: courseSelect ? courseSelect.value : 'all',
             selectedSessionIds: Array.from(selectedSessionIds),
             savedSelectionIds: Array.from(savedSelectionIds),
             dateFromFilter: dateFromInput ? dateFromInput.value : null,
@@ -200,6 +206,13 @@ function applyCompletionFilter(sessionsArray, filterValue) {
         return sessionsArray.filter(s => s.state === 'completed:bad');
     }
     return sessionsArray;
+}
+
+function applyCourseFilter(sessionsArray, filterValue) {
+    if (!filterValue || filterValue === 'all') {
+        return sessionsArray;
+    }
+    return sessionsArray.filter(s => s.course === filterValue);
 }
 
 function updateClearDatesButtonState() {
@@ -427,6 +440,43 @@ async function login(event) {
     }
 }
 
+function populateCourseFilter() {
+    const filterLabel = doc('courseFilterLabel');
+    const filterSelect = doc('courseFilter');
+    
+    // Only show course filter for institution-level access
+    if (!currentAccess || currentAccess.type !== 'institution' || !filterSelect) {
+        if (filterLabel) filterLabel.style.display = 'none';
+        return;
+    }
+    
+    // Get unique courses from sessions
+    const uniqueCourses = new Set();
+    sessions.forEach(s => {
+        if (s.course) {
+            uniqueCourses.add(s.course);
+        }
+    });
+    
+    // Sort courses alphabetically
+    const courseList = Array.from(uniqueCourses).sort();
+    
+    // Populate the dropdown with "all" plus all courses
+    filterSelect.innerHTML = '<option value="all">all</option>' +
+        courseList.map(course => `<option value="${course}">${course}</option>`).join('');
+    
+    // Restore previously selected course
+    const savedCourseFilter = localStorage.getItem(STORAGE_KEY) ? JSON.parse(localStorage.getItem(STORAGE_KEY)).courseFilter : 'all';
+    if (savedCourseFilter && courseList.includes(savedCourseFilter)) {
+        filterSelect.value = savedCourseFilter;
+    } else {
+        filterSelect.value = 'all';
+    }
+    
+    // Show the course filter
+    if (filterLabel) filterLabel.style.display = 'flex';
+}
+
 function showSessionsSection() {
     if (doc('loginSection')) {
         doc('loginSection').style.display = 'none';
@@ -474,6 +524,9 @@ function showSessionsSection() {
     // Load launch URL and QR code for course-level access
     loadLaunchUrl();
     
+    // Populate course filter for institution-level access
+    populateCourseFilter();
+    
     // Add radio button listeners for select mode (after sessions section is visible)
     const radioButtons = document.querySelectorAll('input[name="selectMode"]');
     if (radioButtons.length > 0 && !radioButtons[0].dataset.listenerAdded) {
@@ -482,6 +535,10 @@ function showSessionsSection() {
             radio.addEventListener('change', (e) => {
                 const completionFilter = doc('completionFilter') ? doc('completionFilter').value : 'all';
                 let filteredSessions = applyCompletionFilter(sessions, completionFilter);
+                
+                // Apply course filter (institution-level access only)
+                const courseFilter = doc('courseFilter') ? doc('courseFilter').value : 'all';
+                filteredSessions = applyCourseFilter(filteredSessions, courseFilter);
                 
                 // Apply date range filter
                 const dateFromInput = doc('dateFrom');
@@ -713,6 +770,10 @@ function renderSessions() {
     const completionFilter = doc('completionFilter') ? doc('completionFilter').value : 'all';
     let filteredSessions = applyCompletionFilter(sessions, completionFilter);
     
+    // Filter sessions based on course filter dropdown (institution-level access only)
+    const courseFilter = doc('courseFilter') ? doc('courseFilter').value : 'all';
+    filteredSessions = applyCourseFilter(filteredSessions, courseFilter);
+    
     // Apply date range filter
     const dateFromInput = doc('dateFrom');
     const dateToInput = doc('dateTo');
@@ -732,7 +793,7 @@ function renderSessions() {
         });
     }
     
-    console.log(`Filtered sessions: ${filteredSessions.length} (completionFilter: ${completionFilter})`);
+    console.log(`Filtered sessions: ${filteredSessions.length} (completionFilter: ${completionFilter}, courseFilter: ${courseFilter})`);
     
     // Update sessions count
     const countSpan = doc('sessionsCount');
@@ -873,6 +934,10 @@ function updateSelectAllCheckbox() {
     // Get filtered sessions count
     const completionFilter = doc('completionFilter') ? doc('completionFilter').value : 'all';
     let filteredSessions = applyCompletionFilter(sessions, completionFilter);
+    
+    // Apply course filter (institution-level access only)
+    const courseFilter = doc('courseFilter') ? doc('courseFilter').value : 'all';
+    filteredSessions = applyCourseFilter(filteredSessions, courseFilter);
     
     // Apply date range filter
     const dateFromInput = doc('dateFrom');
@@ -1353,6 +1418,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const completionFilterSelect = doc('completionFilter');
     if (completionFilterSelect) {
         completionFilterSelect.addEventListener('change', () => {
+            currentPage = 1;
+            renderSessions();
+            saveState();
+        });
+    }
+    
+    // Add course filter dropdown listener (institution-level access only)
+    const courseFilterSelect = doc('courseFilter');
+    if (courseFilterSelect) {
+        courseFilterSelect.addEventListener('change', () => {
             currentPage = 1;
             renderSessions();
             saveState();
