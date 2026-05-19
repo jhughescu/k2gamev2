@@ -517,6 +517,22 @@ const createAccessKey = async (req, res) => {
             normalizedSessionLimit = parsedLimit;
         }
 
+        // Check for existing access key with the same scope
+        const duplicateQuery = {
+            type: normalizedType,
+            institutionSlug: instSlug
+        };
+        if (normalizedType === 'course') {
+            duplicateQuery.courseSlug = courseSlugNormalized;
+        }
+        const existingKey = await AccessKey.findOne(duplicateQuery).lean();
+        if (existingKey) {
+            const scope = normalizedType === 'institution'
+                ? `institution ${instSlug}`
+                : `course ${instSlug}/${courseSlugNormalized}`;
+            return res.status(409).json({ error: `Access key already exists for ${scope}` });
+        }
+
         const passwordHash = await hashPassword(password);
         const key = await AccessKey.create({
             type: normalizedType,
