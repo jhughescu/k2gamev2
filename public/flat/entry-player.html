@@ -31,7 +31,9 @@
                         You will be special advisor, like Erik Meyer, to a team of 3 climbers navigating the incredibly difficult journey of climbing K2. Face high-pressure events, make real-time decisions, and manage the unforeseen, all before time runs out.
                     </p>
                     <p class="entry-intro">
-                       Are you ready to take on the challenge? <a id="play-setup-link" href="/setup">Follow this link</a> to start your climb!
+                       Are you ready to take on the challenge?
+                    </p>
+                    <button type="button" id='getstarted' class='k2-modal-btn-link' style="max-width: 300px;">Get started</button>
                 </section>
             </div>
         </div>
@@ -39,7 +41,7 @@
 
     <script>
         (function () {
-            var followLink = document.getElementById('play-setup-link');
+            var followLink = document.getElementById('getstarted');
             if (!followLink) {
                 console.log('play setup link not found');
                 return;
@@ -50,10 +52,14 @@
                 console.log('play setup link: no token found in path', window.location.pathname);
                 return;
             }
-
+            console.log('play setup link: token found in path', pathMatch[1]);
             var token = pathMatch[1];
             var query = window.location.search || '';
-            followLink.setAttribute('href', '/play/' + encodeURIComponent(token) + '/setup' + query);
+
+            followLink.addEventListener('click', function () {
+                var targetUrl = '/play/' + encodeURIComponent(token) + '/setup' + query;
+                window.location.href = targetUrl;
+            });
         })();
     </script>
 
