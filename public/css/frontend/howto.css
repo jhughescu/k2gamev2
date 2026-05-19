@@ -70,6 +70,7 @@ p {
     display: grid;
     grid-template-columns: auto;
     grid-template-rows: 50% auto 50%;
+    place-items: center;
 
 }
 
@@ -1161,7 +1162,7 @@ body {
     background-repeat: no-repeat;
     background-position: center;
     background-attachment: fixed; /* optional: keeps it fixed while scrolling */
-    min-height: 100vh; /* body always at least full viewport height */+
+    min-height: 100vh; /* body always at least full viewport height */
 
 }
 .desktop-fade-bg {
@@ -1175,9 +1176,20 @@ body {
 /* Entry page */
 .entry-content {
     align-self: center;
-    /* background-color: rgba(255, 255, 255, 0.881); */
-    /* border-radius: 20px; */
-    /* max-width: 800px; */
+    justify-self: center;
+    width: min(90%, 860px);
+    padding: clamp(24px, 4vw, 48px);
+    background-color: rgba(255, 255, 255, 0.8);
+    border-radius: 20px;
+    box-shadow: none;
+    color: #000;
+    text-align: center;
+}
+
+.entry-content h1,
+.entry-content p {
+    color: #00354a;
+    text-shadow: none;
 }
 .entry-intro {
     max-width: 560px;
@@ -1186,14 +1198,44 @@ body {
 }
 .entry-content a,
 .entry-content a:visited {
-    color: #fff;
-    text-decoration: none;
+    color: #000;
+    text-decoration: underline;
 }
 .entry-content a:hover,
 .entry-content a:focus {
-    color: #fff;
+    color: #000;
     text-decoration: underline;
 }
+
+@media (max-width: 799px) {
+    body {
+        padding: 12px;
+    }
+
+    .home-page-grid {
+        height: auto;
+        min-height: calc(100dvh - 24px);
+        grid-template-rows: auto;
+        align-content: start;
+        justify-items: center;
+        padding: 0;
+    }
+
+    .entry-content {
+        width: min(96%, 860px);
+        max-height: calc(100dvh - 40px);
+        overflow-y: auto;
+        padding: 20px;
+        margin-top: 8vh;
+        transform: none;
+    }
+
+    .entry-content .k2-modal-btn-link {
+        width: min(300px, 100%);
+        margin: 12px auto 0;
+    }
+}
+
 @media (min-width: 800px) {
 
     /* Main Mountain Background */
