@@ -102,9 +102,15 @@
                             </div>
                             <button id="clearDatesBtn" style="padding: 6px 12px; background: #0050a8; color: white; border: 1px solid #003f85; border-radius: 3px; cursor: pointer; font-size: 13px; font-weight: 500;">Clear</button>
                             <button id="downloadDataBtn" style="padding: 6px 12px; background: #2e7d32; color: white; border: 1px solid #1b5e20; border-radius: 3px; cursor: pointer; font-size: 13px; font-weight: 500;">Download Data</button>
-                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                                <input type="checkbox" id="showCompletedOnly" style="cursor: pointer;">
-                                <span>Show completed only</span>
+                            <label for="completionFilter" style="display: flex; align-items: center; gap: 8px; font-weight: 500;">
+                                Completion:
+                                <select id="completionFilter" style="padding: 6px; border: 1px solid #ccc; border-radius: 3px; cursor: pointer;">
+                                    <option value="all">all</option>
+                                    <option value="incomplete">incomplete</option>
+                                    <option value="completed">completed</option>
+                                    <option value="completed:good">completed: good</option>
+                                    <option value="completed:bad">completed: bad</option>
+                                </select>
                             </label>
                         </div>
                         <button id="deleteSelectedBtn" style="padding: 6px 12px; background: #d32f2f; color: white; border: 1px solid #b71c1c; border-radius: 3px; cursor: pointer; font-size: 13px; font-weight: 500;">Delete Selected</button>

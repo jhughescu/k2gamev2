@@ -1,7 +1,7 @@
 {
-  "timestamp": "2026-05-19T10:16:01+01:00",
-  "commitHash": "d4c08f97d4eaa4cf6956a7a1890552a8765bb6f8",
-  "commitMessage": "Update entry page styling in howto.css",
+  "timestamp": "2026-05-19T10:29:01+01:00",
+  "commitHash": "4505bc5999c23b4f8bb7123b43d20497150b2b56",
+  "commitMessage": "Prevent duplicate access keys for same institution/course scope\n\nAdd validation to check if an access key already exists before creation:\n- For institution keys: prevent duplicates based on institution slug\n- For course keys: prevent duplicates based on institution and course slugs\n- Return 409 Conflict status with descriptive error message if duplicate detected",
   "branch": "master",
   "githubReleaseTag": null,
   "githubRunNumber": null,

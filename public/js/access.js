@@ -139,9 +139,15 @@ function loadSavedState() {
         if (state && Array.isArray(state.savedSelectionIds)) {
             savedSelectionIds = new Set(state.savedSelectionIds);
         }
-        if (state && typeof state.showCompletedOnly === 'boolean') {
-            const checkbox = doc('showCompletedOnly');
-            if (checkbox) checkbox.checked = state.showCompletedOnly;
+        if (state && typeof state.completionFilter === 'string') {
+            const select = doc('completionFilter');
+            if (select) select.value = state.completionFilter;
+        } else {
+            // Fallback for old saved state with showCompletedOnly
+            if (state && typeof state.showCompletedOnly === 'boolean') {
+                const select = doc('completionFilter');
+                if (select) select.value = state.showCompletedOnly ? 'completed' : 'all';
+            }
         }
         if (state && state.dateFromFilter) {
             dateFromFilter = state.dateFromFilter;
@@ -161,11 +167,11 @@ function loadSavedState() {
 
 function saveState() {
     try {
-        const checkbox = doc('showCompletedOnly');
+        const select = doc('completionFilter');
         const dateFromInput = doc('dateFrom');
         const dateToInput = doc('dateTo');
         const state = {
-            showCompletedOnly: checkbox ? checkbox.checked : false,
+            completionFilter: select ? select.value : 'all',
             selectedSessionIds: Array.from(selectedSessionIds),
             savedSelectionIds: Array.from(savedSelectionIds),
             dateFromFilter: dateFromInput ? dateFromInput.value : null,
@@ -175,6 +181,25 @@ function saveState() {
     } catch (err) {
         console.warn('Failed to save state:', err);
     }
+}
+
+function applyCompletionFilter(sessionsArray, filterValue) {
+    if (!filterValue || filterValue === 'all') {
+        return sessionsArray;
+    }
+    if (filterValue === 'incomplete') {
+        return sessionsArray.filter(s => s.state === 'incomplete');
+    }
+    if (filterValue === 'completed') {
+        return sessionsArray.filter(s => s.state && (s.state === 'completed:good' || s.state === 'completed:bad'));
+    }
+    if (filterValue === 'completed:good') {
+        return sessionsArray.filter(s => s.state === 'completed:good');
+    }
+    if (filterValue === 'completed:bad') {
+        return sessionsArray.filter(s => s.state === 'completed:bad');
+    }
+    return sessionsArray;
 }
 
 function updateClearDatesButtonState() {
@@ -455,10 +480,8 @@ function showSessionsSection() {
         radioButtons[0].dataset.listenerAdded = 'true';
         radioButtons.forEach(radio => {
             radio.addEventListener('change', (e) => {
-                const showCompletedOnly = doc('showCompletedOnly') ? doc('showCompletedOnly').checked : false;
-                let filteredSessions = showCompletedOnly 
-                    ? sessions.filter(s => s.state && s.state !== 'incomplete')
-                    : sessions;
+                const completionFilter = doc('completionFilter') ? doc('completionFilter').value : 'all';
+                let filteredSessions = applyCompletionFilter(sessions, completionFilter);
                 
                 // Apply date range filter
                 const dateFromInput = doc('dateFrom');
@@ -686,11 +709,9 @@ function renderSessions() {
     console.log('=== SESSIONS DATA ===');
     console.log(`Total sessions: ${sessions.length}`);
     
-    // Filter sessions based on checkbox
-    const showCompletedOnly = doc('showCompletedOnly') ? doc('showCompletedOnly').checked : false;
-    let filteredSessions = showCompletedOnly 
-        ? sessions.filter(s => s.state && s.state !== 'incomplete')
-        : sessions;
+    // Filter sessions based on completion filter dropdown
+    const completionFilter = doc('completionFilter') ? doc('completionFilter').value : 'all';
+    let filteredSessions = applyCompletionFilter(sessions, completionFilter);
     
     // Apply date range filter
     const dateFromInput = doc('dateFrom');
@@ -711,7 +732,7 @@ function renderSessions() {
         });
     }
     
-    console.log(`Filtered sessions: ${filteredSessions.length} (showCompletedOnly: ${showCompletedOnly})`);
+    console.log(`Filtered sessions: ${filteredSessions.length} (completionFilter: ${completionFilter})`);
     
     // Update sessions count
     const countSpan = doc('sessionsCount');
@@ -850,10 +871,8 @@ function renderSessions() {
 
 function updateSelectAllCheckbox() {
     // Get filtered sessions count
-    const showCompletedOnly = doc('showCompletedOnly') ? doc('showCompletedOnly').checked : false;
-    let filteredSessions = showCompletedOnly 
-        ? sessions.filter(s => s.state && s.state !== 'incomplete')
-        : sessions;
+    const completionFilter = doc('completionFilter') ? doc('completionFilter').value : 'all';
+    let filteredSessions = applyCompletionFilter(sessions, completionFilter);
     
     // Apply date range filter
     const dateFromInput = doc('dateFrom');
@@ -1326,12 +1345,14 @@ if (doc('logoutBtn')) {
     doc('logoutBtn').addEventListener('click', logout);
 }
 
-// Add filter checkbox listener
+// Add filter listeners
 document.addEventListener('DOMContentLoaded', () => {
     loadSavedState();
-    const checkbox = doc('showCompletedOnly');
-    if (checkbox) {
-        checkbox.addEventListener('change', () => {
+    
+    // Add completion filter dropdown listener
+    const completionFilterSelect = doc('completionFilter');
+    if (completionFilterSelect) {
+        completionFilterSelect.addEventListener('change', () => {
             currentPage = 1;
             renderSessions();
             saveState();
