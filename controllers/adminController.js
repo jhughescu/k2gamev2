@@ -469,9 +469,9 @@ function generateRandomPassword() {
 // -- Access key management (admin/superuser) --
 const createAccessKey = async (req, res) => {
     try {
-        const { type, institutionSlug, courseSlug, password, label, firstName, surname, endDate, sessionLimit } = req.body || {};
-        if (!type || !institutionSlug || !password || !firstName || !surname) {
-            return res.status(400).json({ error: 'type, institutionSlug, password, firstName, and surname are required' });
+        const { type, institutionSlug, courseSlug, password, label, endDate, sessionLimit } = req.body || {};
+        if (!type || !institutionSlug || !password) {
+            return res.status(400).json({ error: 'type, institutionSlug, and password are required' });
         }
         const normalizedType = type.toLowerCase();
         if (!['institution', 'course'].includes(normalizedType)) {
@@ -493,12 +493,6 @@ const createAccessKey = async (req, res) => {
             if (!courseExists) {
                 return res.status(404).json({ error: 'Course not found on institution' });
             }
-        }
-
-        const normalizedFirstName = String(firstName).trim();
-        const normalizedSurname = String(surname).trim();
-        if (!normalizedFirstName || !normalizedSurname) {
-            return res.status(400).json({ error: 'firstName and surname are required' });
         }
 
         let normalizedEndDate = null;
@@ -530,8 +524,6 @@ const createAccessKey = async (req, res) => {
             courseSlug: courseSlugNormalized,
             passwordHash,
             label: label || '',
-            firstName: normalizedFirstName,
-            surname: normalizedSurname,
             endDate: normalizedEndDate,
             sessionLimit: normalizedSessionLimit,
             createdBy: req.session && req.session.username ? req.session.username : 'system'
@@ -653,8 +645,6 @@ const createGeneratedSessions = async (req, res) => {
                 courseSlug: first.course,
                 passwordHash,
                 label: generatedLabel,
-                firstName: 'Session',
-                surname: 'Generator',
                 createdBy: req.session && req.session.username ? req.session.username : 'system'
             });
             createdAccessKeyId = String(key._id);
@@ -966,11 +956,7 @@ const exportAccessKeySessions = async (req, res) => {
                 type: key.type || null,
                 institutionSlug: key.institutionSlug || null,
                 courseSlug: key.courseSlug || null,
-                facilitator: {
-                    firstName: key.firstName || null,
-                    surname: key.surname || null,
-                    label: key.label || null
-                }
+                label: key.label || null
             },
             sessions: exportedSessions
         };
@@ -978,11 +964,11 @@ const exportAccessKeySessions = async (req, res) => {
         const stamp = new Date().toISOString().replace(/[:.]/g, '-');
         const inst = String(key.institutionSlug || 'inst').toLowerCase();
         const course = String(key.courseSlug || 'all').toLowerCase();
-        const holder = `${String(key.firstName || '').toLowerCase()}_${String(key.surname || '').toLowerCase()}`
+        const label = String(key.label || 'export').toLowerCase()
             .replace(/[^a-z0-9_]+/g, '_')
             .replace(/_+/g, '_')
-            .replace(/^_|_$/g, '') || 'holder';
-        const fileName = `k2_sessions_${inst}_${course}_${holder}_${stamp}.json`;
+            .replace(/^_|_$/g, '') || 'export';
+        const fileName = `k2_sessions_${inst}_${course}_${label}_${stamp}.json`;
 
         res.setHeader('Content-Type', 'application/json; charset=utf-8');
         res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);

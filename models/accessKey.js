@@ -6,8 +6,6 @@ const accessKeySchema = new mongoose.Schema({
     courseSlug: { type: String, lowercase: true, trim: true },
     passwordHash: { type: String, required: true },
     label: { type: String, default: '' },
-    firstName: { type: String, default: '', trim: true },
-    surname: { type: String, default: '', trim: true },
     endDate: { type: Date, default: null },
     sessionLimit: { type: Number, min: 1, default: null },
     active: { type: Boolean, default: true },

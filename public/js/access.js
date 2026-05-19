@@ -355,12 +355,10 @@ async function login(event) {
     const type = doc('accessType').value;
     const institutionSlug = doc('institutionSlug').value.trim().toLowerCase();
     const courseSlug = doc('courseSlug').value.trim().toLowerCase();
-    const firstName = doc('firstName').value.trim();
-    const surname = doc('surname').value.trim();
     const password = doc('password').value;
 
-    if (!institutionSlug || !firstName || !surname || !password) {
-        showError('Institution, first name, surname, and password are required');
+    if (!institutionSlug || !password) {
+        showError('Institution and password are required');
         return;
     }
 
@@ -369,7 +367,7 @@ async function login(event) {
         return;
     }
 
-    const payload = { type, institutionSlug, firstName, surname, password };
+    const payload = { type, institutionSlug, password };
     if (type === 'course') {
         payload.courseSlug = courseSlug;
     }

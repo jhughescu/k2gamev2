@@ -1975,8 +1975,6 @@ function renderAccessKeys() {
             ? `INS: ${k.institutionSlug}`
             : `COU: ${k.institutionSlug} / ${k.courseSlug}`;
         const label = k.label ? ` • ${k.label}` : '';
-        const holder = `${k.firstName || ''} ${k.surname || ''}`.trim();
-        const holderLine = holder ? `<span class="institution-slug">Holder: ${holder}</span>` : '';
         const endDateLine = k.endDate ? `<span class="institution-slug">End date: ${new Date(k.endDate).toLocaleDateString()}</span>` : '<span class="institution-slug">End date: none</span>';
         const sessionLimitLine = Number.isInteger(k.sessionLimit)
             ? `<span class="institution-slug">Session limit: ${k.sessionLimit}</span>`
@@ -1989,7 +1987,6 @@ function renderAccessKeys() {
                     <div>
                         <h3>${scope}${label}</h3>
                         <span class="institution-slug">${activeBadge}</span>
-                        ${holderLine}
                         ${endDateLine}
                         ${sessionLimitLine}
                     </div>
@@ -2146,9 +2143,8 @@ async function deleteAccessKey(id) {
             ? `INS ${key.institutionSlug}`
             : `COU ${key.institutionSlug}/${key.courseSlug}`)
         : 'this key';
-    const holder = key ? `${key.firstName || ''} ${key.surname || ''}`.trim() : '';
     const label = key && key.label ? ` (${key.label})` : '';
-    const keyRef = `${scope}${holder ? ` - ${holder}` : ''}${label}`;
+    const keyRef = `${scope}${label}`;
 
     const confirmed = confirm(
         `Delete access key ${keyRef}?\n\n` +
@@ -2190,13 +2186,11 @@ async function createAccessKey(event) {
     const courseSlug = doc('accessCourseSlug').value;
     const password = doc('accessPassword').value;
     const label = doc('accessLabel').value.trim();
-    const firstName = doc('accessFirstName').value.trim();
-    const surname = doc('accessSurname').value.trim();
     const endDate = doc('accessEndDate').value;
     const sessionLimitRaw = doc('accessSessionLimit').value.trim();
 
-    if (!type || !institutionSlug || !password || !firstName || !surname) {
-        showError('Type, institution slug, password, first name, and surname are required');
+    if (!type || !institutionSlug || !password) {
+        showError('Type, institution slug, and password are required');
         return;
     }
     if (type === 'course' && !courseSlug) {
@@ -2217,9 +2211,7 @@ async function createAccessKey(event) {
         type,
         institutionSlug,
         password,
-        label,
-        firstName,
-        surname
+        label
     };
     if (type === 'course') {
         payload.courseSlug = courseSlug;
@@ -2245,8 +2237,6 @@ async function createAccessKey(event) {
         showSuccess('Access key created');
         doc('accessPassword').value = '';
         doc('accessLabel').value = '';
-        doc('accessFirstName').value = '';
-        doc('accessSurname').value = '';
         doc('accessEndDate').value = '';
         doc('accessSessionLimit').value = '';
         if (type === 'course') {

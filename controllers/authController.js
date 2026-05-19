@@ -386,11 +386,11 @@ const getAccessLoginOptions = async (req, res) => {
 };
 
 const accessLogin = async (req, res) => {
-    const { type, institutionSlug, courseSlug, password, firstName, surname } = req.body || {};
-    if (!type || !institutionSlug || !password || !firstName || !surname) {
+    const { type, institutionSlug, courseSlug, password } = req.body || {};
+    if (!type || !institutionSlug || !password) {
         return res.status(400).json({
             error: 'Bad Request',
-            message: 'type, institutionSlug, firstName, surname, and password are required'
+            message: 'type, institutionSlug, and password are required'
         });
     }
 
@@ -401,8 +401,6 @@ const accessLogin = async (req, res) => {
 
     const inst = (institutionSlug || '').toLowerCase();
     const course = (courseSlug || '').toLowerCase();
-    const normalizedFirstName = normalizeAccessName(firstName);
-    const normalizedSurname = normalizeAccessName(surname);
 
     const query = { type: normalizedType, institutionSlug: inst, active: true };
     if (normalizedType === 'course') {
@@ -419,12 +417,6 @@ const accessLogin = async (req, res) => {
 
     let matchedKey = null;
     for (const key of keys) {
-        const keyFirstName = normalizeAccessName(key.firstName);
-        const keySurname = normalizeAccessName(key.surname);
-        if (keyFirstName !== normalizedFirstName || keySurname !== normalizedSurname) {
-            continue;
-        }
-
         const ok = await verifyPassword(password, key.passwordHash);
         if (ok) {
             matchedKey = key;
@@ -459,8 +451,6 @@ const accessLogin = async (req, res) => {
         courseSlug: normalizedType === 'course' ? course : undefined,
         courseName: normalizedType === 'course' ? courseName : undefined,
         label: matchedKey.label || undefined,
-        firstName: matchedKey.firstName || undefined,
-        surname: matchedKey.surname || undefined,
         endDate: matchedKey.endDate || undefined,
         sessionLimit: Number.isInteger(matchedKey.sessionLimit) ? matchedKey.sessionLimit : undefined
     };
