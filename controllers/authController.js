@@ -306,11 +306,7 @@ const getAccessLoginOptions = async (req, res) => {
                 .filter(Boolean)
         );
 
-        const activeKeys = await AccessKey.find({
-            active: true,
-            firstName: { $exists: true, $ne: '' },
-            surname: { $exists: true, $ne: '' }
-        })
+        const activeKeys = await AccessKey.find({ active: true })
             .select('type institutionSlug courseSlug')
             .lean();
 
