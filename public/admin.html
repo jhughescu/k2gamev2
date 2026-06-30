@@ -301,6 +301,43 @@
                 </div>
             </div>
 
+            
+
+            <!-- Traffic Monitor Section -->
+            <div class="section-card" data-panel-id="trafficMonitor" style="margin-top: 32px;">
+                <div class="section-card-header">
+                    <h2>Runtime Traffic Monitor</h2>
+                    <div class="section-card-actions">
+                        <button type="button" id="trafficMonitorToggleBtn" class="secondary section-toggle-btn" aria-expanded="false" aria-controls="trafficMonitorBody">Expand</button>
+                    </div>
+                </div>
+                <div id="trafficMonitorBody" style="display: none;">
+                    <p class="muted">Live server-side traffic metrics updated every 2 seconds. Shows event rates, latency, and socket counts for the past 10 seconds.</p>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-top: 12px;">
+                        <div style="border: 1px solid #e5e7eb; border-radius: 6px; padding: 12px; background: #f9fafb;">
+                            <div style="font-size: 12px; color: #6b7280; margin-bottom: 4px;">Total Events/sec</div>
+                            <div id="trafficTotalPerSec" style="font-size: 24px; font-weight: 600; color: #1f2937;">—</div>
+                        </div>
+                        <div style="border: 1px solid #e5e7eb; border-radius: 6px; padding: 12px; background: #f9fafb;">
+                            <div style="font-size: 12px; color: #6b7280; margin-bottom: 4px;">updateSession/sec</div>
+                            <div id="trafficUpdateSessionRate" style="font-size: 24px; font-weight: 600; color: #1f2937;">—</div>
+                        </div>
+                        <div style="border: 1px solid #e5e7eb; border-radius: 6px; padding: 12px; background: #f9fafb;">
+                            <div style="font-size: 12px; color: #6b7280; margin-bottom: 4px;">updateSession p95 (ms)</div>
+                            <div id="trafficUpdateSessionP95" style="font-size: 24px; font-weight: 600; color: #1f2937;">—</div>
+                        </div>
+                        <div style="border: 1px solid #e5e7eb; border-radius: 6px; padding: 12px; background: #f9fafb;">
+                            <div style="font-size: 12px; color: #6b7280; margin-bottom: 4px;">Connected Sockets</div>
+                            <div id="trafficTotalSockets" style="font-size: 24px; font-weight: 600; color: #1f2937;">—</div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 12px; padding: 12px; background: #f3f4f6; border-radius: 6px;">
+                        <div style="font-size: 12px; color: #6b7280; margin-bottom: 8px;"><strong>Role Distribution</strong></div>
+                        <div id="trafficRoleBreakdown" style="font-size: 13px; font-family: monospace; color: #1f2937; white-space: pre;"></div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Sessions Section -->
             <div class="section-card" data-panel-id="sessions" style="margin-top: 32px;">
                 <div class="section-card-header">
@@ -392,6 +429,7 @@
         </div>
     </div>
 
+    <script src="/socket.io/socket.io.js"></script>
     <script src="/js/admin.js"></script>
 </body>
 </html>

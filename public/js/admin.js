@@ -29,6 +29,94 @@ let draggedPanelId = null;
 let sessionRetentionDays = 90;
 let pendingRestorePackageData = null;
 let pendingRestoreFileName = '';
+let adminDashboardSocket = null;
+let trafficStreamActive = false;
+
+function updateTrafficMonitorDisplay(snapshot) {
+    if (!snapshot) {
+        return;
+    }
+    const updateSessionEvent = snapshot.byEventRate.find(e => e.event === 'updateSession');
+    const updateSessionRate = updateSessionEvent ? updateSessionEvent.perSecond : 0;
+    const updateSessionLatency = snapshot.latency['updateSession'] || {};
+    const roleBreakdown = Object.entries(snapshot.byRole)
+        .map(([role, count]) => `${role}: ${count}`)
+        .join('\n');
+
+    doc('trafficTotalPerSec').textContent = snapshot.totals.perSecond.toString();
+    doc('trafficUpdateSessionRate').textContent = updateSessionRate.toString();
+    doc('trafficUpdateSessionP95').textContent = (updateSessionLatency.p95Ms || 0).toString();
+    doc('trafficTotalSockets').textContent = (snapshot.sockets.total || 0).toString();
+    doc('trafficRoleBreakdown').textContent = roleBreakdown || 'No connected sockets';
+}
+
+function startTrafficMonitorStream() {
+    if (trafficStreamActive || !adminDashboardSocket) {
+        return;
+    }
+    trafficStreamActive = true;
+    adminDashboardSocket.on('trafficSnapshot', (snap) => {
+        updateTrafficMonitorDisplay(snap);
+    });
+    adminDashboardSocket.emit('subscribeTrafficStream', (err, result) => {
+        if (err) {
+            console.error('Failed to subscribe to traffic stream:', err);
+            trafficStreamActive = false;
+        }
+    });
+}
+
+function stopTrafficMonitorStream() {
+    if (!trafficStreamActive || !adminDashboardSocket) {
+        return;
+    }
+    trafficStreamActive = false;
+    adminDashboardSocket.emit('unsubscribeTrafficStream', (err, result) => {
+        if (err) {
+            console.error('Failed to unsubscribe from traffic stream:', err);
+        }
+    });
+    adminDashboardSocket.off('trafficSnapshot');
+}
+
+function ensureAdminDashboardSocket() {
+    if (adminDashboardSocket) {
+        window.adminDashboardSocket = adminDashboardSocket;
+        return adminDashboardSocket;
+    }
+    if (typeof io !== 'function') {
+        console.warn('Socket.IO client is not available on this page');
+        return null;
+    }
+
+    adminDashboardSocket = io('', {
+        query: {
+            role: 'admin.dashboard'
+        }
+    });
+
+    adminDashboardSocket.on('authError', (data) => {
+        console.error('Socket authentication failed:', data && data.message ? data.message : data);
+    });
+
+    window.startTrafficStream = () => {
+        adminDashboardSocket.on('trafficSnapshot', (snap) => {
+            console.log('trafficSnapshot', snap);
+        });
+        adminDashboardSocket.emit('subscribeTrafficStream', (err, result) => {
+            console.log('subscribeTrafficStream', err, result);
+        });
+    };
+
+    window.stopTrafficStream = () => {
+        adminDashboardSocket.emit('unsubscribeTrafficStream', (err, result) => {
+            console.log('unsubscribeTrafficStream', err, result);
+        });
+    };
+
+    window.adminDashboardSocket = adminDashboardSocket;
+    return adminDashboardSocket;
+}
 
 function initRetentionArchiveFilterState() {
     const uiState = getUiState();
@@ -1059,6 +1147,8 @@ async function showAdminSection(role) {
         const roleLabel = role.charAt(0).toUpperCase() + role.slice(1);
         document.getElementById('dashboardHeading').textContent = `Dashboard (${roleLabel})`;
     }
+
+    ensureAdminDashboardSocket();
 
     await loadBuildInfo(role);
     await loadRetentionConfig();
@@ -3198,6 +3288,25 @@ document.getElementById('courseSlug').addEventListener('input', () => {
     courseSlugEdited = true;
     updateAddCourseButtonState();
 });
+
+const trafficMonitorToggleBtn = doc('trafficMonitorToggleBtn');
+const trafficMonitorBody = doc('trafficMonitorBody');
+if (trafficMonitorToggleBtn && trafficMonitorBody) {
+    trafficMonitorToggleBtn.addEventListener('click', function () {
+        const isExpanded = this.getAttribute('aria-expanded') === 'true';
+        if (isExpanded) {
+            trafficMonitorBody.style.display = 'none';
+            this.setAttribute('aria-expanded', 'false');
+            this.textContent = 'Expand';
+            stopTrafficMonitorStream();
+        } else {
+            trafficMonitorBody.style.display = 'block';
+            this.setAttribute('aria-expanded', 'true');
+            this.textContent = 'Collapse';
+            startTrafficMonitorStream();
+        }
+    });
+}
 document.getElementById('instSlug').addEventListener('input', () => {
     instSlugEdited = true;
     updateButtonState();

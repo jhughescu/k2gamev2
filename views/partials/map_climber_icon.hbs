@@ -12,6 +12,7 @@
     <div class='map-pointer-label' id='map-pointer-label_{{profile}}' style='display: none;'>
        {{> climber_summary_prod this}}
     </div>
+    <div class='clName'>{{#if gameData.isDev}}{{option}}) {{name}}{{/if}}</div>
     <img class='map-pointer-profile' src='assets/profiles/profileimages_{{filename}}.png' alt='' aria-hidden='true' />
     <img class='map-pointer' src='assets/icons/Icons_Pointer.png' alt='' aria-hidden='true' />
 </div>

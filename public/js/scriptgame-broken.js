@@ -18,7 +18,16 @@ document.addEventListener('DOMContentLoaded', function () {
             role: 'player'
         }
     });
+    const emitPlayerPresence = (present) => {
+        if (!socket || !socket.connected) {
+            return;
+        }
+        socket.emit('playerPresence', { present: !!present });
+    };
     window.socket = socket; // Expose for testing in console
+    socket.on('connect', () => {
+        emitPlayerPresence(!document.hidden);
+    });
     socket.on('disconnect', () => {
         //        theState.storeTime(session.time);
 
@@ -57,7 +66,8 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
     socket.on('requestGame', (id) => {
-//        console.log(`req game`, session.uniqueID.toString() === id.toString());
+    //    console.log(`%creq game`, 'background-color: black; color: green;', session.uniqueID.toString() === id.toString());
+    //    console.log(session);
         if (session) {
             if (session.uniqueID.toString() === id.toString()) {
                 socket.emit('gameFound', gameData);
@@ -451,6 +461,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
     const createClimber = (o) => {
+        console.log('create climber', o);
         const c = new Climber(o);
         c.onClimberUpdate = onClimberUpdate;
         return c;
@@ -688,11 +699,13 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     };
     const resourcesGoneSetup = (m, ev) => {
-        //        console.log(`resourcesGoneSetup`, ev);
+        console.log(`resourcesGoneSetup`, ev);
         const d = $('.resupply');
         const b = $('.k2-modal-btn');
         const out = {};
+        expandSession();
         const prof = session[`profile${ev.profile}`];
+        console.log(prof);
         renderResourceForm(ev.resourceObject, (rOb) => {
             const form = $('#resourceForm');
             if (!rOb) {
@@ -891,8 +904,6 @@ document.addEventListener('DOMContentLoaded', function () {
 //            playPauseSession();
             unpausing = true;
             console.log(`closeModal calls unpauseSession`);
-            // If there are any zeroes in the climber profiles, we need to check for them and handle them before unpausing the session
-            clearupZeroes();
 
         }
         removeFullscreenModalClick();
@@ -957,9 +968,15 @@ document.addEventListener('DOMContentLoaded', function () {
     };
     const showModalEvent = (ev) => {
         if (ev.noModal) {
+//            console.warn('noModal condition - just unpause?');
             unpauseSession();
             return;
         }
+    //    console.log(window.clone(ev));
+//        ev.current = true;
+//        if (ev.current) {
+//
+//            }
         if (ev.hasOwnProperty('supportTeam') && !cheating) {
             // duplicate the support team to break linkage with origin, randomise the list for display
             ev.supportTeam = window.clone(ev.supportTeam);
@@ -1243,7 +1260,7 @@ document.addEventListener('DOMContentLoaded', function () {
     };
     const expandSession = () => {
         // on init, takes a session and expands various items
-        //        console.log(`expandSession`);
+        console.log(` * * expandSession`);
         //        if (session.profile2.constructor.name !== 'Climber') {
         //            only run if profile2 not yet defined
         session.allProfiles = [];
@@ -1254,14 +1271,8 @@ document.addEventListener('DOMContentLoaded', function () {
                         summaryString: session[i].summary
                     };
                     const c = getClimber(o);
-//                    console.log('HERE', o);
-//                    console.log('HERE', c);
-//                    console.log('HERE', window.clone(c));
-//                    session[i] = window.clone(c);
                     delete session[i];
                     session[i] = c;
-                    //                        Object.assign(session[i], window.clone(c));
-//                    console.log(session[i]);
                     session[i].oxygen = window.clone(c).oxygen;
                     session.allProfiles.push(session[i]);
                 }
@@ -1285,9 +1296,24 @@ document.addEventListener('DOMContentLoaded', function () {
     };
     const setSession = (sesh, type) => {
         // unified method for setting the session
-        const i = setInterval(() => {
-            if (gameData !== null) {
+        const runOnNextFrame = (fn) => {
+            if (typeof window.requestAnimationFrame === 'function') {
+                window.requestAnimationFrame(() => fn());
+            } else {
+                setTimeout(fn, 0);
+            }
+        };
+
+        const initWhenGameDataReady = () => {
+            if (gameData === null) {
+                setTimeout(initWhenGameDataReady, 100);
+                return;
+            }
+            console.log(`initWhenGameDataReady: gameData is ready, proceeding with setSession`);
+            runOnNextFrame(() => {
                 session = sesh;
+                // console.log(`%csetSession called with type ${type}`, 'background-color: black; color: green;', session);
+                // devShowClimbers();
                 if (window.getQueries().hasOwnProperty('team')) {
                     const ft = parseInt(window.getQueries().team);
                     // console.log(`force team to ${ft} (if available)`);
@@ -1320,37 +1346,28 @@ document.addEventListener('DOMContentLoaded', function () {
                         }
                     }
                 }
-                initRender();
-                goQuiz();
-                updateView();
-                if (session.state === 'new') {
-                    const rEvs = eventStack.allEvents.filter(e => e.probability);
-                    // console.log('new session, set to incomplete - process the random events?', eventStack, rEvs);
-                    const rEvents = eventStack.processRandomEvents();
-                    // const evs = eventStack.processAllEvents(true);
-                    // console.log('* * * * * * processed random events', rEvents);
-                    
-                    updateSession('eventsRandom', rEvents.map(({ n, time, active, resultString }) => ({ n, time, active, resultString })));
-                    updateSession('state', 'incomplete');
-                } else {
-                    // console.log(`THIS IS NOT NEW`, gameData, session);
-                }
-                clearInterval(i);
 
-                let lastState = JSON.stringify(session.profile0);
+                runOnNextFrame(() => {
+                    initRender();
+                    goQuiz();
+                    updateView();
+                    if (session.state === 'new') {
+                        const rEvs = eventStack.allEvents.filter(e => e.probability);
+                        // console.log('new session, set to incomplete - process the random events?', eventStack, rEvs);
+                        const rEvents = eventStack.processRandomEvents();
+                        // const evs = eventStack.processAllEvents(true);
+                        // console.log('* * * * * * processed random events', rEvents);
 
-                setInterval(() => {
-                    const current = JSON.stringify(session.profile0);
-                    if (current !== lastState) {
-                        lastState = current;
+                        updateSession('eventsRandom', rEvents.map(({ n, time, active, resultString }) => ({ n, time, active, resultString })));
+                        updateSession('state', 'incomplete');
+                    } else {
+                        // console.log(`THIS IS NOT NEW`, gameData, session);
                     }
-                }, 100); // 100 ms check
+                });
+            });
+        };
 
-
-            } else {
-//                console.log('waiting for data...');
-            }
-        }, 100);
+        initWhenGameDataReady();
     };
     const getStoredSTL = () => {
 //        return localStorage.getItem('supportTeamList').split(',');
@@ -1381,6 +1398,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     teamID: t.id,
                     gameData: gameData
                 }
+                console.log(`create support climber on changeSupportTeam`, clOb);
                 const c = createClimber(clOb);
                 delete c.gameData;
                 session.supportTeam.climbers[`p${i}`] = c;
@@ -1388,6 +1406,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     };
     const changeSupportTeamV1 = () => {
+        // RETAIN THIS, IT IS USED
         // socket call fetches supportTeamRef & team is built from that.
         // returned team will be all of the same country
         if (!$.isEmptyObject(window.clone(session))) {
@@ -1699,7 +1718,7 @@ document.addEventListener('DOMContentLoaded', function () {
     };
     const playPauseSession = () => {
 //        return;
-       console.log('playPauseSession', eventStack);
+    //    console.log('playPauseSession', eventStack);
         if (!checkCompletion().allFinished) {
             toggleTimer();
         }
@@ -1766,20 +1785,23 @@ document.addEventListener('DOMContentLoaded', function () {
         state = JSON.parse(str);
     };
     const getStoredState = async () => {
+        console.log('%cgetStoredState', 'background-color: black; color: green;')
         const hup = {
             uniqueID: session.uniqueID
         };
         socket.emit('getSession', hup, (s) => {
-            console.log('we have the session', s)
+            console.log('%cwe have the session', 'background-color: black; color: green;', s)
         });
     };
 
     const updateSession = (p, v, cb) => {
-        // console.log(`%cupdateSession called with`, 'background-color: black; color: yellow;', p, v);
+        console.log(`%cupdateSession called with`, 'background-color: black; color: yellow;', p, v);
         if (p === 'eventsRandom') {
             // console.log(` * * * updateSession`, p, v);
         }
         session[p] = v;
+        // expandSession should NOT be called here, it is an init method and not designed to run on every update.
+        // Check the methods called within expandSession to see if they should be called here instead.
         expandSession();
         const hup = {
             uniqueID: session.uniqueID
@@ -1792,7 +1814,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 // console.log('%cupdateSession callback', 'background-color: black; color: green;', str);
             }
         });
-        window.tools.update(session, Object.assign({allEvents: eventStack.getEvents()}, gameData));
+        if (eventStack) {
+            window.tools.update(session, Object.assign({allEvents: eventStack.getEvents()}, gameData));
+        }
     };
 
     const getCurrentState = () => {
@@ -1878,8 +1902,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const getData = () => {
         // console.log('getData called');
         socket.emit('getGameData', (d) => {
-            // console.log(`gameData returned`, JSON.parse(JSON.stringify(d)));
-
+            // console.log('%cgameData returned', 'background-color: black; color: green;', JSON.parse(JSON.stringify(d)));
+            devShowClimbers();
             gameData = processData(d);
             //            console.log(d)
             //            console.log(gameData)
@@ -1916,13 +1940,12 @@ document.addEventListener('DOMContentLoaded', function () {
     // consider combining two methods below
     const climberUpdate = (c, temp) => {
         // event to be called from Climber class
-//        console.log(`climberUpdate`, c);
+    //    console.log(`climberUpdate`, c);
         devShowProfiles();
         if (c.finished) {
             const cID = `profile${c.profile}`;
 //            const C = session[cID]
-            delete queuedClimberSessionUpdates[cID];
-            delete queuedClimberLogs[cID];
+            console.log('make the update');
             updateSession(cID, {summary: c.getStorageSummary()});
             const allFinished = checkCompletion().allFinished;
             if (allFinished) {
@@ -1942,51 +1965,13 @@ document.addEventListener('DOMContentLoaded', function () {
         });
         return cOut;
     };
-    const CLIMBER_UPDATE_FLUSH_MS = 2000;
-    const CLIMBER_LOG_PROPS = ['profile', 'option', 'name', 'filename', 'type', 'currentSpeed', 'oxygen', 'sustenance', 'rope', 'allDelays', 'allLandmarks', 'position', 'currentTime', 'finishTime', 'finished'];
-    const queuedClimberSessionUpdates = {};
-    const queuedClimberLogs = {};
-    let climberUpdateFlushInt = null;
-
-    const flushQueuedClimberUpdates = () => {
-        const climberIDs = Object.keys(queuedClimberSessionUpdates);
-        if (climberIDs.length === 0) {
-            return;
-        }
-        climberIDs.forEach((climberID) => {
-            const update = queuedClimberSessionUpdates[climberID];
-            delete queuedClimberSessionUpdates[climberID];
-            updateSession(climberID, update, () => {
-                if (queuedClimberLogs.hasOwnProperty(climberID)) {
-                    socket.emit('writeClimberLog', queuedClimberLogs[climberID]);
-                    delete queuedClimberLogs[climberID];
-                }
-            });
-        });
-    };
-
-    const queueClimberUpdate = (climberID, summaryUpdate) => {
-        queuedClimberSessionUpdates[climberID] = summaryUpdate;
-        if (session.hasOwnProperty(climberID)) {
-            queuedClimberLogs[climberID] = {
-                sessionID: session.uniqueID,
-                climberID: climberID,
-                climber: getClimberObject(session[climberID], CLIMBER_LOG_PROPS)
-            };
-        }
-    };
-
-    const ensureClimberUpdateFlusher = () => {
-        if (climberUpdateFlushInt !== null) {
-            return;
-        }
-        climberUpdateFlushInt = setInterval(flushQueuedClimberUpdates, CLIMBER_UPDATE_FLUSH_MS);
-    };
-
-    ensureClimberUpdateFlusher();
-
     const onClimberUpdate = (p, s) => {
-        queueClimberUpdate(p, s);
+       console.log('CLIMBER UPDATE', session.state, p);
+        updateSession(p, s, () => {
+            const props = ['profile', 'option', 'name', 'filename', 'type', 'currentSpeed', 'oxygen', 'sustenance', 'rope', 'allDelays', 'allLandmarks', 'position', 'currentTime', 'finishTime', 'finished'];
+//            console.log(`%cwrite climber log here`, 'color: orange;');
+            socket.emit('writeClimberLog', {sessionID: session.uniqueID, climberID: p, climber: getClimberObject(session[p], props)});
+        });
     };
 
     const resetClimbers = () => {
@@ -2218,7 +2203,7 @@ document.addEventListener('DOMContentLoaded', function () {
     };
     const storePlayTimeOnExit = () => {
         // can only run in map mode
-//        console.log(`try to run storePlayTimeOnExit, cp: ${getCurrentPage().page}, map? ${getCurrentPage().page === 'map'}`);
+       console.log(`try to run storePlayTimeOnExit, cp: ${getCurrentPage().page}, map? ${getCurrentPage().page === 'map'}`);
         if (getCurrentPage().page === 'map') {
 //            console.log('can store');
             updateSession('playTime', playTime.time + getPlayTime());
@@ -2639,6 +2624,9 @@ document.addEventListener('DOMContentLoaded', function () {
 //        return;
         const $scroller = $('#theatre');
         const $header = $('.nav-header-container');
+        const $profileHeader = $('.resources-profile-header');
+        let latestScrollY = 0;
+        let framePending = false;
         // Config: each item can have its own min/max height and children with min/max fonts
         const resizableItems = [
             {
@@ -2662,23 +2650,17 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         ];
 
-        $scroller.on('scroll', function () {
-            const scrollY = $(this).scrollTop();
-//            $('.resources-profile-header').css({'padding-top': '6em'});
-//            console.log(`scrollY: ${scrollY}`);
+        const applyMobileHeaderLayout = (scrollY) => {
             if (scrollY > 30) {
-//                console.log('mini')
                 $header.addClass('mini');
             } else {
                 $header.removeClass('mini');
             }
-//            return;
+
             resizableItems.forEach(item => {
                 const newHeight = Math.max(item.minHeight, item.maxHeight - scrollY);
                 item.$el.css('height', newHeight + 'px');
-                $('.resources-profile-header').css({'padding-top': `${newHeight}px`});
-                const newPadding = newHeight;
-                console.log(`set padding to ${newPadding}px`);
+                $profileHeader.css({ 'padding-top': `${newHeight}px` });
                 if (item.children) {
                     item.children.forEach(child => {
                         const ratio = (newHeight - item.minHeight) / (item.maxHeight - item.minHeight);
@@ -2696,6 +2678,18 @@ document.addEventListener('DOMContentLoaded', function () {
                     });
                 }
             });
+        };
+
+        $scroller.on('scroll', function () {
+            latestScrollY = $(this).scrollTop();
+            if (framePending) {
+                return;
+            }
+            framePending = true;
+            window.requestAnimationFrame(() => {
+                framePending = false;
+                applyMobileHeaderLayout(latestScrollY);
+            });
         });
     };
     const doMini = () => {
@@ -2704,7 +2698,6 @@ document.addEventListener('DOMContentLoaded', function () {
         const $content = $('.resources-grid');
         const scrollY = $scroller.scrollTop();
         if (scrollY > 30) {
-            $header.offsetHeight;
             $header.addClass('mini');
             $content.addClass('mini');
         } else {
@@ -2894,9 +2887,10 @@ document.addEventListener('DOMContentLoaded', function () {
     // On Option tile click, calculate requisites
     const resOptionselect = (profile, type, ob) => {
         if (type !== null) {
-            //            console.log(`resOptionselect, ${profile}, ${type}`);
+                       console.log(`resOptionselect, ${profile}, ${type}`);
             const c = gameData.constants;
             const p = session[`profile${profile}`];
+            console.log(`resOptionselect`, p);
             if (p) {
                 const pn = parseInt(profile);
                 const tn = parseInt(type);
@@ -2944,9 +2938,17 @@ document.addEventListener('DOMContentLoaded', function () {
     };
     // calculate required resources to complete expedition:
     const getRequirement = (prof) => {
-//        console.log(`getRequirement`);
-        const p = typeof (prof) === 'string' || typeof (prof) === 'number' ? session[`profile${prof}`] : prof;
-        const t = p.type > -1 ? p.type : p.temptype;
+       console.log(`getRequirement`, gameData, session);
+        // expandSession();
+        let p = typeof (prof) === 'string' || typeof (prof) === 'number' ? session[`profile${prof}`] : prof;
+        
+        console.log(new Climber({summaryString: p.summary, gameData: gameData, team: session.team}));
+        p = new Climber({summaryString: p.summary, gameData: gameData, team: session.team});
+        console.log(p);
+        console.log(JSON.parse(JSON.stringify(p)));
+        const t = p.type > -1 ? p.type : p.temptype || 0;
+        console.log(t);
+        console.log(p.options);
         const o = p.options[t];
         const time = (o.t1 + o.t2) * 2;
         const r = {
@@ -3406,8 +3408,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         // Usually called by the Climber class (publically exposed method)
         const rem = Math.ceil(ob[ob.resource]);
-        console.log(`depletion of ${ob.resource} for ${ob.name}, remaining: ${rem}`);
-        console.log(ob);
+        // console.log(`depletion of ${ob.resource} for ${ob.name}, remaining: ${rem}`);
         if (OK) {
             devShowProfiles();
             if (rem === 0) {
@@ -3422,13 +3423,6 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
     };
-    const clearupZeroes = () => {
-        const zeroes = Climber.checkForZeroes();
-        console.log(`zeroes`, zeroes);
-        if (zeroes.length > 0) {
-            climberDepletionEvent(zeroes[0]);
-        }
-    }
     const endgame = (good) => {
         updateSession('state', `completed:${good ? 'good' : 'bad'}`);
         // work out total finish time & write to Session (completionTime)
@@ -3738,6 +3732,23 @@ document.addEventListener('DOMContentLoaded', function () {
         return p;
     };
     // dev stuff
+    const devShowClimbers = () => {
+        const S = session;
+        // console.log('%cdevShowClimbers', 'background-color: black; color: green;', S, Climber.getClimbers());
+        // return;
+        if (S) {
+            const p = Object.entries(S).filter(e => e[0].includes('profile')).map(e => e[1]);
+            // console.log('%cdevShowClimbers', 'background-color: black; color: green;', p, S.team.profiles);
+            p.forEach((prof, i) => {
+                const summaryParts = String(prof.summary || '').split('_');
+                const posPart = summaryParts.find(part => String(part).startsWith('pos:')) || '';
+                const posValue = posPart.includes(':') ? posPart.split(':')[1] : '';
+                // console.log(summaryParts);
+                console.log(S.team.profiles['p' + i].name, parseFloat(posValue));
+                // console.log(`${prof.name}: ${prof._cp}`);
+            })
+        }
+    }
     const devShowProfiles = () => {
         const p = prepProfilesForDisplay();
         const pd = $('.map-pointer-label');
@@ -3816,7 +3827,7 @@ document.addEventListener('DOMContentLoaded', function () {
     };
     //  # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # renderMap
     const renderMap = () => {
-       console.log(`RENDER MAP`);
+//        console.log(`RENDER MAP`);
         if (window.clone(gTimer).elapsedTime === 0) {
             renderCinema();
         }
@@ -3827,10 +3838,14 @@ document.addEventListener('DOMContentLoaded', function () {
                     initx: 10 + (index * 5)
                 }))
             };
+
             const rOb = {climbers: Climber.getClimbers()};
+//            console.log(rOb);
+//            console.log(rOb1);
             prepProfilesForDisplay();
-            console.log(rOb);
+//            console.log('renderMap now');
             renderTemplate('theatre', 'map', rOb, () => {
+//                console.log(rOb);
                 setupHelpButton();
                 playTimeStart();
                 updateAddress('map');
@@ -3854,24 +3869,20 @@ document.addEventListener('DOMContentLoaded', function () {
                         allClimbersFinished();
                         pauseSession();
                     } else {
-//                        console.log(gameData.isDev);
+                    //    console.log(`isDev: ${gameData.isDev}`);
                         ///*
+                        // autoPlay = true;
                         if (autoPlay || !gameData.isDev) {
-//                            console.log(`renderMap will unpause...`);
+                           console.log(`renderMap will unpause...`);
                             setTimeout(() => {
-//                                console.log(`...renderMap has unpaused`)
+                               console.log(`...renderMap has unpaused`)
                                 unpauseSession(true);
                             }, 300);
                         }
                         //*/
                     }
                     showMapzone();
-                    clearupZeroes();
-                    // const zeroes = Climber.checkForZeroes();
-                    // console.log(`zeroes`, zeroes);
-                    // if (zeroes.length > 0) {
-                    //     climberDepletionEvent(zeroes[0]);
-                    // }
+
                 });
             })
         });
@@ -4339,7 +4350,11 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     const onUnload = () => {
-        flushQueuedClimberUpdates();
+        console.log('onUnload triggers');
+        emitPlayerPresence(false);
+        if (socket && socket.connected) {
+            socket.disconnect();
+        }
         snapshot();
         if (theState !== null) {
             theState.storeTime(gTimer.elapsedTime);
@@ -4353,6 +4368,9 @@ document.addEventListener('DOMContentLoaded', function () {
     window.climberDepletionEvent = climberDepletionEvent;
     window.getToolkitInfo = getToolkitInfo;
     window.onbeforeunload = onUnload;
+    window.addEventListener('pagehide', () => {
+        emitPlayerPresence(false);
+    });
     window.addEventListener('hashchange', () => {
         //        myMethod();
         if (window.location.hash !== currentHash) {

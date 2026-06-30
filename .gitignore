@@ -7,3 +7,6 @@ node_modules/
 /ngrok.yml
 /downloads/
 /ngrokv1.yml
+exporter.yml
+sessions.json
+PATCH_ACCESS_KEY_PASSWORD.txt

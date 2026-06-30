@@ -1,7 +1,7 @@
 {
-  "timestamp": "2026-05-19T10:29:01+01:00",
-  "commitHash": "4505bc5999c23b4f8bb7123b43d20497150b2b56",
-  "commitMessage": "Prevent duplicate access keys for same institution/course scope\n\nAdd validation to check if an access key already exists before creation:\n- For institution keys: prevent duplicates based on institution slug\n- For course keys: prevent duplicates based on institution and course slugs\n- Return 409 Conflict status with descriptive error message if duplicate detected",
+  "timestamp": "2026-06-29T16:14:52+01:00",
+  "commitHash": "f16bebcd995bbd125bf0d78949aeaf9ca9257640",
+  "commitMessage": "Fix course dropdown inactive bug in facilitator login\n\nThe getAccessLoginOptions query was filtering AccessKey documents\nby firstName and surname fields which do not exist on the model.\nThis caused activeKeys to always be empty, courseOptionsByInstitution\nto remain {}, and the Course dropdown to never receive options.\n\nRemove the bogus field filters so all active keys are returned.",
   "branch": "master",
   "githubReleaseTag": null,
   "githubRunNumber": null,

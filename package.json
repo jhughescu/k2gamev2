@@ -1,10 +1,14 @@
 {
     "name": "k2gamev2",
     "version": "1.4.0",
-    "description": "K2 game second version",
-    "keywords": [],
-    "author": "John Hughes",
-    "license": "ISC",
+    "description": "K2 game second version for Cranfield University",
+    "keywords": [
+        "k2",
+        "serious-game",
+        "cranfield-university"
+    ],
+    "author": "John Hughes (Cranfield University)",
+    "license": "MIT",
     "dependencies": {
         "chalk": "^4.1.2",
         "connect-mongo": "^6.0.0",
@@ -44,7 +48,8 @@
         "archive:backfill:apply": "node scripts/backfill-session-archive-expiry.js --apply",
         "retention:dry": "node scripts/run-session-retention.js",
         "retention:apply": "node scripts/run-session-retention.js --apply",
-        "free-port": "kill-port 3030"
+        "free-port": "kill-port 3030",
+        "push": "node scripts/git-push.js"
     },
     "main": "app.js",
     "repository": {

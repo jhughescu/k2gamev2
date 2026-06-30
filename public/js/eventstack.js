@@ -130,7 +130,7 @@ class EventStack {
         } else {
             console.warn(`cannot process events; data model incomplete`);
         }
-        console.log('\n\n * * events processed', this.allEvents);
+        // console.log('\n\n * * events processed', this.allEvents);
     }
     processAllEvents() {
         const re = this.processRandomEvents();
@@ -138,7 +138,7 @@ class EventStack {
         return ae;
     };
     processRandomEvents() {
-        console.log(`%cprocessRandomEvents: processing random events`, 'background-color: black; color: orange;');
+        // console.log(`%cprocessRandomEvents: processing random events`, 'background-color: black; color: orange;');
         const re = this.allEvents.filter(e => e.probability);
         return re.map((e, i) => {
         //     console.log(i, JSON.parse(JSON.stringify(e)));
@@ -155,7 +155,7 @@ class EventStack {
                 o.resultString = 'good';
             }
             e = Object.assign(e, o);
-            console.log(JSON.parse(JSON.stringify(e)));
+            // console.log(JSON.parse(JSON.stringify(e)));
             return e;
         });
     };
@@ -198,7 +198,7 @@ class EventStack {
         // return a set of the random events which includes the timings set in the processRandomEvents method, which should be called at session init and stored in the session data
         const re = this.gameData.randomEvents || [];
         const ret = this.gameData.session.eventsRandom || [];
-        console.log(`random events in game data`, re, JSON.parse(JSON.stringify(ret)));
+        // console.log(`random events in game data`, re, JSON.parse(JSON.stringify(ret)));
         let out = [];
         if (ret.length) {
             for (let i = 0; i < ret.length; i++) {
@@ -216,7 +216,7 @@ class EventStack {
             }
             
         }
-        console.log(`random events returned:`, re, JSON.parse(JSON.stringify(out)));
+        // console.log(`random events returned:`, re, JSON.parse(JSON.stringify(out)));
         return out;
     }
     getRandomEventsV1() {
@@ -277,11 +277,11 @@ class EventStack {
                     if (cb) {
                         cb(e);
                     }
-                   console.log(`event ${e.event} CAN be called`);
-                   console.log(e);
+                   console.log(`%cevent ${e.event} CAN be called`, 'background-color: black; color: green;');
+                //    console.log(e);
                     return e;
                 } else {
-                   console.warn(`event ${e.event} has been called previously, cannot call again`);
+                   console.warn(`%cevent ${e.event} has been called previously, cannot call again`, 'background-color: black; color: red;');
                 }
             }
             this.cMin = Math.floor(m);

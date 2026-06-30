@@ -24,6 +24,7 @@ const adminController = require('./adminController');
 const QRCode = require('qrcode');
 const AccessKey = require('../models/accessKey');
 const Session = require('../models/session');
+const { getLivePlayerCountForCourse } = require('./socketController');
 
 const hasGamePageAccess = (req, instSlug, courseSlug) => {
     const session = req.session || {};
@@ -98,6 +99,7 @@ app.get('/access/check', authController.authLimiter, authController.checkAccess)
 app.get('/access/login-options', authController.authLimiter, authController.getAccessLoginOptions);
 app.get('/access/sessions', authController.requireSessionAccess, sessionController.listSessionsForAccess);
 app.get('/access/export-sessions', authController.requireSessionAccess, sessionController.exportSessionsForAccess);
+app.post('/access/import-sessions', authController.requireSessionAccess, sessionController.importSessionsForAccess);
 app.get('/access/gamedata', authController.requireSessionAccess, (req, res) => {
     // Return gameData for quiz/team info
     sessionController.getGameData((data) => {
@@ -162,13 +164,118 @@ app.get('/access/launch-url', authController.requireSessionAccess, async (req, r
             return res.status(404).json({ error: 'Launch token not found for this course' });
         }
         const baseUrl = `${req.protocol}://${req.get('host')}`;
-        const keyParam = access.accessKeyId ? `?ak=${encodeURIComponent(access.accessKeyId)}` : '';
-        const launchUrl = `${baseUrl}/play/${course.launchToken}${keyParam}`;
+        const launchUrl = `${baseUrl}/play/${course.launchToken}`;
         const qrDataUrl = await QRCode.toDataURL(launchUrl, { width: 300, margin: 2 });
         res.json({ launchUrl, qrDataUrl });
     } catch (err) {
         console.error('Error generating launch URL:', err.message);
         res.status(500).json({ error: 'Failed to generate launch URL' });
+    }
+});
+
+app.get('/access/course-launch-urls', authController.requireSessionAccess, async (req, res) => {
+    const access = req.session && req.session.access;
+    if (!access || !access.institutionSlug) {
+        return res.status(400).json({ error: 'Institution access is required' });
+    }
+
+    try {
+        const inst = await Institution.findOne({ slug: access.institutionSlug }).lean();
+        if (!inst || !Array.isArray(inst.courses)) {
+            return res.status(404).json({ error: 'Institution not found' });
+        }
+
+        const sessionCounts = await Session.aggregate([
+            {
+                $match: {
+                    institution: (access.institutionSlug || '').toLowerCase()
+                }
+            },
+            {
+                $group: {
+                    _id: '$course',
+                    count: { $sum: 1 }
+                }
+            }
+        ]);
+
+        const sessionStatsByCourse = new Map(
+            sessionCounts.map((entry) => [
+                String(entry._id || '').toLowerCase(),
+                {
+                    count: Number(entry.count) || 0
+                }
+            ])
+        );
+
+        const baseUrl = `${req.protocol}://${req.get('host')}`;
+        const currentCourseSlug = (access.courseSlug || '').toLowerCase();
+
+        const courseEntries = (inst.courses || [])
+            .filter((course) => {
+                const courseSlug = (course.slug || '').toLowerCase();
+                if (!courseSlug || !course.launchToken) return false;
+                if (access.type === 'course') {
+                    return courseSlug === currentCourseSlug;
+                }
+                return true;
+            })
+            .map(async (course) => {
+                const slug = (course.slug || '').toLowerCase();
+                const name = course.name || course.slug;
+                const url = `${baseUrl}/play/${course.launchToken}`;
+                const qrDataUrl = await QRCode.toDataURL(url, { width: 280, margin: 2 });
+                return {
+                    slug,
+                    name,
+                    url,
+                    qrDataUrl,
+                    sessionCount: (sessionStatsByCourse.get(slug) || {}).count || 0,
+                    inProgressCount: getLivePlayerCountForCourse((access.institutionSlug || '').toLowerCase(), slug),
+                    active: typeof course.active === 'boolean' ? course.active : true
+                };
+            });
+
+        const courses = await Promise.all(courseEntries);
+
+        courses.sort((a, b) => a.name.localeCompare(b.name));
+
+        res.json({
+            institutionName: inst.title || inst.slug,
+            courseCount: courses.length,
+            courses
+        });
+    } catch (err) {
+        console.error('Error generating course launch URLs:', err.message);
+        res.status(500).json({ error: 'Failed to generate course launch URLs' });
+    }
+});
+
+// Toggle course active state (facilitator/admin only)
+app.post('/access/course-toggle-active', authController.requireSessionAccess, async (req, res) => {
+    const access = req.session && req.session.access;
+    if (!access || !access.institutionSlug) {
+        return res.status(400).json({ error: 'Institution access is required' });
+    }
+    const { courseSlug, active } = req.body || {};
+    if (!courseSlug || typeof active !== 'boolean') {
+        return res.status(400).json({ error: 'Missing courseSlug or active' });
+    }
+    try {
+        const inst = await Institution.findOne({ slug: access.institutionSlug });
+        if (!inst || !Array.isArray(inst.courses)) {
+            return res.status(404).json({ error: 'Institution not found' });
+        }
+        const course = inst.courses.find((c) => (c.slug || '').toLowerCase() === String(courseSlug).toLowerCase());
+        if (!course) {
+            return res.status(404).json({ error: 'Course not found' });
+        }
+        course.active = !!active;
+        await inst.save();
+        return res.json({ success: true });
+    } catch (err) {
+        console.error('Error toggling course active:', err);
+        return res.status(500).json({ error: 'Failed to update course state' });
     }
 });
 
@@ -207,8 +314,13 @@ app.get('/play/:token', async (req, res) => {
         if (!inst || !Array.isArray(inst.courses)) {
             return res.redirect('/');
         }
+
         const course = inst.courses.find((c) => ((c.launchToken || '').toLowerCase() === token));
         if (!course) {
+            return res.redirect('/');
+        }
+        if (typeof course.active === 'boolean' && !course.active) {
+            // Optionally: res.status(403).send('This course is currently inactive.');
             return res.redirect('/');
         }
 

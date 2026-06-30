@@ -32,8 +32,9 @@ const developData = (d) => {
 const validateInstitutionCourse = async (institutionSlug, courseSlug) => {
     const instSlug = (institutionSlug || '').toLowerCase();
     const course = (courseSlug || '').toLowerCase();
+    // Session documents now require institution/course, so missing scope is invalid.
     if (!instSlug && !course) {
-        return { inst: null, course: null };
+        return null;
     }
     if (!instSlug || !course) {
         return null;
@@ -137,9 +138,21 @@ const newSession = async (ob, cb) => {
         do {
             st = Math.floor(at.length * Math.random());
         } while (st === cc);
-        const institutionSlug = (ob.institution || '').toLowerCase();
-        const courseSlug = (ob.course || '').toLowerCase();
+        const institutionSlug = ((ob.institution || ob.institutionSlug) || '').toLowerCase().trim();
+        const courseSlug = ((ob.course || ob.courseSlug) || '').toLowerCase().trim();
         const accessKeyId = (ob.accessKeyId || '').toString().trim();
+        if (!institutionSlug || !courseSlug) {
+            console.warn(`Missing institution/course scope for new session`, {
+                institutionSlug,
+                courseSlug,
+                hasInstitutionAlias: Boolean(ob && ob.institutionSlug),
+                hasCourseAlias: Boolean(ob && ob.courseSlug)
+            });
+            if (cb) {
+                return cb({ error: 'invalid institution/course' });
+            }
+            return;
+        }
         const validation = await validateInstitutionCourse(institutionSlug, courseSlug);
         if (validation === null) {
             console.warn(`Invalid institution/course combination`, { institutionSlug, courseSlug });
@@ -223,8 +236,8 @@ const getFacilitatorTtlWarningDays = () => {
 };
 
 const updateSession = async (sOb, cb) => {
-   console.log(`updateSession called for uniqueID: ${sOb.uniqueID} (${typeof(sOb.uniqueID)})`);
-   console.log(sOb);
+//    console.log(`updateSession called for uniqueID: ${sOb.uniqueID} (${typeof(sOb.uniqueID)})`);
+//    console.log(sOb);
     try {
         const filter = { uniqueID: String(sOb.uniqueID) };
 
@@ -389,11 +402,24 @@ const listSessionsForAccess = async (req, res) => {
     try {
         const filter = { ...(req.accessFilter || {}) };
         const accessContext = req.accessContext || {};
+        const institutionSlug = (accessContext.institutionSlug || '').toLowerCase();
         const accessKeyId = (accessContext.accessKeyId || '').toString().trim();
         const hasSessionLimit = Number.isInteger(accessContext.sessionLimit) && accessContext.sessionLimit > 0;
         const ttlWarningDays = getFacilitatorTtlWarningDays();
         const ttlWarningMs = ttlWarningDays * 24 * 60 * 60 * 1000;
         const nowMs = Date.now();
+
+        let courseNameBySlug = new Map();
+        if (institutionSlug) {
+            const inst = await Institution.findOne({ slug: institutionSlug })
+                .select('courses.slug courses.name')
+                .lean();
+            courseNameBySlug = new Map(
+                ((inst && inst.courses) || [])
+                    .map((course) => [String(course.slug || '').toLowerCase(), course.name || course.slug || ''])
+                    .filter(([slug]) => Boolean(slug))
+            );
+        }
 
         // For limited keys, scope sessions to the specific access key so
         // "remaining" reflects this key's own allocation only.
@@ -409,6 +435,11 @@ const listSessionsForAccess = async (req, res) => {
             const enrichedSessions = sessions.map(s => {
                 if (s.teamRef !== undefined && gameData.teams && gameData.teams[s.teamRef]) {
                     s.teamCountry = gameData.teams[s.teamRef].country;
+                }
+
+                const courseSlug = String(s.course || s.courseSlug || '').toLowerCase();
+                if (courseSlug && !s.courseName) {
+                    s.courseName = courseNameBySlug.get(courseSlug) || s.course || s.courseSlug || courseSlug;
                 }
 
                 let expiresAtIso = null;
@@ -462,8 +493,40 @@ const exportSessionsForAccess = async (req, res) => {
     try {
         const accessContext = req.accessContext || {};
         const accessKeyId = (accessContext.accessKeyId || '').toString().trim();
-        const baseFilter = req.accessFilter || {};
-        const filter = accessKeyId ? { accessKeyId } : { ...baseFilter };
+        const hasSessionLimit = Number.isInteger(accessContext.sessionLimit) && accessContext.sessionLimit > 0;
+        const filter = { ...(req.accessFilter || {}) };
+        const requestedCourseSlug = String((req.query && req.query.courseSlug) || '').toLowerCase().trim();
+
+        if (requestedCourseSlug) {
+            if (accessContext.type === 'course') {
+                const activeCourseSlug = String(accessContext.courseSlug || '').toLowerCase().trim();
+                if (requestedCourseSlug !== activeCourseSlug) {
+                    return res.status(403).json({ error: 'Forbidden', message: 'Course backup outside access scope' });
+                }
+            }
+
+            if (accessContext.type === 'institution') {
+                const instSlug = String(accessContext.institutionSlug || '').toLowerCase().trim();
+                const inst = await Institution.findOne({ slug: instSlug }).lean();
+                const hasCourse = Boolean(
+                    inst
+                    && Array.isArray(inst.courses)
+                    && inst.courses.some((course) => String(course.slug || '').toLowerCase() === requestedCourseSlug)
+                );
+
+                if (!hasCourse) {
+                    return res.status(400).json({ error: 'Invalid courseSlug for current institution scope' });
+                }
+            }
+
+            filter.course = requestedCourseSlug;
+        }
+
+        // Match listSessionsForAccess behavior: only scope to key-specific sessions
+        // when this access key has a session cap.
+        if (hasSessionLimit && accessKeyId) {
+            filter.accessKeyId = accessKeyId;
+        }
 
         const sessions = await Session.find(filter).lean();
         const exportedSessions = sessions.map((s) => {
@@ -485,19 +548,14 @@ const exportSessionsForAccess = async (req, res) => {
                 accessKeyId: accessKeyId || null,
                 type: accessContext.type || null,
                 institutionSlug: accessContext.institutionSlug || null,
-                courseSlug: accessContext.courseSlug || null,
-                facilitator: {
-                    firstName: accessContext.firstName || null,
-                    surname: accessContext.surname || null,
-                    label: accessContext.label || null
-                }
+                courseSlug: requestedCourseSlug || accessContext.courseSlug || null
             },
             sessions: exportedSessions
         };
 
         const stamp = new Date().toISOString().replace(/[:.]/g, '-');
         const inst = (accessContext.institutionSlug || 'inst').toLowerCase();
-        const course = (accessContext.courseSlug || 'all').toLowerCase();
+        const course = (requestedCourseSlug || accessContext.courseSlug || 'all').toLowerCase();
         const fileName = `k2_sessions_${inst}_${course}_${stamp}.json`;
 
         res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -506,6 +564,193 @@ const exportSessionsForAccess = async (req, res) => {
     } catch (err) {
         console.error('Error exporting sessions for access:', err);
         res.status(500).json({ error: 'Failed to export sessions' });
+    }
+};
+
+const validateAccessRestorePackageShape = (packageData) => {
+    if (!packageData || typeof packageData !== 'object') {
+        return 'Restore package must be a JSON object';
+    }
+    if (packageData.exportType !== 'k2-session-export') {
+        return 'Unsupported restore package type';
+    }
+    if (!Array.isArray(packageData.sessions)) {
+        return 'Restore package must contain a sessions array';
+    }
+    return null;
+};
+
+const resolveRestoreCourseForAccess = async (accessContext, requestedCourseSlug) => {
+    const institutionSlug = String(accessContext && accessContext.institutionSlug ? accessContext.institutionSlug : '').toLowerCase().trim();
+    const accessType = String(accessContext && accessContext.type ? accessContext.type : '').toLowerCase().trim();
+    const accessCourseSlug = String(accessContext && accessContext.courseSlug ? accessContext.courseSlug : '').toLowerCase().trim();
+    const requested = String(requestedCourseSlug || '').toLowerCase().trim();
+
+    if (!institutionSlug || !['institution', 'course'].includes(accessType)) {
+        return { error: 'Invalid access scope for restore' };
+    }
+
+    if (accessType === 'course') {
+        if (requested && requested !== accessCourseSlug) {
+            return { error: 'Requested course is outside your access scope', status: 403 };
+        }
+        if (!accessCourseSlug) {
+            return { error: 'Course scope is missing for this access key' };
+        }
+    }
+
+    const targetCourseSlug = accessType === 'course' ? accessCourseSlug : requested;
+    if (!targetCourseSlug) {
+        return { error: 'targetCourseSlug is required for institution-level restore' };
+    }
+
+    const institution = await Institution.findOne({ slug: institutionSlug });
+    if (!institution || !Array.isArray(institution.courses)) {
+        return { error: 'Institution not found', status: 404 };
+    }
+
+    const targetCourse = institution.courses.find(
+        (course) => String(course.slug || '').toLowerCase() === targetCourseSlug
+    );
+
+    if (!targetCourse) {
+        return { error: `Course ${institutionSlug}/${targetCourseSlug} does not exist`, status: 404 };
+    }
+
+    const isActive = typeof targetCourse.active === 'boolean' ? targetCourse.active : true;
+    if (isActive) {
+        return { error: 'Restore is only allowed when the target course is inactive', status: 409 };
+    }
+
+    return {
+        institutionSlug,
+        targetCourseSlug,
+        course: targetCourse
+    };
+};
+
+const importSessionsForAccess = async (req, res) => {
+    try {
+        const accessContext = req.accessContext || {};
+        const rawBody = req.body || {};
+        const packageData = rawBody.packageData && typeof rawBody.packageData === 'object'
+            ? rawBody.packageData
+            : rawBody;
+
+        const shapeError = validateAccessRestorePackageShape(packageData);
+        if (shapeError) {
+            return res.status(400).json({ error: shapeError });
+        }
+
+        const bodyTargetCourseSlug = String(rawBody.targetCourseSlug || '').toLowerCase().trim();
+        const scopeTargetCourseSlug = String(packageData.scope && packageData.scope.courseSlug ? packageData.scope.courseSlug : '').toLowerCase().trim();
+        const requestedTargetCourseSlug = bodyTargetCourseSlug || scopeTargetCourseSlug;
+
+        const scopeResolution = await resolveRestoreCourseForAccess(accessContext, requestedTargetCourseSlug);
+        if (scopeResolution.error) {
+            return res.status(scopeResolution.status || 400).json({ error: scopeResolution.error });
+        }
+
+        const institutionSlug = scopeResolution.institutionSlug;
+        const targetCourseSlug = scopeResolution.targetCourseSlug;
+        const incomingSessions = packageData.sessions || [];
+
+        const summary = {
+            total: incomingSessions.length,
+            restored: 0,
+            skipped: 0,
+            failed: 0,
+            details: []
+        };
+
+        const seenUniqueIds = new Set();
+        const seenNames = new Set();
+
+        for (let index = 0; index < incomingSessions.length; index += 1) {
+            const sourceSession = incomingSessions[index] || {};
+            const label = String(sourceSession.dateID || sourceSession.uniqueID || sourceSession.name || `#${index + 1}`);
+
+            try {
+                const uniqueID = String(sourceSession.uniqueID || '').trim();
+                const name = String(sourceSession.name || '').trim();
+                const sourceInstitution = String(sourceSession.institution || '').toLowerCase().trim();
+                const sourceCourse = String(sourceSession.course || '').toLowerCase().trim();
+
+                if (!uniqueID || !name) {
+                    summary.failed += 1;
+                    summary.details.push({ session: label, result: 'failed', reason: 'uniqueID and name are required' });
+                    continue;
+                }
+
+                if (sourceInstitution !== institutionSlug || sourceCourse !== targetCourseSlug) {
+                    summary.failed += 1;
+                    summary.details.push({
+                        session: label,
+                        result: 'failed',
+                        reason: `session scope mismatch (expected ${institutionSlug}/${targetCourseSlug})`
+                    });
+                    continue;
+                }
+
+                if (seenUniqueIds.has(uniqueID)) {
+                    summary.skipped += 1;
+                    summary.details.push({ session: label, result: 'skipped', reason: 'duplicate uniqueID in restore package' });
+                    continue;
+                }
+                if (seenNames.has(name)) {
+                    summary.skipped += 1;
+                    summary.details.push({ session: label, result: 'skipped', reason: 'duplicate name in restore package' });
+                    continue;
+                }
+
+                seenUniqueIds.add(uniqueID);
+                seenNames.add(name);
+
+                const existingByUniqueID = await Session.exists({ uniqueID });
+                if (existingByUniqueID) {
+                    summary.skipped += 1;
+                    summary.details.push({ session: label, result: 'skipped', reason: 'uniqueID already exists' });
+                    continue;
+                }
+
+                const existingByName = await Session.exists({ name });
+                if (existingByName) {
+                    summary.skipped += 1;
+                    summary.details.push({ session: label, result: 'skipped', reason: 'name already exists' });
+                    continue;
+                }
+
+                const clone = { ...sourceSession };
+                delete clone._id;
+                delete clone.__v;
+                delete clone.sourceMongoId;
+
+                clone.uniqueID = uniqueID;
+                clone.name = name;
+                clone.institution = institutionSlug;
+                clone.course = targetCourseSlug;
+
+                await Session.create(clone);
+                summary.restored += 1;
+                summary.details.push({ session: label, result: 'restored' });
+            } catch (err) {
+                summary.failed += 1;
+                const errorMessage = err && err.message ? err.message : 'unknown error';
+                summary.details.push({ session: label, result: 'failed', reason: errorMessage });
+            }
+        }
+
+        return res.json({
+            success: true,
+            target: {
+                institutionSlug,
+                courseSlug: targetCourseSlug
+            },
+            summary
+        });
+    } catch (err) {
+        console.error('Error importing sessions for access:', err);
+        return res.status(500).json({ error: 'Failed to import sessions' });
     }
 };
 
@@ -600,6 +845,7 @@ module.exports = {
     changeSupportTeam,
     listSessionsForAccess,
     exportSessionsForAccess,
+    importSessionsForAccess,
     getHighestSessionNumber,
     getSessionStateStats
 };

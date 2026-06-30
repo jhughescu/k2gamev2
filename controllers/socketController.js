@@ -2,12 +2,14 @@ const socketIo = require('socket.io');
 const { getEventEmitter } = require('./../controllers/eventController');
 const sessionController = require('./../controllers/sessionController');
 const Session = require('./../models/session');
+const Institution = require('./../models/institution');
 //const downloadController = require('./../controllers/downloadController');
 const { saveCSVLocally, convertToCSV } = require('./../controllers/downloadController');
 const logController = require('./../controllers/logController');
 const databaseController = require('./../controllers/databaseController');
 const gfxController = require('./../controllers/gfxController');
 const quizController = require('./../controllers/quizController');
+const trafficMonitor = require('./../controllers/trafficMonitor');
 
 const tools = require('./../controllers/tools');
 const { sessionMiddleware, buildAccessFilter } = require('./../controllers/authController');
@@ -15,6 +17,38 @@ const { sessionMiddleware, buildAccessFilter } = require('./../controllers/authC
 const eventEmitter = getEventEmitter();
 
 let io = null;
+const TRAFFIC_STREAM_INTERVAL_MS = 2000;
+const trafficStreamSubscribers = new Set();
+let trafficStreamInterval = null;
+
+const stopTrafficStream = () => {
+    if (trafficStreamInterval) {
+        clearInterval(trafficStreamInterval);
+        trafficStreamInterval = null;
+    }
+};
+
+const startTrafficStream = () => {
+    if (trafficStreamInterval || !io) {
+        return;
+    }
+    trafficStreamInterval = setInterval(() => {
+        if (!io || trafficStreamSubscribers.size === 0) {
+            stopTrafficStream();
+            return;
+        }
+        const snapshot = trafficMonitor.getSnapshot({ io });
+        const namespaceSockets = io.of('/').sockets;
+        trafficStreamSubscribers.forEach((socketId) => {
+            const subscribedSocket = namespaceSockets.get(socketId);
+            if (!subscribedSocket) {
+                trafficStreamSubscribers.delete(socketId);
+                return;
+            }
+            subscribedSocket.emit('trafficSnapshot', snapshot);
+        });
+    }, TRAFFIC_STREAM_INTERVAL_MS);
+};
 
 const normalizeSlug = (value) => (value || '').toLowerCase().trim();
 
@@ -26,6 +60,43 @@ const getCourseScopeFromSession = (session = {}) => {
         return null;
     }
     return { institutionSlug, courseSlug };
+};
+
+const getCourseScopeFromPlayerSession = (session = {}) => {
+    const playerSession = session.playerSession || {};
+    const institutionSlug = normalizeSlug(playerSession.institutionSlug);
+    const courseSlug = normalizeSlug(playerSession.courseSlug);
+    if (!institutionSlug || !courseSlug) {
+        return null;
+    }
+    return { institutionSlug, courseSlug };
+};
+
+const getCourseScopeForSocket = (connectedSocket) => {
+    if (!connectedSocket) {
+        return null;
+    }
+
+    const session = connectedSocket.request && connectedSocket.request.session ? connectedSocket.request.session : {};
+    const fromAccess = getCourseScopeFromSession(session);
+    if (fromAccess) {
+        return fromAccess;
+    }
+
+    const fromBinding = getCourseScopeFromPlayerSession(session);
+    if (fromBinding) {
+        return fromBinding;
+    }
+
+    const cachedScope = connectedSocket.data && connectedSocket.data.playerScope ? connectedSocket.data.playerScope : null;
+    if (cachedScope && cachedScope.institutionSlug && cachedScope.courseSlug) {
+        return {
+            institutionSlug: normalizeSlug(cachedScope.institutionSlug),
+            courseSlug: normalizeSlug(cachedScope.courseSlug)
+        };
+    }
+
+    return null;
 };
 
 const getFacilitatorCourseRoom = (institutionSlug, courseSlug) => {
@@ -45,7 +116,10 @@ const countPlayersForCourse = (institutionSlug, courseSlug) => {
         if (role !== 'player') {
             return;
         }
-        const scope = getCourseScopeFromSession(connectedSocket.request && connectedSocket.request.session ? connectedSocket.request.session : {});
+        if (connectedSocket.data && connectedSocket.data.playerPresent === false) {
+            return;
+        }
+        const scope = getCourseScopeForSocket(connectedSocket);
         if (!scope) {
             return;
         }
@@ -55,6 +129,10 @@ const countPlayersForCourse = (institutionSlug, courseSlug) => {
     });
 
     return count;
+};
+
+const getLivePlayerCountForCourse = (institutionSlug, courseSlug) => {
+    return countPlayersForCourse(institutionSlug, courseSlug);
 };
 
 const emitFacilitatorPlayerCount = (institutionSlug, courseSlug) => {
@@ -159,7 +237,15 @@ function initSocket(server) {
             // game clients
             if (sType === 'player') {
                 console.log('player enters');
-                const playerScope = getCourseScopeFromSession(session);
+                const playerScope = getCourseScopeFromSession(session) || getCourseScopeFromPlayerSession(session);
+                socket.data = socket.data || {};
+                socket.data.playerPresent = true;
+                if (playerScope) {
+                    socket.data.playerScope = {
+                        institutionSlug: playerScope.institutionSlug,
+                        courseSlug: playerScope.courseSlug
+                    };
+                }
 //                console.log('handshakeCheck', getPlayerHandshake());
 //                console.log(Q);
                 const persistPlayerSessionBinding = (uniqueID, payload = {}) => {
@@ -175,6 +261,12 @@ function initSocket(server) {
                             courseSlug: normalizeSlug((payload && payload.course) || (requestSession.access && requestSession.access.courseSlug)),
                             accessKeyId: ((payload && payload.accessKeyId) || (requestSession.access && requestSession.access.accessKeyId) || '').toString().trim(),
                             updatedAt: Date.now()
+                        };
+
+                        socket.data = socket.data || {};
+                        socket.data.playerScope = {
+                            institutionSlug: normalizeSlug(requestSession.playerSession.institutionSlug),
+                            courseSlug: normalizeSlug(requestSession.playerSession.courseSlug)
                         };
 
                         requestSession.save((err) => {
@@ -197,10 +289,20 @@ function initSocket(server) {
                     console.log(`join room ${rid} ${showRoomSize(rid)}`);
                 });
                 socket.on('disconnect', () => {
-                    if (playerScope) {
-                        emitFacilitatorPlayerCount(playerScope.institutionSlug, playerScope.courseSlug);
+                    const scope = getCourseScopeForSocket(socket);
+                    if (scope) {
+                        emitFacilitatorPlayerCount(scope.institutionSlug, scope.courseSlug);
                     }
 //                    console.log('gone');
+                });
+                socket.on('playerPresence', (payload = {}) => {
+                    const present = payload && payload.present === false ? false : true;
+                    socket.data = socket.data || {};
+                    socket.data.playerPresent = present;
+                    const scope = getCourseScopeForSocket(socket);
+                    if (scope) {
+                        emitFacilitatorPlayerCount(scope.institutionSlug, scope.courseSlug);
+                    }
                 });
                 socket.on('newSession', (ob = {}, cb) => {
                     console.log('new session');
@@ -297,7 +399,14 @@ function initSocket(server) {
                     sessionController.getSession(sOb, cb);
                 });
                 socket.on('updateSession', (sOb, cb) => {
-                    sessionController.updateSession(sOb, cb);
+                    const startedAt = Date.now();
+                    trafficMonitor.monitorEvent('updateSession', sType);
+                    sessionController.updateSession(sOb, (...args) => {
+                        trafficMonitor.monitorLatency('updateSession', Date.now() - startedAt);
+                        if (cb) {
+                            cb(...args);
+                        }
+                    });
                 });
                 socket.on('deleteSession', (sOb, cb) => {
                     console.log(`try to delete`);
@@ -341,6 +450,7 @@ function initSocket(server) {
                     logController.writeFinalReport(ob);
                 });
                 socket.on('writeClimberLog', (ob) => {
+                    trafficMonitor.monitorEvent('writeClimberLog', sType);
                     logController.writeClimberLog(ob);
                 });
                 socket.on('deleteSessionLogs', (id) => {
@@ -438,6 +548,38 @@ function initSocket(server) {
                     console.log('data request admin')
                     sessionController.getGameData(cb);
                 });
+                socket.on('getTrafficSnapshot', (cb) => {
+                    trafficMonitor.monitorEvent('getTrafficSnapshot', sType);
+                    if (cb) {
+                        cb(null, trafficMonitor.getSnapshot({ io }));
+                    }
+                });
+                socket.on('subscribeTrafficStream', (cb) => {
+                    trafficMonitor.monitorEvent('subscribeTrafficStream', sType);
+                    trafficStreamSubscribers.add(socket.id);
+                    startTrafficStream();
+                    if (cb) {
+                        cb(null, { subscribed: true, intervalMs: TRAFFIC_STREAM_INTERVAL_MS });
+                    }
+                });
+                socket.on('unsubscribeTrafficStream', (cb) => {
+                    trafficMonitor.monitorEvent('unsubscribeTrafficStream', sType);
+                    trafficStreamSubscribers.delete(socket.id);
+                    if (trafficStreamSubscribers.size === 0) {
+                        stopTrafficStream();
+                    }
+                    if (cb) {
+                        cb(null, { subscribed: false });
+                    }
+                });
+                socket.on('disconnect', () => {
+                    if (trafficStreamSubscribers.has(socket.id)) {
+                        trafficStreamSubscribers.delete(socket.id);
+                        if (trafficStreamSubscribers.size === 0) {
+                            stopTrafficStream();
+                        }
+                    }
+                });
                 socket.on('getQuizQuestion', async ({ qId, bank, excludeIds }, cb) => {
                     try {
                         const question = await quizController.getQuestion(bank, qId, excludeIds);
@@ -486,16 +628,41 @@ function initSocket(server) {
                 }
 
                 socket.join('facilitators');
-                const facilitatorScope = getCourseScopeFromSession(session);
-                if (facilitatorScope) {
-                    const room = getFacilitatorCourseRoom(facilitatorScope.institutionSlug, facilitatorScope.courseSlug);
+                const access = session && session.access ? session.access : {};
+                const institutionSlug = normalizeSlug(access.institutionSlug);
+                const courseSlug = normalizeSlug(access.courseSlug);
+
+                if (institutionSlug && access.type === 'course' && courseSlug) {
+                    const room = getFacilitatorCourseRoom(institutionSlug, courseSlug);
                     socket.join(room);
                     socket.emit('facilitatorPlayerCount', {
-                        institutionSlug: facilitatorScope.institutionSlug,
-                        courseSlug: facilitatorScope.courseSlug,
-                        playerCount: countPlayersForCourse(facilitatorScope.institutionSlug, facilitatorScope.courseSlug),
+                        institutionSlug,
+                        courseSlug,
+                        playerCount: countPlayersForCourse(institutionSlug, courseSlug),
                         timestamp: Date.now()
                     });
+                }
+
+                if (institutionSlug && access.type === 'institution') {
+                    try {
+                        const inst = await Institution.findOne({ slug: institutionSlug }).lean();
+                        const courseSlugs = (inst && Array.isArray(inst.courses) ? inst.courses : [])
+                            .map((course) => normalizeSlug(course && course.slug))
+                            .filter((slug) => Boolean(slug));
+
+                        courseSlugs.forEach((slug) => {
+                            const room = getFacilitatorCourseRoom(institutionSlug, slug);
+                            socket.join(room);
+                            socket.emit('facilitatorPlayerCount', {
+                                institutionSlug,
+                                courseSlug: slug,
+                                playerCount: countPlayersForCourse(institutionSlug, slug),
+                                timestamp: Date.now()
+                            });
+                        });
+                    } catch (err) {
+                        console.warn('Failed to initialize facilitator course rooms for institution scope:', err && err.message ? err.message : err);
+                    }
                 }
                 socket.on('disconnect', () => {
 //                    console.log('facilitator disconnected');
@@ -650,5 +817,6 @@ function initSocket(server) {
 //};
 module.exports = {
     initSocket,
-    eventEmitter
+    eventEmitter,
+    getLivePlayerCountForCourse
 };

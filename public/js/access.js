@@ -55,11 +55,303 @@ let currentPage = 1;
 const sessionsPerPage = 5;
 let dateFromFilter = null;
 let dateToFilter = null;
-let pinnedSessionId = null; // Track pinned/toggled session highlight
 let facilitatorSocket = null;
 let refreshTimer = null;
 let loginOptions = null;
 let ttlInfo = null;
+let sessionDetailsMode = 'summary';
+let activeSessionDetails = null;
+let courseLaunchUrlsCollapsed = false;
+let activeCourseQr = null;
+let pendingDeactivateWarningResolver = null;
+
+function renderRestoreReport(summary) {
+    const summaryEl = doc('restoreReportSummary');
+    const detailsEl = doc('restoreReportDetails');
+    if (!summaryEl || !detailsEl) return;
+
+    const total = Number(summary && summary.total) || 0;
+    const restored = Number(summary && summary.restored) || 0;
+    const skipped = Number(summary && summary.skipped) || 0;
+    const failed = Number(summary && summary.failed) || 0;
+    summaryEl.textContent = `Total: ${total} | Restored: ${restored} | Skipped: ${skipped} | Failed: ${failed}`;
+
+    const details = Array.isArray(summary && summary.details) ? summary.details : [];
+    if (details.length === 0) {
+        detailsEl.innerHTML = '<div style="color: #666;">No per-session details were returned.</div>';
+        return;
+    }
+
+    const rows = details.map((entry) => {
+        const result = String(entry && entry.result ? entry.result : '').toLowerCase();
+        let color = '#6b7280';
+        if (result === 'restored') color = '#2e7d32';
+        if (result === 'skipped') color = '#a16207';
+        if (result === 'failed') color = '#b71c1c';
+        return `
+            <tr>
+                <td style="padding: 6px 8px; border-bottom: 1px solid #eee; vertical-align: top;">${escapeHtml(entry && entry.session ? entry.session : '')}</td>
+                <td style="padding: 6px 8px; border-bottom: 1px solid #eee; vertical-align: top; color: ${color}; font-weight: 600;">${escapeHtml(result || 'unknown')}</td>
+                <td style="padding: 6px 8px; border-bottom: 1px solid #eee; vertical-align: top;">${escapeHtml(entry && entry.reason ? entry.reason : '')}</td>
+            </tr>
+        `;
+    }).join('');
+
+    detailsEl.innerHTML = `
+        <table style="width: 100%; border-collapse: collapse; table-layout: fixed;">
+            <thead>
+                <tr>
+                    <th style="text-align: left; padding: 6px 8px; border-bottom: 1px solid #ddd; width: 25%;">Session</th>
+                    <th style="text-align: left; padding: 6px 8px; border-bottom: 1px solid #ddd; width: 15%;">Result</th>
+                    <th style="text-align: left; padding: 6px 8px; border-bottom: 1px solid #ddd;">Reason</th>
+                </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+        </table>
+    `;
+}
+
+function openRestoreReportModal(summary) {
+    const modal = doc('restoreReportModal');
+    if (!modal) return;
+    renderRestoreReport(summary || {});
+    modal.classList.add('active');
+    modal.setAttribute('aria-hidden', 'false');
+}
+
+function closeRestoreReportModal() {
+    const modal = doc('restoreReportModal');
+    if (!modal) return;
+    modal.classList.remove('active');
+    modal.setAttribute('aria-hidden', 'true');
+}
+
+function resolveDeactivateWarning(result) {
+    const modal = doc('deactivateWarningModal');
+    if (modal) {
+        modal.classList.remove('active');
+        modal.setAttribute('aria-hidden', 'true');
+    }
+    if (pendingDeactivateWarningResolver) {
+        const resolver = pendingDeactivateWarningResolver;
+        pendingDeactivateWarningResolver = null;
+        resolver(Boolean(result));
+    }
+}
+
+function closeDeactivateWarningModal() {
+    resolveDeactivateWarning(false);
+}
+
+function openDeactivateWarningModal(message, activeUserCount = 0) {
+    const modal = doc('deactivateWarningModal');
+    const messageEl = doc('deactivateWarningMessage');
+    const titleEl = doc('deactivateWarningTitle');
+    if (!modal || !messageEl) {
+        return Promise.resolve(window.confirm(message || 'Are you sure?'));
+    }
+
+    // If another confirmation is pending, cancel it before opening a new one.
+    if (pendingDeactivateWarningResolver) {
+        pendingDeactivateWarningResolver(false);
+        pendingDeactivateWarningResolver = null;
+    }
+
+    if (titleEl) {
+        const count = Number(activeUserCount) || 0;
+        if (count > 0) {
+            titleEl.textContent = count === 1
+                ? 'Confirm Course Deactivation (1 Active User)'
+                : `Confirm Course Deactivation (${count} Active Users)`;
+        } else {
+            titleEl.textContent = 'Confirm Course Deactivation';
+        }
+    }
+
+    messageEl.textContent = message || 'Are you sure you want to set this course inactive?';
+    modal.classList.add('active');
+    modal.setAttribute('aria-hidden', 'false');
+
+    return new Promise((resolve) => {
+        pendingDeactivateWarningResolver = resolve;
+    });
+}
+
+function updateCourseQrDownloadLink(course) {
+    const downloadBtn = doc('courseQrDownloadBtn');
+    if (!downloadBtn) return;
+    if (!course || !course.qrDataUrl) {
+        downloadBtn.dataset.qrUrl = '';
+        downloadBtn.dataset.filename = 'course-qr.png';
+        return;
+    }
+
+    const safeName = String(course.name || course.slug || 'course').trim().replace(/[^a-z0-9-_]+/gi, '-').replace(/^-+|-+$/g, '').toLowerCase() || 'course';
+    downloadBtn.dataset.qrUrl = course.qrDataUrl;
+    downloadBtn.dataset.filename = `${safeName}-qr.png`;
+}
+
+// Attach QR code download button handler once after DOMContentLoaded
+// This ensures the handler is only attached once and always uses the latest activeCourseQr
+
+document.addEventListener('DOMContentLoaded', () => {
+    const courseQrDownloadBtn = doc('courseQrDownloadBtn');
+    if (courseQrDownloadBtn) {
+        courseQrDownloadBtn.addEventListener('click', () => {
+            if (!activeCourseQr || !activeCourseQr.qrDataUrl) return;
+            const filename = courseQrDownloadBtn.dataset.filename || 'course-qr.png';
+            const link = document.createElement('a');
+            link.href = activeCourseQr.qrDataUrl;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+    }
+});
+
+
+async function copyCourseQrToClipboard(course) {
+    if (!course || !course.qrDataUrl) {
+        throw new Error('Missing QR image data');
+    }
+
+    // Convert data URL to Blob without fetch (avoids CSP connect-src restriction)
+    const dataUrl = course.qrDataUrl;
+    const [header, base64] = dataUrl.split(',');
+    const mimeMatch = header.match(/:(.*?);/);
+    const mime = mimeMatch ? mimeMatch[1] : 'image/png';
+    const binary = atob(base64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+        bytes[i] = binary.charCodeAt(i);
+    }
+    const blob = new Blob([bytes], { type: mime });
+
+    if (navigator.clipboard && window.ClipboardItem) {
+        await navigator.clipboard.write([
+            new ClipboardItem({ [mime]: blob })
+        ]);
+        return;
+    }
+
+    throw new Error('Clipboard image copy is not supported in this browser');
+}
+
+async function pickRestorePackageFile() {
+    return new Promise((resolve) => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json,application/json';
+        input.style.display = 'none';
+        document.body.appendChild(input);
+
+        input.addEventListener('change', () => {
+            const file = input.files && input.files.length ? input.files[0] : null;
+            document.body.removeChild(input);
+            resolve(file);
+        }, { once: true });
+
+        input.click();
+    });
+}
+
+function formatRestoreSummary(summary) {
+    if (!summary || typeof summary !== 'object') return 'Restore completed.';
+    const restored = Number(summary.restored) || 0;
+    const skipped = Number(summary.skipped) || 0;
+    const failed = Number(summary.failed) || 0;
+    return `Restore complete: ${restored} restored, ${skipped} skipped, ${failed} failed`;
+}
+
+async function importCourseSessionsFromBackup(courseSlug) {
+    const normalizedCourseSlug = String(courseSlug || '').toLowerCase().trim();
+    if (!normalizedCourseSlug) {
+        showError('Missing target course for import');
+        return;
+    }
+
+    const file = await pickRestorePackageFile();
+    if (!file) return;
+
+    try {
+        const rawText = await file.text();
+        let packageData = null;
+        try {
+            packageData = JSON.parse(rawText);
+        } catch (parseErr) {
+            showError('Selected file is not valid JSON');
+            return;
+        }
+
+        const res = await secureApiCall(`${API_BASE}/import-sessions`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                targetCourseSlug: normalizedCourseSlug,
+                packageData
+            })
+        });
+
+        if (!res || res.expired) return;
+
+        const payload = await res.json().catch(() => ({}));
+        if (!res.ok) {
+            showError(payload.error || 'Restore failed');
+            return;
+        }
+
+        const summary = payload.summary || {};
+        showSuccess(formatRestoreSummary(summary));
+        openRestoreReportModal(summary);
+
+        const failedCount = Number(summary.failed) || 0;
+        if (failedCount > 0) {
+            const details = Array.isArray(summary.details) ? summary.details : [];
+            const failedDetails = details.filter((entry) => entry && entry.result === 'failed').slice(0, 3);
+            if (failedDetails.length > 0) {
+                const sample = failedDetails
+                    .map((entry) => `${entry.session || 'session'}: ${entry.reason || 'failed'}`)
+                    .join(' | ');
+                showError(`Restore completed with errors. ${sample}`);
+            }
+        }
+    } catch (err) {
+        console.error('Import restore error:', err);
+        showError('Failed to import restore package');
+    }
+}
+
+function openCourseQrModal(course) {
+    const modal = doc('courseQrModal');
+    if (!modal || !course) return;
+
+    activeCourseQr = course;
+
+    const title = doc('courseQrModalTitle');
+    const subtitle = doc('courseQrModalSubtitle');
+    const image = doc('courseQrModalImage');
+    const url = doc('courseQrModalUrl');
+
+    if (title) title.textContent = `${course.name || course.slug || 'Course'} QR Code`;
+    if (subtitle) subtitle.textContent = 'Scan this code to open the course-specific game launch page.';
+    if (image) image.src = course.qrDataUrl || '';
+    if (url) url.textContent = course.url || '';
+    updateCourseQrDownloadLink(course);
+
+    modal.classList.add('active');
+    modal.setAttribute('aria-hidden', 'false');
+}
+
+function closeCourseQrModal() {
+    const modal = doc('courseQrModal');
+    if (!modal) return;
+    activeCourseQr = null;
+    modal.classList.remove('active');
+    modal.setAttribute('aria-hidden', 'true');
+}
+
+const SESSION_DETAILS_BASIC_EXCLUDE = new Set(['__v', '_id', 'eventsRandom', 'supportTeamRef', 'teamRef', 'ttl', 'lastAccessedAt', 'expiresAt', 'time', 'type', 'playTime', 'uniqueID']);
 
 function scheduleRealtimeRefresh(delayMs = 300) {
     if (refreshTimer) {
@@ -98,9 +390,25 @@ function connectFacilitatorSocket() {
 
     facilitatorSocket.on('facilitatorPlayerCount', (payload = {}) => {
         const countEl = doc('launchPlayerCount');
-        if (!countEl) return;
         const playerCount = Number.isFinite(payload.playerCount) ? payload.playerCount : 0;
-        countEl.textContent = `Players connected: ${playerCount}`;
+        if (countEl) {
+            countEl.textContent = `Players connected: ${playerCount}`;
+        }
+
+        // Update the in-progress count for the specific course in real-time
+        const courseSlug = payload.courseSlug;
+        if (courseSlug) {
+            const inProgressEl =
+                doc(`inProgressCount-${courseSlug}`) ||
+                document.querySelector(`.courseInProgressLabel[data-course-slug="${courseSlug}"]`);
+            if (inProgressEl) {
+                const count = Number.isFinite(payload.playerCount) ? payload.playerCount : 0;
+                const label = count === 1 ? '1 in progress' : `${count} in progress`;
+                inProgressEl.textContent = label;
+                // Update color based on whether there are players in progress
+                inProgressEl.style.color = count > 0 ? '#b45309' : '#4b5563';
+            }
+        }
 
         // Keep the session-limit "remaining" summary in sync with realtime activity.
         if (currentAccess && Number.isInteger(currentAccess.sessionLimit) && currentAccess.sessionLimit > 0) {
@@ -163,6 +471,9 @@ function loadSavedState() {
             const select = doc('courseFilter');
             if (select) select.value = state.courseFilter;
         }
+        if (state && typeof state.courseLaunchUrlsCollapsed === 'boolean') {
+            courseLaunchUrlsCollapsed = state.courseLaunchUrlsCollapsed;
+        }
         updateClearDatesButtonState();
     } catch (err) {
         console.warn('Failed to load saved state:', err);
@@ -178,6 +489,7 @@ function saveState() {
         const state = {
             completionFilter: select ? select.value : 'all',
             courseFilter: courseSelect ? courseSelect.value : 'all',
+            courseLaunchUrlsCollapsed,
             selectedSessionIds: Array.from(selectedSessionIds),
             savedSelectionIds: Array.from(savedSelectionIds),
             dateFromFilter: dateFromInput ? dateFromInput.value : null,
@@ -187,6 +499,20 @@ function saveState() {
     } catch (err) {
         console.warn('Failed to save state:', err);
     }
+}
+
+function updateCourseLaunchUrlsCollapseButton() {
+    const button = doc('courseLaunchUrlsToggleBtn');
+    const body = doc('courseLaunchUrlsBody');
+    if (!button || !body) return;
+    button.textContent = courseLaunchUrlsCollapsed ? 'Expand' : 'Collapse';
+    body.style.display = courseLaunchUrlsCollapsed ? 'none' : 'block';
+}
+
+function setCourseLaunchUrlsCollapsed(isCollapsed) {
+    courseLaunchUrlsCollapsed = Boolean(isCollapsed);
+    updateCourseLaunchUrlsCollapseButton();
+    saveState();
 }
 
 function applyCompletionFilter(sessionsArray, filterValue) {
@@ -243,6 +569,257 @@ function showSuccess(message) {
     setTimeout(() => el.classList.remove('active'), 3000);
 }
 
+function escapeHtml(value) {
+    return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function formatQuizAnswersPlainEnglish(quizValue) {
+    const quizText = getQuizAnswersPlainText(quizValue);
+    if (!quizText) {
+        return '<span style="color: #777;">No quiz answers</span>';
+    }
+
+    return `<div style="white-space: pre-wrap; font-size: 12px; line-height: 1.5;">${escapeHtml(quizText)}</div>`;
+}
+
+function getQuizAnswersPlainText(quizValue) {
+    if (!Array.isArray(quizValue) || quizValue.length === 0) {
+        return '';
+    }
+
+    const lines = quizValue.map((answersForQuestion, questionIndex) => {
+        const questionNumber = questionIndex + 1;
+        const selected = Array.isArray(answersForQuestion) ? answersForQuestion : [];
+        const question = Array.isArray(questions) ? questions[questionIndex] : null;
+        const options = question && Array.isArray(question.options) ? question.options : [];
+
+        if (selected.length === 0) {
+            return `${questionNumber}) (no answer)`;
+        }
+
+        const answerLabels = selected.map((answerIndex) => {
+            if (Number.isInteger(answerIndex) && answerIndex >= 0 && answerIndex < options.length) {
+                return options[answerIndex];
+            }
+            return String(answerIndex);
+        });
+
+        return `${questionNumber}) ${answerLabels.join(', ')}`;
+    });
+
+    return lines.join('\n');
+}
+
+function getQuizAnswerPlainTextForQuestion(quizValue, questionIndex) {
+    if (!Array.isArray(quizValue) || questionIndex < 0 || questionIndex >= quizValue.length) {
+        return '';
+    }
+
+    const selected = Array.isArray(quizValue[questionIndex]) ? quizValue[questionIndex] : [];
+    if (selected.length === 0) {
+        return '';
+    }
+
+    const question = Array.isArray(questions) ? questions[questionIndex] : null;
+    const options = question && Array.isArray(question.options) ? question.options : [];
+
+    const answerLabels = selected.map((answerIndex) => {
+        if (Number.isInteger(answerIndex) && answerIndex >= 0 && answerIndex < options.length) {
+            return options[answerIndex];
+        }
+        return String(answerIndex);
+    });
+
+    return answerLabels.join(', ');
+}
+
+function formatSecondsToHHMM(value) {
+    const secs = Number(value);
+    if (!Number.isFinite(secs) || secs < 0) {
+        return null;
+    }
+    const totalMinutes = Math.floor(secs / 60);
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+}
+
+function formatDateTimeForSummary(value) {
+    const raw = String(value || '').trim();
+    if (!raw) return null;
+    const monthNames = [
+        'January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+
+    const digits = raw.replace(/\D/g, '');
+    if (digits.length >= 8) {
+        const year = digits.slice(0, 4);
+        const monthNumber = Number(digits.slice(4, 6));
+        const monthText = monthNumber >= 1 && monthNumber <= 12
+            ? monthNames[monthNumber - 1]
+            : digits.slice(4, 6).padStart(2, '0');
+        const day = digits.slice(6, 8).padStart(2, '0');
+        const hour = (digits.length >= 10 ? digits.slice(8, 10) : '00').padStart(2, '0');
+        const minute = (digits.length >= 12 ? digits.slice(10, 12) : '00').padStart(2, '0');
+        const second = (digits.length >= 14 ? digits.slice(12, 14) : '00').padStart(2, '0');
+        return `${day} ${monthText} ${year}, ${hour}:${minute}:${second}`;
+    }
+
+    const dt = new Date(raw);
+    if (Number.isNaN(dt.getTime())) return null;
+
+    const day = String(dt.getDate()).padStart(2, '0');
+    const monthText = monthNames[dt.getMonth()];
+    const year = String(dt.getFullYear());
+    const hour = String(dt.getHours()).padStart(2, '0');
+    const minute = String(dt.getMinutes()).padStart(2, '0');
+    const second = String(dt.getSeconds()).padStart(2, '0');
+    return `${day} ${monthText} ${year}, ${hour}:${minute}:${second}`;
+}
+
+function formatSessionPropertyValue(value, keyName = '') {
+    const normalizedKey = String(keyName).toLowerCase();
+
+    if (value === null || value === undefined) {
+        return '<span style="color: #777;">null</span>';
+    }
+
+    if (sessionDetailsMode === 'summary' && (normalizedKey === 'completiontime' || normalizedKey === 'completedtime')) {
+        const hhmm = formatSecondsToHHMM(value);
+        if (hhmm) {
+            return `<span style="font-family: monospace;">${escapeHtml(hhmm)}</span>`;
+        }
+    }
+
+    if (sessionDetailsMode === 'summary' && (normalizedKey === 'dateid' || normalizedKey === 'dateaccessed')) {
+        const formattedDateTime = formatDateTimeForSummary(value);
+        if (formattedDateTime) {
+            return `<span style="font-family: monospace;">${escapeHtml(formattedDateTime)}</span>`;
+        }
+    }
+
+    if (normalizedKey === 'quiz' && sessionDetailsMode === 'summary') {
+        return formatQuizAnswersPlainEnglish(value);
+    }
+
+    // Keep events/quiz values on one logical line while allowing wraps on narrow screens.
+    if ((normalizedKey === 'events' || normalizedKey === 'quiz') && typeof value === 'object') {
+        return `<span style="display: inline-block; white-space: normal; overflow-wrap: anywhere; word-break: break-word; font-family: monospace; font-size: 12px; line-height: 1.4;">${escapeHtml(JSON.stringify(value))}</span>`;
+    }
+
+    if (typeof value === 'object') {
+        return `<pre style="margin: 0; white-space: pre-wrap; font-size: 12px; line-height: 1.4;">${escapeHtml(JSON.stringify(value, null, 2))}</pre>`;
+    }
+    return `<span>${escapeHtml(value)}</span>`;
+}
+
+function getSessionDetailsKeys(session, mode = sessionDetailsMode) {
+    const allKeys = Object.keys(session).sort((a, b) => a.localeCompare(b));
+    if (mode === 'full') {
+        return allKeys;
+    }
+    const SUMMARY_ORDER = ['name', 'dateID', 'dateAccessed', 'institution', 'course', 'teamCountry', 'state', 'events', 'quiz'];
+    const filtered = allKeys.filter((key) => {
+        const lowerKey = String(key).toLowerCase();
+        if (SESSION_DETAILS_BASIC_EXCLUDE.has(key)) return false;
+        if (lowerKey.includes('profile')) return false;
+        return true;
+    });
+    const ordered = SUMMARY_ORDER.filter((k) => filtered.includes(k));
+    const rest = filtered.filter((k) => !SUMMARY_ORDER.includes(k));
+    return [...ordered, ...rest];
+}
+
+function formatSessionPropertyValueForCsv(value, keyName = '') {
+    const normalizedKey = String(keyName).toLowerCase();
+
+    if (value === null || value === undefined) {
+        return 'null';
+    }
+
+    if (normalizedKey === 'completiontime' || normalizedKey === 'completedtime') {
+        const hhmm = formatSecondsToHHMM(value);
+        if (hhmm) return hhmm;
+    }
+
+    if (normalizedKey === 'dateid' || normalizedKey === 'dateaccessed') {
+        const formattedDateTime = formatDateTimeForSummary(value);
+        if (formattedDateTime) return formattedDateTime;
+    }
+
+    if (normalizedKey === 'quiz') {
+        const quizText = getQuizAnswersPlainText(value);
+        return quizText || 'No quiz answers';
+    }
+
+    if (typeof value === 'object') {
+        return JSON.stringify(value);
+    }
+
+    return String(value);
+}
+
+function updateSessionDetailsModeButton() {
+    const modeBtn = doc('sessionDetailsModeBtn');
+    if (!modeBtn) return;
+    modeBtn.textContent = sessionDetailsMode === 'summary' ? 'View: Summary' : 'View: Full';
+}
+
+function renderSessionDetailsModal(session) {
+    const content = doc('sessionDetailsContent');
+    if (!content || !session) return;
+
+    const rows = getSessionDetailsKeys(session)
+        .map((key) => `
+            <tr>
+                <td style="vertical-align: top; font-weight: 600; width: 220px; padding: 8px; border-bottom: 1px solid #eee;">${escapeHtml(key)}</td>
+                <td style="vertical-align: top; padding: 8px; border-bottom: 1px solid #eee;">${formatSessionPropertyValue(session[key], key)}</td>
+            </tr>
+        `)
+        .join('');
+
+    content.innerHTML = `
+        <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+            <tbody>
+                ${rows || '<tr><td style="padding: 8px; color: #777;">No properties found.</td></tr>'}
+            </tbody>
+        </table>
+    `;
+}
+
+function openSessionDetailsModal(session) {
+    const modal = doc('sessionDetailsModal');
+    if (!modal || !session) return;
+
+    activeSessionDetails = session;
+    updateSessionDetailsModeButton();
+
+    const sessionName = session.name || session.uniqueID || 'Session';
+    const title = doc('sessionDetailsTitle');
+    if (title) {
+        title.textContent = `Session Details: ${sessionName}`;
+    }
+
+    renderSessionDetailsModal(session);
+
+    modal.classList.add('active');
+    modal.setAttribute('aria-hidden', 'false');
+}
+
+function closeSessionDetailsModal() {
+    const modal = doc('sessionDetailsModal');
+    if (!modal) return;
+    activeSessionDetails = null;
+    modal.classList.remove('active');
+    modal.setAttribute('aria-hidden', 'true');
+}
+
 function initThemeToggle() {
     const THEME_KEY = 'dashboard_theme';
     const themeBtn = doc('themeToggleBtn');
@@ -256,7 +833,7 @@ function initThemeToggle() {
         themeBtn.setAttribute('aria-label', themeBtn.title);
     };
 
-    themeBtn.style.display = 'inline-block';
+    themeBtn.style.display = 'none';
     
     // Restore theme preference on load
     const savedTheme = localStorage.getItem(THEME_KEY);
@@ -450,23 +1027,66 @@ function populateCourseFilter() {
         return;
     }
     
-    // Get unique courses from sessions
-    const uniqueCourses = new Set();
+    // Build a course-name lookup for the active institution so labels can use full names.
+    const institutionSlug = String(currentAccess.institutionSlug || '').toLowerCase();
+    const courseOptionsByInstitution = (loginOptions && loginOptions.courseOptionsByInstitution) || {};
+    const configuredCourses = courseOptionsByInstitution[institutionSlug] || [];
+    const courseNameBySlug = new Map(
+        configuredCourses
+            .map((course) => [String(course.slug || '').toLowerCase(), course.name || course.slug || ''])
+            .filter(([slug]) => Boolean(slug))
+    );
+
+    // Get unique course values from sessions and derive best-available labels.
+    const courseLabelByValue = new Map();
     sessions.forEach(s => {
-        if (s.course) {
-            uniqueCourses.add(s.course);
-        }
+        const courseValue = s.course || s.courseSlug;
+        if (!courseValue) return;
+
+        const normalizedValue = String(courseValue).toLowerCase();
+        const bestLabel =
+            (s.courseName && String(s.courseName).trim()) ||
+            courseNameBySlug.get(normalizedValue) ||
+            String(courseValue);
+
+        courseLabelByValue.set(courseValue, bestLabel);
     });
     
-    // Sort courses alphabetically
-    const courseList = Array.from(uniqueCourses).sort();
-    
-    // Populate the dropdown with "all" plus all courses
-    filterSelect.innerHTML = '<option value="all">all</option>' +
-        courseList.map(course => `<option value="${course}">${course}</option>`).join('');
+    // Sort by display label (full course name when available)
+    const courseList = Array.from(courseLabelByValue.keys()).sort((a, b) => {
+        const aLabel = courseLabelByValue.get(a) || String(a);
+        const bLabel = courseLabelByValue.get(b) || String(b);
+        return aLabel.localeCompare(bLabel);
+    });
+
+    // Populate the dropdown with "all" plus all courses.
+    filterSelect.innerHTML = '';
+    const allOption = document.createElement('option');
+    allOption.value = 'all';
+    allOption.textContent = 'all';
+    filterSelect.appendChild(allOption);
+
+    courseList.forEach((course) => {
+        const option = document.createElement('option');
+        option.value = course;
+        option.textContent = courseLabelByValue.get(course) || String(course);
+        filterSelect.appendChild(option);
+    });
     
     // Restore previously selected course
-    const savedCourseFilter = localStorage.getItem(STORAGE_KEY) ? JSON.parse(localStorage.getItem(STORAGE_KEY)).courseFilter : 'all';
+    let savedCourseFilter = 'all';
+    try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+            const parsed = JSON.parse(raw);
+            if (parsed && typeof parsed.courseFilter === 'string') {
+                savedCourseFilter = parsed.courseFilter;
+            }
+        }
+    } catch (err) {
+        console.warn('Failed to restore saved course filter:', err);
+    }
+
     if (savedCourseFilter && courseList.includes(savedCourseFilter)) {
         filterSelect.value = savedCourseFilter;
     } else {
@@ -520,9 +1140,9 @@ function showSessionsSection() {
     loadGameData();
 
     updateLaunchLimitsInfo();
-    
-    // Load launch URL and QR code for course-level access
-    loadLaunchUrl();
+
+    // Load course/game URLs for the current institution or course access scope
+    loadCourseLaunchUrls();
     
     // Populate course filter for institution-level access
     populateCourseFilter();
@@ -589,31 +1209,187 @@ function showSessionsSection() {
     }
 }
 
-async function loadLaunchUrl() {
-    const card = doc('launchUrlCard');
-    if (!card) return;
-    if (!currentAccess || currentAccess.type !== 'course') {
+async function loadCourseLaunchUrls() {
+    const card = doc('courseLaunchUrlsCard');
+    const list = doc('courseLaunchUrlsList');
+    const title = doc('courseLaunchUrlsTitle');
+    const description = doc('courseLaunchUrlsDescription');
+    const toggleBtn = doc('courseLaunchUrlsToggleBtn');
+    if (!card || !list) return;
+
+    if (!currentAccess || !currentAccess.institutionSlug) {
         card.style.display = 'none';
+        list.innerHTML = '';
         return;
     }
 
-    updateLaunchLimitsInfo();
-
-    const countEl = doc('launchPlayerCount');
-    if (countEl) {
-        countEl.textContent = 'Players connected: 0';
-    }
     try {
-        const res = await secureApiCall(`${API_BASE}/launch-url`);
-        if (!res || res.expired || !res.ok) return;
+        const res = await secureApiCall(`${API_BASE}/course-launch-urls`);
+        if (!res || res.expired || !res.ok) {
+            card.style.display = 'none';
+            list.innerHTML = '';
+            return;
+        }
+
         const data = await res.json();
-        const input = doc('launchUrlInput');
-        const img = doc('launchUrlQr');
-        if (input) input.value = data.launchUrl || '';
-        if (img && data.qrDataUrl) img.src = data.qrDataUrl;
+        const courses = Array.isArray(data.courses) ? data.courses : [];
+        const heading = currentAccess.type === 'course' ? 'Course Game URL' : 'Course Game URLs';
+        if (title) title.textContent = heading;
+        if (description) {
+            description.textContent = currentAccess.type === 'course'
+                ? 'This dashboard shows the launch link for the active course.'
+                : 'Each course below includes a direct game launch URL.';
+        }
+
+        if (courses.length === 0) {
+            list.innerHTML = '<div style="color: #666; font-size: 13px;">No launchable courses found.</div>';
+            card.style.display = 'block';
+            updateCourseLaunchUrlsCollapseButton();
+            return;
+        }
+
+        list.innerHTML = courses.map((course) => {
+            const stateLabel = course.active ? 'Active' : 'Inactive';
+            const stateColor = course.active ? '#2e7d32' : '#b71c1c';
+            const toggleLabel = course.active ? 'Set Inactive' : 'Set Active';
+            const inProgressCount = Number(course.inProgressCount) || 0;
+            const inProgressLabel = inProgressCount === 1 ? '1 in progress' : `${inProgressCount} in progress`;
+            const inProgressColor = inProgressCount > 0 ? '#b45309' : '#4b5563';
+            const importButtonHtml = course.active
+                ? ''
+                : `<button type="button" class="courseLaunchImportBtn" data-course-slug="${escapeHtml(course.slug)}"
+                        style="padding: 8px 14px; background: #6d4c41; color: white; border: 1px solid #5d4037; border-radius: 3px; cursor: pointer; font-size: 13px; white-space: nowrap;">Import</button>`;
+            return `
+            <div style="padding: 10px 12px; border: 1px solid #d7e1ee; border-radius: 4px; background: #fff;" data-course-slug="${escapeHtml(course.slug)}">
+                <div style="display: flex; justify-content: space-between; gap: 12px; align-items: center; margin-bottom: 8px; flex-wrap: wrap;">
+                    <div style="font-weight: 600; color: #173a5e;">
+                        ${escapeHtml(course.name)}
+                        <span style="font-weight: 500; color: #5f6b7a;">(${Number(course.sessionCount) || 0} session${Number(course.sessionCount) === 1 ? '' : 's'} found)</span>
+                        <span id="inProgressCount-${escapeHtml(course.slug)}" class="courseInProgressLabel" data-course-slug="${escapeHtml(course.slug)}" style="font-weight: 600; color: ${inProgressColor}; margin-left: 8px;">${escapeHtml(inProgressLabel)}</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="font-size: 12px; color: ${stateColor}; font-weight: 600;">${stateLabel}</span>
+                        <button type="button" class="courseToggleActiveBtn" data-course-slug="${escapeHtml(course.slug)}" data-active="${course.active ? '1' : '0'}" data-in-progress-count="${inProgressCount}"
+                            style="padding: 4px 10px; background: #eee; color: #222; border: 1px solid #bbb; border-radius: 3px; cursor: pointer; font-size: 12px;">${toggleLabel}</button>
+                        <div style="font-size: 12px; color: #6b7280; margin-left: 10px;">${escapeHtml(course.slug)}</div>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                    <input type="text" readonly value="${escapeHtml(course.url)}" aria-label="Game URL for ${escapeHtml(course.name)}"
+                        style="flex: 1; min-width: 260px; padding: 8px 10px; border: 1px solid #b0c8e8; border-radius: 3px; font-size: 12px; background: #fdfdfd; font-family: monospace;">
+                    <button type="button" class="courseLaunchCopyBtn" data-course-url="${escapeHtml(course.url)}"
+                        style="padding: 8px 14px; background: #0050a8; color: white; border: 1px solid #003f85; border-radius: 3px; cursor: pointer; font-size: 13px; white-space: nowrap;">Copy</button>
+                    <button type="button" class="courseLaunchQrBtn" data-course-name="${escapeHtml(course.name)}" data-course-url="${escapeHtml(course.url)}" data-course-qr="${escapeHtml(course.qrDataUrl)}"
+                        style="padding: 8px 14px; background: #2e7d32; color: white; border: 1px solid #1b5e20; border-radius: 3px; cursor: pointer; font-size: 13px; white-space: nowrap;">QR</button>
+                    <button type="button" class="courseLaunchBackupBtn" data-course-name="${escapeHtml(course.name)}" data-course-slug="${escapeHtml(course.slug)}"
+                        style="padding: 8px 14px; background: #757575; color: white; border: 1px solid #616161; border-radius: 3px; cursor: pointer; font-size: 13px; white-space: nowrap;">Backup</button>
+                    ${importButtonHtml}
+                </div>
+            </div>
+        `; }).join('');
+        card.querySelectorAll('.courseToggleActiveBtn').forEach((button) => {
+            button.addEventListener('click', async () => {
+                const courseSlug = button.getAttribute('data-course-slug');
+                const currentlyActive = button.getAttribute('data-active') === '1';
+                const inProgressCount = Number(button.getAttribute('data-in-progress-count')) || 0;
+                if (currentlyActive && inProgressCount > 0) {
+                    const warningMessage = inProgressCount === 1
+                        ? 'There is currently 1 active user in this course. Are you sure you want to set this course inactive?'
+                        : `There are currently ${inProgressCount} active users in this course. Are you sure you want to set this course inactive?`;
+                    const confirmed = await openDeactivateWarningModal(warningMessage, inProgressCount);
+                    if (!confirmed) {
+                        return;
+                    }
+                }
+                button.disabled = true;
+                button.textContent = 'Updating...';
+                try {
+                    const res = await secureApiCall(`${API_BASE}/course-toggle-active`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ courseSlug, active: !currentlyActive })
+                    });
+                    if (res.ok) {
+                        showSuccess('Course state updated');
+                        await loadCourseLaunchUrls();
+                    } else {
+                        const err = await res.json().catch(() => ({}));
+                        showError(err.error || 'Failed to update course state');
+                    }
+                } catch (err) {
+                    showError('Failed to update course state');
+                } finally {
+                    button.disabled = false;
+                }
+            });
+        });
+
         card.style.display = 'block';
+
+        if (toggleBtn && !toggleBtn.dataset.listenerAdded) {
+            toggleBtn.dataset.listenerAdded = 'true';
+            toggleBtn.addEventListener('click', () => {
+                setCourseLaunchUrlsCollapsed(!courseLaunchUrlsCollapsed);
+            });
+        }
+
+        updateCourseLaunchUrlsCollapseButton();
+
+        card.querySelectorAll('.courseLaunchCopyBtn').forEach((button) => {
+            button.addEventListener('click', async () => {
+                const url = button.getAttribute('data-course-url') || '';
+                try {
+                    await navigator.clipboard.writeText(url);
+                    button.textContent = 'Copied';
+                    setTimeout(() => {
+                        button.textContent = 'Copy';
+                    }, 1200);
+                } catch (err) {
+                    console.warn('Failed to copy course URL:', err);
+                }
+            });
+        });
+        card.querySelectorAll('.courseLaunchQrBtn').forEach((button) => {
+            button.addEventListener('click', () => {
+                openCourseQrModal({
+                    name: button.getAttribute('data-course-name') || '',
+                    url: button.getAttribute('data-course-url') || '',
+                    qrDataUrl: button.getAttribute('data-course-qr') || ''
+                });
+            });
+        });
+        card.querySelectorAll('.courseLaunchBackupBtn').forEach((button) => {
+            button.addEventListener('click', async () => {
+                const courseSlug = button.getAttribute('data-course-slug') || '';
+                const originalText = button.textContent;
+                button.disabled = true;
+                button.textContent = 'Creating...';
+                try {
+                    await downloadAccessData(courseSlug);
+                } finally {
+                    button.disabled = false;
+                    button.textContent = originalText;
+                }
+            });
+        });
+        card.querySelectorAll('.courseLaunchImportBtn').forEach((button) => {
+            button.addEventListener('click', async () => {
+                const courseSlug = button.getAttribute('data-course-slug') || '';
+                const originalText = button.textContent;
+                button.disabled = true;
+                button.textContent = 'Importing...';
+                try {
+                    await importCourseSessionsFromBackup(courseSlug);
+                } finally {
+                    button.disabled = false;
+                    button.textContent = originalText;
+                }
+            });
+        });
     } catch (err) {
-        console.warn('Failed to load launch URL:', err);
+        console.warn('Failed to load course launch URLs:', err);
+        card.style.display = 'none';
+        list.innerHTML = '';
     }
 }
 
@@ -633,6 +1409,7 @@ async function loadSessions() {
         const data = await res.json();
         sessions = data.sessions || [];
         ttlInfo = data.ttlInfo || null;
+        populateCourseFilter();
         updateLaunchLimitsInfo();
         renderSessions();
     } catch (err) {
@@ -888,6 +1665,7 @@ function renderSessions() {
     } else {
         selectedSessionIds.clear();
     }
+    updateSelectedCountText();
     saveState();
 
     // Attach checkbox handlers
@@ -902,7 +1680,73 @@ function renderSessions() {
             }
             updateSelectedSessionsPanel();
             updateSelectAllCheckbox();
+            updateSelectedCountText();
             saveState();
+        });
+    });
+
+    // Hovering a session title should highlight the matching completion-time bar.
+    container.querySelectorAll('.institution-item .institution-header h3').forEach((titleEl) => {
+        const sessionTile = titleEl.closest('.institution-item');
+        if (!sessionTile) return;
+        const sessionId = sessionTile.getAttribute('data-session-id');
+        if (!sessionId) return;
+
+        titleEl.addEventListener('mouseenter', () => {
+            const barRow = document.querySelector(`.time-bar-row[data-session-id="${sessionId}"]`);
+            if (!barRow) return;
+            const barFill = barRow.querySelector('.time-bar-fill');
+
+            barRow.style.backgroundColor = '#f0f0f0';
+            if (barFill) {
+                barFill.style.background = 'linear-gradient(90deg, #003f85, #002f63)';
+                barFill.style.transform = 'scaleY(1.1)';
+            }
+        });
+
+        titleEl.addEventListener('mouseleave', () => {
+            const barRow = document.querySelector(`.time-bar-row[data-session-id="${sessionId}"]`);
+            if (!barRow) return;
+            const barFill = barRow.querySelector('.time-bar-fill');
+
+            barRow.style.backgroundColor = '';
+            if (barFill) {
+                barFill.style.background = 'linear-gradient(90deg, #0050a8, #003f85)';
+                barFill.style.transform = '';
+            }
+        });
+    });
+
+    // Hovering a session tile highlights itself (same style as bar-to-tile highlight).
+    container.querySelectorAll('.institution-item').forEach((sessionTile) => {
+        const sessionId = sessionTile.getAttribute('data-session-id');
+        if (!sessionId) return;
+
+        sessionTile.addEventListener('mouseenter', () => {
+            sessionTile.style.backgroundColor = '#e3f2fd';
+            sessionTile.style.borderColor = '#0050a8';
+            sessionTile.style.boxShadow = '0 2px 8px rgba(0, 80, 168, 0.3)';
+        });
+
+        sessionTile.addEventListener('mouseleave', () => {
+            sessionTile.style.backgroundColor = '';
+            sessionTile.style.borderColor = '';
+            sessionTile.style.boxShadow = '';
+        });
+    });
+
+    // Clicking a session tile opens the full session details modal.
+    container.querySelectorAll('.institution-item').forEach((sessionTile) => {
+        sessionTile.addEventListener('click', (event) => {
+            if (event.target.closest('input, button, a, label')) {
+                return;
+            }
+
+            const sessionId = sessionTile.getAttribute('data-session-id');
+            if (!sessionId) return;
+            const session = sessions.find((s) => String(s.uniqueID) === String(sessionId));
+            if (!session) return;
+            openSessionDetailsModal(session);
         });
     });
     
@@ -928,6 +1772,7 @@ function renderSessions() {
 
     updateSelectedSessionsPanel();
     updateSelectAllCheckbox();
+    updateSelectedCountText();
 }
 
 function updateSelectAllCheckbox() {
@@ -1005,6 +1850,20 @@ function updateSelectAllCheckbox() {
     }
 }
 
+function updateSelectedCountText() {
+    const selectedCountEl = doc('selectedSessionsCount');
+    const selectedCount = selectedSessionIds.size;
+
+    if (selectedCountEl) {
+        selectedCountEl.textContent = `(${selectedCount} selected)`;
+    }
+
+    const downloadSessionDetailsBtn = doc('downloadSessionDetailsBtn');
+    if (downloadSessionDetailsBtn) {
+        downloadSessionDetailsBtn.textContent = `Download ${selectedCount} Sessions`;
+    }
+}
+
 function updateSelectedSessionsPanel() {
     const list = doc('selectedSessionsList');
     if (!list) return;
@@ -1070,9 +1929,6 @@ function updateSelectedSessionsPanel() {
         const barFill = row.querySelector('.time-bar-fill');
         
         row.addEventListener('mouseenter', () => {
-            // Don't apply hover if this session is pinned
-            if (pinnedSessionId === sessionId) return;
-            
             // Highlight the bar
             row.style.backgroundColor = '#f0f0f0';
             if (barFill) {
@@ -1090,79 +1946,21 @@ function updateSelectedSessionsPanel() {
         });
         
         row.addEventListener('mouseleave', () => {
-            // Don't remove highlight if this session is pinned
-            if (pinnedSessionId === sessionId) return;
-            
-            // Reset the bar
-            row.style.backgroundColor = '';
-            if (barFill) {
-                barFill.style.background = 'linear-gradient(90deg, #0050a8, #003f85)';
-                barFill.style.transform = '';
-            }
-            
-            // Reset the session tile
+            // Always clear the tile highlight — pin only locks bar appearance
             const sessionTile = document.querySelector(`.institution-item[data-session-id="${sessionId}"]`);
             if (sessionTile) {
                 sessionTile.style.backgroundColor = '';
                 sessionTile.style.borderColor = '';
                 sessionTile.style.boxShadow = '';
             }
-        });
-        
-        row.addEventListener('click', () => {
-            // Toggle pin state
-            if (pinnedSessionId === sessionId) {
-                // Unpin - remove highlight
-                pinnedSessionId = null;
-                row.style.backgroundColor = '';
-                if (barFill) {
-                    barFill.style.background = 'linear-gradient(90deg, #0050a8, #003f85)';
-                    barFill.style.transform = '';
-                }
-                
-                const sessionTile = document.querySelector(`.institution-item[data-session-id="${sessionId}"]`);
-                if (sessionTile) {
-                    sessionTile.style.backgroundColor = '';
-                    sessionTile.style.borderColor = '';
-                    sessionTile.style.boxShadow = '';
-                }
-            } else {
-                // Clear previous pin if any
-                if (pinnedSessionId) {
-                    const prevRow = list.querySelector(`.time-bar-row[data-session-id="${pinnedSessionId}"]`);
-                    if (prevRow) {
-                        prevRow.style.backgroundColor = '';
-                        const prevFill = prevRow.querySelector('.time-bar-fill');
-                        if (prevFill) {
-                            prevFill.style.background = 'linear-gradient(90deg, #0050a8, #003f85)';
-                            prevFill.style.transform = '';
-                        }
-                    }
-                    
-                    const prevTile = document.querySelector(`.institution-item[data-session-id="${pinnedSessionId}"]`);
-                    if (prevTile) {
-                        prevTile.style.backgroundColor = '';
-                        prevTile.style.borderColor = '';
-                        prevTile.style.boxShadow = '';
-                    }
-                }
-                
-                // Pin - apply persistent highlight
-                pinnedSessionId = sessionId;
-                row.style.backgroundColor = '#f0f0f0';
-                if (barFill) {
-                    barFill.style.background = 'linear-gradient(90deg, #003f85, #002f63)';
-                    barFill.style.transform = 'scaleY(1.1)';
-                }
-                
-                const sessionTile = document.querySelector(`.institution-item[data-session-id="${sessionId}"]`);
-                if (sessionTile) {
-                    sessionTile.style.backgroundColor = '#e3f2fd';
-                    sessionTile.style.borderColor = '#0050a8';
-                    sessionTile.style.boxShadow = '0 2px 8px rgba(0, 80, 168, 0.3)';
-                }
+
+            row.style.backgroundColor = '';
+            if (barFill) {
+                barFill.style.background = 'linear-gradient(90deg, #0050a8, #003f85)';
+                barFill.style.transform = '';
             }
         });
+        
     });
     
     // Render quiz pie charts
@@ -1269,6 +2067,7 @@ async function logout() {
     sessions = [];
     disconnectFacilitatorSocket();
     selectedSessionIds.clear();
+    courseLaunchUrlsCollapsed = false;
     saveState();
     doc('loginSection').style.display = 'block';
     doc('sessionsSection').style.display = 'none';
@@ -1276,6 +2075,11 @@ async function logout() {
     doc('password').value = '';
     doc('institutionSlug').value = '';
     doc('courseSlug').value = '';
+    const courseLaunchUrlsCard = doc('courseLaunchUrlsCard');
+    if (courseLaunchUrlsCard) courseLaunchUrlsCard.style.display = 'none';
+    const courseLaunchUrlsList = doc('courseLaunchUrlsList');
+    if (courseLaunchUrlsList) courseLaunchUrlsList.innerHTML = '';
+    closeCourseQrModal();
     showSuccess('Logged out');
 }
 
@@ -1362,9 +2166,11 @@ function getDownloadFilenameFromDisposition(disposition, fallback = 'k2_sessions
     return fallback;
 }
 
-async function downloadAccessData() {
+async function downloadAccessData(courseSlug = '') {
     try {
-        const res = await secureApiCall(`${API_BASE}/export-sessions`, {
+        const normalizedCourseSlug = String(courseSlug || '').toLowerCase().trim();
+        const query = normalizedCourseSlug ? `?courseSlug=${encodeURIComponent(normalizedCourseSlug)}` : '';
+        const res = await secureApiCall(`${API_BASE}/export-sessions${query}`, {
             method: 'GET',
             headers: { 'Accept': 'application/json' }
         });
@@ -1391,11 +2197,92 @@ async function downloadAccessData() {
         document.body.removeChild(link);
         window.URL.revokeObjectURL(objectUrl);
 
-        showSuccess('Data export downloaded');
+        if (normalizedCourseSlug) {
+            showSuccess(`Backup file downloaded for ${normalizedCourseSlug}`);
+        } else {
+            showSuccess('Data export downloaded');
+        }
     } catch (err) {
         console.error('Download data error:', err);
         showError('Failed to download data export');
     }
+}
+
+function csvEscape(value) {
+    const text = String(value == null ? '' : value);
+    return `"${text.replace(/"/g, '""')}"`;
+}
+
+function buildSessionDetailsCsv(selectedSessions) {
+    const excludedCsvKeys = new Set(['uniqueID', 'events', 'quiz']);
+    const headerSet = new Set();
+    selectedSessions.forEach((session) => {
+        getSessionDetailsKeys(session, 'summary').forEach((key) => {
+            if (!excludedCsvKeys.has(key)) {
+                headerSet.add(key);
+            }
+        });
+    });
+
+    const answeredQuestionNumbers = new Set();
+    selectedSessions.forEach((session) => {
+        if (!Array.isArray(session.quiz)) return;
+        session.quiz.forEach((answersForQuestion, idx) => {
+            if (Array.isArray(answersForQuestion) && answersForQuestion.length > 0) {
+                answeredQuestionNumbers.add(idx + 1);
+            }
+        });
+    });
+    const quizColumns = Array.from(answeredQuestionNumbers)
+        .sort((a, b) => a - b)
+        .map((qNum) => `quiz_q${qNum}`);
+
+    const orderedHeader = ['name', 'dateID', 'dateAccessed', 'institution', 'course', 'teamCountry', 'state'];
+    const dynamicKeys = Array.from(headerSet).filter((key) => !orderedHeader.includes(key)).sort((a, b) => a.localeCompare(b));
+    const columns = orderedHeader.filter((key) => headerSet.has(key)).concat(dynamicKeys, quizColumns);
+
+    const lines = [];
+    lines.push(columns.map(csvEscape).join(','));
+
+    selectedSessions.forEach((session) => {
+        const row = columns.map((key) => {
+            if (key.startsWith('quiz_q')) {
+                const qNumber = Number(key.slice('quiz_q'.length));
+                const questionIndex = Number.isFinite(qNumber) ? qNumber - 1 : -1;
+                return getQuizAnswerPlainTextForQuestion(session.quiz, questionIndex);
+            }
+            if (!Object.prototype.hasOwnProperty.call(session, key)) return '';
+            return formatSessionPropertyValueForCsv(session[key], key);
+        });
+        lines.push(row.map(csvEscape).join(','));
+    });
+
+    return lines.join('\r\n');
+}
+
+function downloadSelectedSessionDetailsCsv() {
+    const selectedSessions = sessions.filter((s) => s.uniqueID && selectedSessionIds.has(s.uniqueID));
+    if (!selectedSessions.length) {
+        showError('No sessions selected for detail export');
+        return;
+    }
+
+    const csv = buildSessionDetailsCsv(selectedSessions);
+    const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const inst = ((currentAccess && currentAccess.institutionSlug) || 'inst').toLowerCase();
+    const course = ((currentAccess && currentAccess.courseSlug) || 'all').toLowerCase();
+    const fileName = `k2_session_details_${inst}_${course}_${stamp}.csv`;
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const objectUrl = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = objectUrl;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(objectUrl);
+    showSuccess('Session detail CSV downloaded');
 }
 if (doc('loginForm')) {
     doc('loginForm').addEventListener('submit', login);
@@ -1413,6 +2300,112 @@ if (doc('logoutBtn')) {
 // Add filter listeners
 document.addEventListener('DOMContentLoaded', () => {
     loadSavedState();
+
+    updateSessionDetailsModeButton();
+
+    const sessionDetailsModeBtn = doc('sessionDetailsModeBtn');
+    if (sessionDetailsModeBtn) {
+        sessionDetailsModeBtn.addEventListener('click', () => {
+            sessionDetailsMode = sessionDetailsMode === 'summary' ? 'full' : 'summary';
+            updateSessionDetailsModeButton();
+            if (activeSessionDetails) {
+                renderSessionDetailsModal(activeSessionDetails);
+            }
+        });
+    }
+
+    const sessionDetailsCloseBtn = doc('sessionDetailsCloseBtn');
+    if (sessionDetailsCloseBtn) {
+        sessionDetailsCloseBtn.addEventListener('click', closeSessionDetailsModal);
+    }
+
+    const sessionDetailsModal = doc('sessionDetailsModal');
+    if (sessionDetailsModal) {
+        sessionDetailsModal.addEventListener('click', (event) => {
+            if (event.target === sessionDetailsModal) {
+                closeSessionDetailsModal();
+            }
+        });
+    }
+    const courseQrCloseBtn = doc('courseQrCloseBtn');
+    if (courseQrCloseBtn) {
+        courseQrCloseBtn.addEventListener('click', closeCourseQrModal);
+    }
+
+    const courseQrCopyBtn = doc('courseQrCopyBtn');
+    if (courseQrCopyBtn) {
+        courseQrCopyBtn.addEventListener('click', async () => {
+            if (!activeCourseQr) return;
+            const originalText = courseQrCopyBtn.textContent;
+            try {
+                await copyCourseQrToClipboard(activeCourseQr);
+                courseQrCopyBtn.textContent = 'Copied';
+                showSuccess('Image copied to clipboard');
+                setTimeout(() => {
+                    courseQrCopyBtn.textContent = originalText;
+                }, 1200);
+            } catch (err) {
+                console.warn('Failed to copy course QR code:', err);
+                showError('Copying QR images is not supported in this browser');
+            }
+        });
+    }
+
+    const courseQrModal = doc('courseQrModal');
+    if (courseQrModal) {
+        courseQrModal.addEventListener('click', (event) => {
+            if (event.target === courseQrModal) {
+                closeCourseQrModal();
+            }
+        });
+    }
+
+    const restoreReportCloseBtn = doc('restoreReportCloseBtn');
+    if (restoreReportCloseBtn) {
+        restoreReportCloseBtn.addEventListener('click', closeRestoreReportModal);
+    }
+
+    const restoreReportModal = doc('restoreReportModal');
+    if (restoreReportModal) {
+        restoreReportModal.addEventListener('click', (event) => {
+            if (event.target === restoreReportModal) {
+                closeRestoreReportModal();
+            }
+        });
+    }
+
+    const deactivateWarningCloseBtn = doc('deactivateWarningCloseBtn');
+    if (deactivateWarningCloseBtn) {
+        deactivateWarningCloseBtn.addEventListener('click', closeDeactivateWarningModal);
+    }
+
+    const deactivateWarningCancelBtn = doc('deactivateWarningCancelBtn');
+    if (deactivateWarningCancelBtn) {
+        deactivateWarningCancelBtn.addEventListener('click', () => resolveDeactivateWarning(false));
+    }
+
+    const deactivateWarningConfirmBtn = doc('deactivateWarningConfirmBtn');
+    if (deactivateWarningConfirmBtn) {
+        deactivateWarningConfirmBtn.addEventListener('click', () => resolveDeactivateWarning(true));
+    }
+
+    const deactivateWarningModal = doc('deactivateWarningModal');
+    if (deactivateWarningModal) {
+        deactivateWarningModal.addEventListener('click', (event) => {
+            if (event.target === deactivateWarningModal) {
+                closeDeactivateWarningModal();
+            }
+        });
+    }
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+            closeSessionDetailsModal();
+            closeCourseQrModal();
+            closeRestoreReportModal();
+            closeDeactivateWarningModal();
+        }
+    });
     
     // Add completion filter dropdown listener
     const completionFilterSelect = doc('completionFilter');
@@ -1473,9 +2466,9 @@ document.addEventListener('DOMContentLoaded', () => {
         deleteBtn.addEventListener('click', deleteSelectedSessions);
     }
 
-    const downloadBtn = doc('downloadDataBtn');
-    if (downloadBtn) {
-        downloadBtn.addEventListener('click', downloadAccessData);
+    const downloadSessionDetailsBtn = doc('downloadSessionDetailsBtn');
+    if (downloadSessionDetailsBtn) {
+        downloadSessionDetailsBtn.addEventListener('click', downloadSelectedSessionDetailsCsv);
     }
 
     // Copy launch URL button

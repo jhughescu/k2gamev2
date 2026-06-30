@@ -172,6 +172,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         teamID: t.id,
                         gameData: info.gameData
                     }
+                    console.log(`creating climber for ${t.adjective} team, profile ${i}`);
                     const c = new Climber(clOb);
 //                    console.log(clOb);
 //                    console.log(c);

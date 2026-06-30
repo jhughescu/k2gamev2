@@ -27,6 +27,20 @@ document.addEventListener('DOMContentLoaded', function () {
             role: 'admin.dashboard'
         }
     });
+    window.adminDashboardSocket = socket;
+    window.startTrafficStream = () => {
+        socket.on('trafficSnapshot', (snap) => {
+            console.log('trafficSnapshot', snap);
+        });
+        socket.emit('subscribeTrafficStream', (err, result) => {
+            console.log('subscribeTrafficStream', err, result);
+        });
+    };
+    window.stopTrafficStream = () => {
+        socket.emit('unsubscribeTrafficStream', (err, result) => {
+            console.log('unsubscribeTrafficStream', err, result);
+        });
+    };
 
     // Handle authentication errors
     socket.on('authError', (data) => {
@@ -173,7 +187,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     };
     const prepSessionForDisplay = (s) => {
-//        console.log(`prepSessionForDisplay:`);
+       console.log(`prepSessionForDisplay:`);
 //        console.log(s);
         const o = {
             session: {totalTime: [0, 0, 0]},

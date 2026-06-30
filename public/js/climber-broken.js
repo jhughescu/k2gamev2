@@ -1,8 +1,9 @@
+
 class Climber {
 
     constructor(init) {
-//        console.log('##################################### create new climber ##################################### ');
-//        console.log(init);
+       console.log('##################################### create new climber ##################################### ');
+       console.log(init);
         if (init.summaryString && init.summaryString !== undefined) {
                 const gd = init.gameData;
                 const tm = init.team;
@@ -11,6 +12,7 @@ class Climber {
                 init.gameData = gd;
                 init.team = tm;
         }
+        
         this.onClimberUpdate = null;
         this.gameData = init.gameData;
         this.profile = init.profile;
@@ -18,30 +20,42 @@ class Climber {
             this.option = this.getOption(init.type);
             this.OPTION = this.getOption(init.type).toUpperCase();
         }
-    //    console.log(this.gameData);
-    //    console.log(this.gameData.profiles);
+        // console.log(this.gameData);
+        // console.log(this.profile);
+        console.log(this.gameData.profiles);
+        console.log(this.profile);
+        console.log(init)
         this.options = Object.values(this.gameData.profiles[`profile_${this.profile}`]).filter(p => p.hasOwnProperty('capacity'));
         this.expandOptions();
         this.option = this.getOption(init.profile);
         this.OPTION = this.getOption(init.profile).toUpperCase();
         this.name = init.team.profiles[`p${init.profile}`].name;
+        // console.log(this.name);
         this.nameFirst = this.name.split(' ')[0];
         this.pronouns = init.team.profiles[`p${init.profile}`].gender === 'm' ? {p1: 'he', p2: 'his', p3: 'him'} : {p1: 'she', p2: 'her', p3: 'her'};
         Object.values(this.pronouns).forEach((p, i) => this.pronouns[`P${(i + 1)}`] = window.stringToCamelCase(p));
-//        this.filename = this.name.replace(' ', '').replace(/[^a-zA-Z0-9]/g, '');
-//        this.filename = window.stringToCamelCase(this.name).normalize('NFD').replace(' ', '').replace(/[^a-zA-Z0-9]/g, '').toLocaleLowerCase();
         this.filename = window.stringToCamelCase(this.name.normalize('NFD')).replace(' ', '').toLocaleLowerCase();
         //
         const stored = Object.assign({position: init.position, currentTime: 0, delayExpiry: 0}, this.unpackStorageSummary(this.getStoredSummary()));
+
+        function getInitProp(prop) {
+            
+            const pInit = init.hasOwnProperty(prop) ? init[prop] : null;
+            const pStored = stored.hasOwnProperty(prop) ? stored[prop] : null;
+            // const val = pInit || pStored || null;
+            const val = pStored || pInit || null;
+            if (pInit !== null && pStored !== null && pInit !== pStored) {
+                // console.log(`%cgetInitProp (${prop}) mismatch:`, 'color: red;', `%c${pInit}`, 'color: cyan;', pStored, 'color: cyan;', `%c${val}`, 'color: cyan;');
+                console.log(`%cgetInitProp (${prop}) mismatch: %c${pInit} %c:: %c${pStored} %c${val}`, 'color: red;', 'color: yellow;', 'color: white;', 'color: yellow;', 'color: cyan;');
+                // console.log(this);
+            }
+            return val;
+        }
 
         this.type = init.type;
         this.capacity = init.capacity || this.options[this.profile].capacity;
         this.t1 = init.t1;
         this.t2 = init.t2;
-//        console.log('stored', stored);
-//        console.log('init', init);
-//        console.log(`type: ${this.type}, option: ${this.option}, profile: ${this.profile}`);
-
         this.tTotal = (this.t1 * 2) + (this.t2 * 2);
         this.currentSpeed = 0;
         const PROF = init.team.profiles[`p${init.profile}`];
@@ -54,8 +68,11 @@ class Climber {
         this.responsesArray = Object.values(this.responses);
         this.profileData = init.gameData.profiles[`profile_${init.profile}`];
 
-        this.oxygen = stored.hasOwnProperty('oxygen') ? window.clone(stored).oxygen : 0;
-        this.sustenance = stored.hasOwnProperty('sustenance') ? stored.sustenance : 0;
+        // this.oxygen = stored.hasOwnProperty('oxygen') ? window.clone(stored).oxygen : 0;
+        // console.log('@@@@@@@@@@@@@@@@@@@@@@@', this.name);
+        this.oxygen = getInitProp('oxygen');
+        // this.sustenance = stored.hasOwnProperty('sustenance') ? stored.sustenance : 0;
+        this.sustenance = getInitProp('sustenance');
         this.rope = stored.hasOwnProperty('rope') ? stored.rope : 0;
         this.teamID = stored.hasOwnProperty('teamID') ? stored.teamID : (init.hasOwnProperty('teamID') ? init.teamID : -1);
         this.team = this.getBasicTeam(this.teamID);
@@ -64,23 +81,13 @@ class Climber {
 //        this.allDelays = stored.hasOwnProperty('allDelays') ? stored.allDelays : '';
         this.allDelays = this.retrieveValue(stored, init, 'allDelays', '');
         this.allLandmarks = stored.hasOwnProperty('allLandmarks') ? stored.allLandmarks : '';
-        this.position = stored.position > 0 ? stored.position : 0;
+        const thePosition = init.position || stored.position || 0;
+        // this.position = stored.position > 0 ? stored.position : 0;
+        this.position = thePosition;
 
         // currentTime is a simple integer which can be written/read from the database
         this.currentTime = stored.currentTime > 0 ? stored.currentTime : 0;
         this.currentTime = this.retrieveValue(stored, init, 'currentTime');
-        if (this.type > -1) {
-//            console.log('timing stuff', this.type, this.name);
-//            console.log(stored.currentTime);
-//            console.log(init.currentTime);
-        }
-        if (this.type > -1999999999999999999999) {
-//            console.log('position stuff', this.profile, this.name);
-//            console.log(stored.position);
-//            console.log(init.position);
-//            console.log(init.finishTime, stored.finishTime);
-        }
-//        this.finishTime = stored.hasOwnProperty('finishTime') ? stored.finishTime : 0;
         this.finishTime = init.finishTime || 0;
         // currentTimeObject is a read-only object sent in by the game code (see updatePosition)
         this.currentTimeObject = {};
@@ -91,8 +98,6 @@ class Climber {
         this.delayRemaining = null;
         this.eventTime = stored.eventTime > 0 ? stored.eventTime : 0;
         this.currentStage = init.currentStage || 0;
-//        console.log('derive currentStage from init?', init.currentStage, this.currentStage);
-//        console.log(this.name, this.position)
         this.finished = Boolean(init.finishTime) || false;
         this.view = null;
         this.icon = null;
@@ -111,66 +116,32 @@ class Climber {
                 Climber.allClimbers[Climber.allClimbers.findIndex(e => e.profile === this.profile)] = this;
             }
         }
+
         this.unstore = (gID) => {
             console.log(`unstoring ${this.nameFirst}`);
             this.unstoreSummary(gID);
         };
+        console.log('store summary on init');
         this.storeSummary();
-//        console.log('new climber:', this.oxygen, this);
-//        console.log('new climber:', this.oxygen, window.clone(this));
+        if (this.isRealClimber()) {
+            console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~');
+            const ipS = getInitProp('sustenance');
+            const ipO = getInitProp('oxygen');
+            const ipP = window.roundNumber(getInitProp('position'), 3);
+            // console.log(`${this.name}`, ipP, ipO, ipS);
+        }
+        
+        if (this.position > 0) {
+            // console.log(`returning climber ${this.name} created with position ${this.position}`);
+            // run a resource check:
+            setTimeout(() => {
+                // this.updateResources();
+                // this.toggleInfo();
+            }, 200);
+       }
     }
+    
 
-    static setProperty(c, p, v, cb) {
-        console.log(`setProperty ${p} to ${v} for climber ${c}`);
-        // console.log(this);
-        // console.log(this.getClimbers());
-        let f = true;
-        let m = '';
-        let C = this.getClimbers().filter(cl => cl.option === c);
-        
-        
-        if (C.length === 0) {
-            f = false;
-            m = 'no climbers found (likely not yet initialised)';
-        } else if (C.length === 1) {
-            C = C[0];
-            if (C.gameData.isDev) { 
-                if (C.hasOwnProperty(p)) {
-                    if (v === undefined) {
-                        f = false;
-                        m = `no value provided for property "${p}"`;
-                    } else {
-                        if (typeof(v) !== typeof(C[p])) {
-                            f = false;
-                            m = `value for property "${p}" is of wrong type`;
-                        } else {
-                            C.setProperty(p, v, cb);
-                        }
-                    }
-                } else {
-                    f = false;
-                    m = `property "${p}" not found on climber`;
-                }
-            } else {
-                f = false;
-                m = 'only possible in dev';
-            }
-        } else {
-            // console.warn(`setProperty: climber not found for option ${c}`);
-            f = false;
-            m = 'multiple climbers found';
-        }
-        if (p === undefined && v === undefined) {
-            f = false;
-            m = 'property and value are both undefined';
-        }
-            
-        
-        if (!f) {
-            console.warn(`setProperty error: ${m}`);
-        }
-        return `property set: ${f}`;
-    }
     static resetAll(cs) {
 //        console.log('resetAll', cs);
         Climber.allClimbers.forEach(c => {
@@ -205,6 +176,7 @@ class Climber {
         });
     }
     static storeSummaries() {
+        // console.log(`storing all climber summaries`);
         const active = Climber.getClimbers().filter(c => !c.finished);
         active.forEach(c => {
             c.storeSummary();
@@ -265,28 +237,15 @@ class Climber {
             cb();
         }
     }
-    static checkForZeroes() {
-        const c = this.getClimbers().filter(c => !c.finished);
-        const z = [];
-        c.forEach(c => {
-            // console.log(c.name, c.option, c.oxygen, c.sustenance, c.delayRemaining);
-            // console.log(c);
-            // climbre is zeroed if oxygen or sustenance is zero, and there is no delay remaining (would indicate a resupply run underway)
-            if (c.oxygen === 0 && (c.delayRemaining === null || c.delayRemaining === 0)) {
-                console.log(`%czero at climber ${c.name} (${c.option})`, 'background-color: black; color: red;', c);
-                z.push(Object.assign({resource: 'oxygen'}, c));
-            }
-            if (c.sustenance === 0 && (c.delayRemaining === null || c.delayRemaining === 0)) {
-                console.log(`%czero at climber ${c.name} (${c.option})`, 'background-color: black; color: red;', c);
-                z.push(Object.assign({resource: 'sustenance'}, c));
-            }
-        });
-        return z;
+    static showPositions() {
+        const C = this.getClimbers().filter(c => !c.finished);
+        C.forEach(c => {
+            console.log(c.name, c.position);
+        })
     }
 
     retrieveValue(stored, init, p, def = 0) {
         const storedP = localStorage.getItem(p) || def;
-        // console.log(`retrieving %c${p}:`, 'color: yellow;', storedP);
         const initP = init.hasOwnProperty(p) ? init[p] : def;
         let v;
         if (initP) {
@@ -343,6 +302,13 @@ class Climber {
         return this.type > -100;
     }
 
+    sendUpdate() {
+        // console.log('sendUpdate', this.name, this.getStorageSummary());
+        if (this.onClimberUpdate) {
+            // console.log('ok to send');
+            this.onClimberUpdate(`profile${this.profile}`, {summary: this.getStorageSummary()});
+        }
+    }
     // gets
     getSummaryMap() {
         // mapped values to be stored in DB (store strings and numbers only, no objects etc)
@@ -387,15 +353,6 @@ class Climber {
         return o;
     }
 
-    updateDetailPanel(p, v) {
-        const cdp = this.getView().find('#climberDetailPanel');
-        if (cdp.length > 0) {
-            if (cdp.is(':visible')) {
-                // the detail panel is open and visible; update it.
-                cdp.find(`#detail_${p}`).html(Math.ceil(v));
-            }
-        }
-    }
     // sets
     setProperty(p, v, cb) {
 //        this.log(`setProperty: ${p} to ${v}`);
@@ -409,7 +366,6 @@ class Climber {
 //                this.log(`set ${p} to ${this.prepForLog(v)}: ${this.prepForLog(this[p])} => ${this.prepForLog(v)}`, true);
             }
             this[p] = v;
-            this.updateDetailPanel(p, v);
             if (cb) {
                 cb(this);
             }
@@ -462,8 +418,13 @@ class Climber {
         if (this.displayProps.includes(p)) {
             if (Math.ceil(this[p]) !== Math.ceil(this[p] + av)) {
 //                const cdp = this.view.find('#climberDetailPanel');
-                this.updateDetailPanel(p, this[p] + av);
-                
+                const cdp = this.getView().find('#climberDetailPanel');
+                if (cdp.length > 0) {
+                    if (cdp.is(':visible')) {
+                        // the detail panel is open and visible; update it.
+                        cdp.find(`#detail_${p}`).html(Math.ceil(this[p] + av));
+                    }
+                }
             }
 
         }
@@ -549,6 +510,42 @@ class Climber {
         }
 //        console.log(`${this.name} resupplies = ${this.resupplies}`);
     }
+    addResupplyV1(s, v) {
+        // add an item to the resupplies string if it doesn't already contain it (use initials only)
+        const sm = this.getSummaryMap();
+        const str = `${s}${v}`;
+//        console.log(str);
+        if (s.length > 1) {
+            // if a full string has been passed in, convert to an initial
+            s = sm[s]
+        }
+        if (this.resupplies === '') {
+            this.resupplies = str;
+        } else {
+            if (!this.resupplies.includes(s)) {
+                this.resupplies += str;
+            }
+        }
+        if (this.resupplies.length ) {
+            console.log(`${this.name} resupplies = ${this.resupplies}`);
+        }
+    }
+    addResupplyV1(s) {
+        // add an item to the resupplies string if it doesn't already contain it (use initials only)
+        // V1 works with a simple string of letters (o, s, r)
+        const sm = this.getSummaryMap();
+        if (s.length > 1) {
+            s = sm[s]
+        }
+        if (this.resupplies === '') {
+            this.resupplies = s;
+        } else {
+            if (!this.resupplies.includes(s)) {
+                this.resupplies += s;
+            }
+        }
+//        console.log(`${this.name} resupplies = ${this.resupplies}`);
+    }
     setPosition(n) {
 //        console.log(`${this.name} setPosition ${n}`);
         this.setProperty('position', n);
@@ -617,7 +614,7 @@ class Climber {
         }
         this.allDelays = this.allDelays.join('|');
 //        console.log(`${this.name} setDelay of ${n} minutes at stage ${this.currentStage}, allDelays: ${this.allDelays}`);
-        this.sendUpdateToServer();
+        this.sendUpdate();
     }
     // storage/summarising
     getStorageID() {
@@ -625,51 +622,42 @@ class Climber {
         const sid = `${this.gameData.storeID}-c${this.profile}-${this.filename}`;
         return sid;
     }
-    sendUpdateToServer() {
-        if (this.onClimberUpdate) {
-            // console.log('ok to send to server');
-            this.onClimberUpdate(`profile${this.profile}`, {summary: this.getStorageSummary()});
-        }
-    }
-    setLocalStorage(id, val) {
-        if (id === undefined || val === undefined) {
-            console.warn('setLocalStorage requires both an ID and a value');
-        } else {
-            const sid = `${this.getStorageID()}-${id}`;
-            // console.log(`storing %c${sid}`, 'color: cyan;');
-            localStorage.setItem(sid, val);
-        }
-    }
-    clearLocalStorage(id) {
-        const sid = `${this.getStorageID()}-${id}`;
-        // console.log(`removing %c${sid}`, 'color: cyan;');
-        if (localStorage.getItem(sid)) {
-            localStorage.removeItem(sid);
-        } else {
-            console.warn(`cannot remove ${sid}; not found in localStorage`);
-        }
-    }
-    getlocalStorage(id) {
-        const sid = `${this.getStorageID()}-${id}`;
-        const ret = localStorage.getItem(sid) || '';
-        // console.log(`getting %c${sid}`, 'color: yellow;', ret);
-        return ret;
-    }
     storeSummary() {
         if (this.teamID > -1 && this.team !== -1 && this.type > -100) {
             // don't store any temporary climbers, or support team climbers (these have type = -9999)
-            // const sid = this.getStorageID();
+            const sid = this.getStorageID();
             const ss = this.getStorageSummary();
-            this.setLocalStorage('summary', ss);
-            this.sendUpdateToServer();
+    //        const sid = `${this.gameData.storeID}-c${this.profile}-${this.filename}`;
+            if (this.finishTime > 0) {
+//                console.log(`storing climber with ID ${sid} - use filename? ${this.filename} finishTime: ${this.finishTime}`);
+//                console.log(ss);
+            }
+            console.log(`storeSummary saves local data for ${this.name}`);
+            localStorage.setItem(sid, ss);
+            this.sendUpdate();
         }
     }
     unstoreSummary(gID) {
-        this.clearLocalStorage('summary');
+        let sid = false;
+        if (this.gameData) {
+            sid = this.gameData.storeID;
+        } else if (gID) {
+            sid = gID;
+        }
+        if (sid) {
+            console.log(`removing ${sid}-c${this.profile}-${this.filename}`);
+            localStorage.removeItem(`${sid}-c${this.profile}-${this.filename}`);
+        } else {
+            console.warn('Climber cannot be removed; ID not provided');
+        }
     }
     getStoredSummary() {
+//        const s = `${this.gameData.storeID}-c${this.profile}`;
+//        const s = `${this.gameData.storeID}-c${this.profile}-${this.filename}`;
         const sid = this.getStorageID();
-        const ss = this.getlocalStorage('summary');
+        const ss = localStorage.getItem(sid) ? localStorage.getItem(sid) : '';
+//        console.log(`getting storage called ${sid}:`);
+//        console.log(ss);
         return ss;
     }
     getStorageSummary() {
@@ -701,7 +689,7 @@ class Climber {
         return oo;
     }
     clone() {
-//        console.log('get the team from this?');
+       console.log('get the team from this?');
 //        console.log(this.gameData.teams[this.teamID]);
         return new Climber({
             gameData: this.gameData,
@@ -866,7 +854,7 @@ class Climber {
         this.allLandmarks = this.allLandmarks.split(',').map(e => e = parseFloat(e));
         this.allLandmarks[this.currentStage] = isNaN(this.currentTime) ? 0 : this.currentTime;
         this.allLandmarks = this.allLandmarks.join(',');
-        this.sendUpdateToServer();
+        this.sendUpdate();
 //        console.log(`${this.nameFirst} updateLandmarks: ${this.currentStage}`, this.allLandmarks);
     }
     updatePosition(o, cb) {
@@ -940,6 +928,7 @@ class Climber {
                 this.position = 100;
             }
 //            console.log(`${this.name} position to ${this.position}`);
+            sessionStorage.setItem(`position_${this.name.replace(' ', '_')}`, this.position);
             return this.position;
         }
     }
@@ -947,19 +936,17 @@ class Climber {
         const cto = this.currentTimeObject;
         const con = this.gameData.constants;
         const s = cto.sec - (this.currentSec ? this.currentSec : cto.sec);
+        if (isNaN(s)) {
+            return;
+        }
         // Oxygen: per second depletion
         const currOxygen = this.oxygen;
         const depOxygen = 1 / (con.oxygen.unitTime * 60);
         this.adjustOxygen(-1 * (depOxygen * s));
-//        if (Math.ceil(this.oxygen) !== Math.ceil(currOxygen) && Math.ceil(this.oxygen) >= 0) {
-//            window.climberDepletionEvent(Object.assign(this, {resource: 'oxygen'}));
-//            this.log(`oxygen reduced to ${Math.ceil(this.oxygen)}`, true);
-//        }
         if (Math.ceil(this.oxygen) !== Math.ceil(currOxygen) || Math.ceil(this.oxygen) === 0 && this.delayRemaining === 0) {
             // cond.1: ox change, cond.2 no delay, ox to zero
             if (Math.ceil(this.oxygen) >= 0) {
                 window.climberDepletionEvent(Object.assign(window.clone(this), {resource: 'oxygen'}));
-//                this.log(`oxygen reduced to ${Math.ceil(this.oxygen)}`, true);
             }
         }
         if (Math.ceil(this.oxygen) === 0 && this.delayRemaining === 0) {
@@ -973,19 +960,8 @@ class Climber {
             // cond.1: sus change, cond.2 no delay, sus to zero
             if (Math.ceil(this.sustenance) >= 0) {
                 window.climberDepletionEvent(Object.assign(window.clone(this), {resource: 'sustenance'}));
-//                this.log(`sustenance reduced to ${Math.ceil(this.sustenance)}`, true);
             }
         }
-        // Rope: per second depletion - NO
-        /*
-        const currRope = this.rope;
-        const depRope = 1 / (con.rope.unitLength * 60);
-        this.adjustRope(-1 * (depRope * s));
-        if (Math.ceil(this.rope) !== Math.ceil(currRope) && Math.ceil(this.rope) >= 0) {
-            window.climberDepletionEvent(Object.assign(this, {resource: 'rope'}));
-            this.log(`rope reduced to ${Math.ceil(this.rope)}`, true);
-        }
-        */
         window.climberUpdate(this);
         // Do this last:
         this.currentSec = cto.sec;
@@ -1017,15 +993,17 @@ class Climber {
         return zp;
     }
     //
-    toggleInfo(boo) {
+    toggleInfo() {
         // dev method, toggles climber detail display on/off
+//        console.log(`toggleInfo`, window.clone(this));
+
         const d = $(this.getView().find('.map-pointer-label')[0]);
-        if (!d.is(':visible') || boo === true) {
-            d.show();
-        } else {
+        if (d.is(':visible')) {
             d.hide();
+        } else {
+            d.show();
         }
-        return d.is(':visible');
+        d.show();
     }
     showDead() {
         if (this.view) {
@@ -1103,13 +1081,9 @@ class Climber {
         this.view.off('click').on('click', () => {
 //            jq.css({'z-index': 1});
 //            this.view.css({'z-index': 10});
-            const viz = this.toggleInfo();
-            this.setLocalStorage('infoVisible', viz);
+            this.toggleInfo();
         });
-        // console.log(`info visible? ${this.getlocalStorage('infoVisible')}`);
-        if (this.getlocalStorage('infoVisible') === 'true') {
-            this.toggleInfo(true);
-        }
+        this.toggleInfo();
         let timer;
         const timeout = 1000;
         this.view.append(`<div class='climberDevIndicator'></div>`);

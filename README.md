@@ -1,5 +1,14 @@
 # K2 Game v2
 
+Owner: John Hughes
+Organisation: Cranfield University
+
+Copyright (c) 2024-2026 John Hughes and Cranfield University
+
+## Maintainer
+
+- John Hughes (Cranfield University)
+
 To launch debug window: from main game client type shift-t.
 
 ngrok is built in but doesn't launch by default.

@@ -36,6 +36,12 @@
 /*     jh */
     margin: 10%;
 }
+.clName {
+    position: absolute;
+    width: 120px;
+    font-size: x-small;
+    z-index: 2;
+}
 
 
 .map-pointer-container svg {
