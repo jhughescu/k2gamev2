@@ -1,7 +1,7 @@
 {
-  "timestamp": "2026-06-29T16:14:52+01:00",
-  "commitHash": "f16bebcd995bbd125bf0d78949aeaf9ca9257640",
-  "commitMessage": "Fix course dropdown inactive bug in facilitator login\n\nThe getAccessLoginOptions query was filtering AccessKey documents\nby firstName and surname fields which do not exist on the model.\nThis caused activeKeys to always be empty, courseOptionsByInstitution\nto remain {}, and the Course dropdown to never receive options.\n\nRemove the bogus field filters so all active keys are returned.",
+  "timestamp": "2026-07-01T15:33:59+01:00",
+  "commitHash": "5248d6f5607d4ada288f6864e70f5af682dbc09f",
+  "commitMessage": "Update 30/06/2026, 17:02:13",
   "branch": "master",
   "githubReleaseTag": null,
   "githubRunNumber": null,

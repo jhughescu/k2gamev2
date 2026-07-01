@@ -223,14 +223,16 @@ const writeClimberLog = async (o) => {
     }
 };
 const deleteSessionLogs = async (id) => {
+    if (isLocal()) {
 //    console.log(`################################## delete logs: ${id}`);
-    try {
-        const files = await fs.readdir(LOG_CLIMBERS);
-        const matchingFiles = files.filter(file => file.includes(id));
-        await Promise.all(matchingFiles.map(file => fs.unlink(path.join(LOG_CLIMBERS, file))));
-        console.log(`✅ Deleted ${matchingFiles.length} file(s) matching sID: ${id}`);
-    } catch (err) {
-        console.error(`❌ Error deleting files for sID "${id}":`, err);
+        try {
+            const files = await fs.readdir(LOG_CLIMBERS);
+            const matchingFiles = files.filter(file => file.includes(id));
+            await Promise.all(matchingFiles.map(file => fs.unlink(path.join(LOG_CLIMBERS, file))));
+            console.log(`✅ Deleted ${matchingFiles.length} file(s) matching sID: ${id}`);
+        } catch (err) {
+            console.error(`❌ Error deleting files for sID "${id}":`, err);
+        }
     }
 };
 const getProfileFiles = async (dir, cb) => {
