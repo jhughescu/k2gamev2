@@ -355,7 +355,7 @@
             "video": "5dd21441-4bd0-4350-a77c-b2020099dd78"
         }
     ],
-    "events": [
+    "eventsGOOD": [
         {
             "time": 0.5,
             "ref": "C1PP",
@@ -773,7 +773,7 @@
             "event": "killerstorm"
         }
     ],
-    "eventsOne": [
+    "events": [
         {
             "time": 1110.5,
             "ref": "C1PP",

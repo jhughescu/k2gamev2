@@ -112,8 +112,8 @@ const getHighestSessionNumber = async () => {
 };
 
 const newSession = async (ob, cb) => {
-//    console.log(`newSession; let's call getSessions to see how many sessions there are`);
-//    console.log(ob);
+   console.log(`newSession; let's call getSessions to see how many sessions there are`);
+   console.log(ob);
     getSessions({}, async () => {
         const sessions = await Session.find();
         const data = await processData();
@@ -186,8 +186,8 @@ const newSession = async (ob, cb) => {
                 course: courseSlug,
                 accessKeyId: accessKeyId || undefined
             });
-            console.log(s)
-            console.log(`up there, that's the session`);
+            // console.log(s)
+            // console.log(`up there, that's the session`);
             cb(developSession(s));
         } catch (err) {
             console.error(`error creating session`, err);
